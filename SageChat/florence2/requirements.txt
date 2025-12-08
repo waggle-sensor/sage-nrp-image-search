@@ -1,6 +1,0 @@
-transformers==4.44.*
-huggingface_hub[cli]==0.24.*
-Pillow==10.4.*
-timm==1.0.*
-einops==0.8.*
-# packaging==24.2.* #enable for flash attention, flash attention must have have CUDA 11.7 and above 

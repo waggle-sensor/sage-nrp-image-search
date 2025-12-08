@@ -1,1 +1,0 @@
-weaviate_client==4.10.* #https://weaviate.io/developers/weaviate/release-notes#weaviate-core-and-client-releases

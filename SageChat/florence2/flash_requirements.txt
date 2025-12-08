@@ -1,1 +1,0 @@
-flash-attn #enable for flash attention, flash attention must have have CUDA 11.7 and above 
