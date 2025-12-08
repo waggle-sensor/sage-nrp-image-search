@@ -1,6 +1,7 @@
 # INQUIRE Benchmark
 
 This project uses the same setup as [Hybrid Search](../HybridSearch_example/) so that we can benchmark [Hybrid Search](../HybridSearch_example/) using [INQUIRE](https://github.com/inquire-benchmark/INQUIRE).
+>NOTE: The INQUIRE benchmark needs to be updated to work with sage-nrp-image-search. The current code is not compatible with this service.
 
 ## Usage
 
