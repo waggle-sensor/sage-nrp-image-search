@@ -18,57 +18,19 @@ The **Hybrid Search** integrates both search types into one to improve accuracy 
 ---
 
 ### Authentication
-To set up your cred environment variables create a `.env` file in the root of your project with the following content:
-  ```sh
-  export SAGE_USER=__INSERT_HERE__
-  export SAGE_TOKEN=__INSERT_HERE__
-  export HF_TOKEN=__INSERT_HERE__
-  export CUDA_VISIBLE_DEVICES=0
-  export PLATFORM=amd64
-  ```
-- Then, run:
-  ```bash
-  source .env
-  ```
+For this service to work, you need to have the following credentials:
+- **SAGE_USER**: Your SAGE username
+- **SAGE_TOKEN**: Your SAGE token
+- **HF_TOKEN**: Your Hugging Face token
+
+Your Sage credentials needs access to images on Sage. Any images that you don't have access to will be skipped.
+
+Your Hugging Face token needs access to the models that are used in this service.
 
 ---
 
 ## CI/CD Workflow: Build & Push Images
 This repository includes a GitHub Action that builds and pushes Docker images for all Hybrid Image Search microservices to NRPs public image registry. The workflow runs automatically on pushes to the main branch and on pull requests, detecting changes and publishing updated service images to the configured container registry.
-
----
-
-## Running the Example
->NOTE: I didn't use docker compose because it doesn't have the ability to access to GPU in lower versions, like in node-V033
-
-### Prerequisites
-To run this example, you'll need:
-- **Docker** installed on your machine with GPU access
-- **Cuda** v11.6
-- NVIDIA Driver Release 510 or later
-
-### Step-by-Step Setup
-
-1. **Spin up your Weaviate instance**:
-   - Navigate to the directory containing the `Makefile` file and run:
-     ```bash
-     make db
-     ```
-
-2. **Spin up the app**:
-   - Navigate to the directory containing the `Makefile` file and run:
-     ```bash
-     make build && make up
-     ```
-
-3. **Access Gradio App**:
-   - After your Weaviate instance is running, access the user interface at:
-     ```
-     http://localhost:7860/ #or the shareable link gradio outputted in terminal
-     ```
-
-4. **Image Access**:
-   - Before running, make sure you have access to the image data from Sage. You will need to fetch the relevant image dataset to perform searches.
 
 ---
 
@@ -104,18 +66,6 @@ Debugging - output to yaml:
 kubectl kustomize nrp-dev -o hybrid-search-dev.yaml
 kubectl kustomize nrp-prod -o hybrid-search-dev.yaml
 ```
-
-## Optional
-
-- **Accessing the UI Remotely through port forwarding**:
-   - If your Weaviate instance is running on a remote machine, use SSH tunneling to access the UI:
-     ```bash
-     ssh <client> -L 7860:<EXTERNAL-IP>:7860
-     ```
-   - Example:
-     ```bash
-     ssh node-V033 -L 7860:10.31.81.1:7860
-     ```
 
 ---
 
@@ -167,85 +117,7 @@ kubectl kustomize nrp-prod -o hybrid-search-dev.yaml
 
 ## TODOs
 
-- [X] Add a new vector space in the collection for uploading multivectors created by colbert
-- [X] Update weavloader to use colbert to create embeddings on the caption then upload to weaviate
-   - [X] Add Colbert to Triton
-   - [X] Add function to model.py for colbert inference
-   - [X] Use the new function in data.py and upload vector to weaviate
-   - more?
-- [X] Update the query to use both imagebind and colbert vectors then combine the results
-   - remember to also embed the query with colbert
-   - use weaviate's multi vector query (https://weaviate.io/developers/weaviate/search/multi-vector#available-join-strategies) or combine the results yourself
-      - I have to combine the results myself, hybrid search doesn't except multi vector search
-- [X] Update the app to use the new query classes and new colbert/hybrid query
-   - set up new hyper params for weights
-- [X] Deploy the new setup on V033 and test it out
-- [X] Move your edits to INQUIRE and then run the results
-- [X] Consider using Google's ALIGN instead of imagebind
-   - https://research.google/blog/align-scaling-up-visual-and-vision-language-representation-learning-with-noisy-text-supervision/
-   - https://huggingface.co/docs/transformers/en/model_doc/align
-   - [X] added the implementation to Hybrid search, test it out with Sage images using weavloader (make reset)
-   - [X] run a inquire bechmark and generate results
-- [X] try CLIP ViT-H/14-378 (DFN), it scored high in INQUIRE benchmark based on their leaderboard
-   - https://huggingface.co/apple/DFN5B-CLIP-ViT-H-14-378
-   - [X] add the implementation to Hybrid search, test it out with Sage images using weavloader (make reset)
-   - [X] run a inquire bechmark and generate results
-- [X] Consider alternatives to florence 2 for image captioning
-   - use both nodes V033 and V010 to test Qwen2.5-VL and Gemma3 at the same time
-   - I tried both Qwn2.5-VL and Gemma3 and they both gave results in terms of caption/keyword. They both captured the appearance of the subject as well in the caption which is good since usually we score very low in INQUIRE when it comes to appearance
-      - prompt: create a caption for this image for a scientific purposes and make it as detailed as possible. Only return one caption and a set of keywords, nothing else (picture of a spider on a leaf)
-         - Qwen2.5-VL-72B-Instruct: Caption: A close-up view of an Araneus diadematus, commonly known as the European garden spider or cross spider, perched on a green leaf. The spider's distinctive cross-shaped pattern on its abdomen is clearly visible, along with its eight legs and pedipalps. The surrounding environment includes other leaves, suggesting a natural habitat such as a garden or woodland area. The spider appears to be in a resting position, possibly preparing to ambush prey or tend to its web. Keywords: Araneus diadematus, European garden spider, cross spider, abdomen pattern, eight legs, pedipalps, natural habitat, garden, woodland, resting position, prey ambush, web tending.
-         - gemma-3-12b-it: Caption: Araneus marmoreus (Zebra Orb-weaver) female resting on a leaf within its orb web. This specimen exhibits the characteristic mottled brown and tan coloration of the species, providing effective camouflage against foliage. Note the robust legs, typical of orb-weavers, and the presence of silk threads connecting the leaf to surrounding structures, indicative of web construction. The spider's posture suggests a state of vigilance, awaiting prey capture. The leaf's texture and venation are visible, providing context for the spider's habitat. Keywords: Araneus marmoreus, Zebra Orb-weaver, spider, orb web, arachnid, camouflage, predation, leaf, foliage, silk, invertebrate, arthropod, natural history, macro photography, web construction, female, habitat.
-   - **llama4**
-      - both maverick and scout versions didn't output good results in initial testing of a spider and condor image. The
-         caption was not "scientic" enough but rather for general public.
-   - **Qwen2.5-VL**
-      * **Developed by**: Alibaba Cloud
-      * **Key Features**:
-      * Multimodal models supporting image, text, and bounding box inputs.
-      * Outputs include text and bounding boxes.
-      * Supports English, Chinese, and multilingual conversations.
-   - **Gemma**
-      - **Developed by**: Google
-      * **Resources**:
-      * [Google Deepmind Gemma Model Page](https://deepmind.google/models/gemma/)
-      * **Model List**:
-         * [PaliGemma2](https://deepmind.google/models/gemma/paligemma-2/)
-            * use this model if you are going to finetune, if not then don't use this model as it requires fine tuning to get good results
-         * [Gemma3](https://deepmind.google/models/gemma/gemma-3/)
-            * I can use 4b or 12b instruction tuned versions (27b is most likely too big), The 12b is returning better captions and following instuctions better than 4b
-               * try 4b first
-            * HF: [Gemma3 Blog](https://huggingface.co/blog/gemma3)
-   - Blades (Tesla T4 Gpu)
-      - tried implementing both qwen and gemma but they were too big for the GPU. I was still looking at ways to quantize and lower the memory footprint to see if I can fit the inference into the GPU. The actual model was able to load into the GPU but not the inference.
-   - H100 Gpu
-      - Qwen2.5-VL-7B-Instruct is working, I am going to test thi sfirst and then increase the model size
-         - [X] add the implementation to Hybrid search, test it out with Sage images using weavloader (make reset)
-         - [X] run a inquire bechmark and generate results
-      - Qwen2.5-VL-32B-Instruct
-         - [X] add the implementation to Hybrid search, test it out with Sage images using weavloader (make reset)
-         - [X] run inquire bechmark
-            - this is running noticeably slow, in 17 hours it only has gotten 3650 into weaviate
-            - usually the benchmark would have been almost finished by now
-         - [X] generate results
-      - gemma-3-4b-it
-         - [X] add the implementation to Hybrid search, test it out with Sage images using weavloader (make reset)
-         - [X] run inquire bechmark
-         - [X] generate results
-      - gemma-3-12b-pt
-         - [X] add the implementation to Hybrid search, test it out with Sage images using weavloader (make reset)
-         - [X] run inquire bechmark
-         - [X] generate results
-      - gemma-3-27b-pt
-         - [X] add the implementation to Hybrid search, test it out with Sage images using weavloader (make reset)
-         - [X] run inquire bechmark
-         - [X] generate results
-   - gemma-3-4b-it is the best performing model so far, it is returning good captions and keywords for the images. It is also fast enough to run on a single H100 GPU.
-- [ ] Consider alternatives to reranker
-   - I can also use the same Gemma or Qwen model to rerank the results
-      - there is Qwen models specifically for reranking text embeddings
-         - https://huggingface.co/collections/Qwen/qwen3-reranker-6841b22d0192d7ade9cdefea 
-   - Look at rerank results in INQUIRE to see which is best (https://inquire-benchmark.github.io/)
+- [ ] Bechmark Milvus@NRP
 - [ ] Use other benchmarks to test image retrieval in other domains (ex; Urban) & System-Level Performance
    - General Image-Caption Retrieval Benchmarks
       - **MS COCO Captions:** A widely used benchmark drawn from the MS-COCO dataset (Common Objects in Context). It contains **123,287 images** covering everyday scenes (including many urban street scenes with people, vehicles, buildings, etc.), each paired with 5 human-written captions. The standard split is \~82k images for training, 5k for validation, 5k for testing. *Relevance:* Although not exclusively urban, COCO features many city context images (e.g. street traffic, city parks, indoor scenes). *Evaluation:* Typically uses **Recall\@K** (K=1,5,10) as the primary metric – e.g. the percentage of queries for which the correct image is in the top K results. Some works also report mean average precision (mAP) on the 5K test set. **Access:** [COCO Dataset Page](https://cocodataset.org/#download) (captions and images are publicly downloadable).
