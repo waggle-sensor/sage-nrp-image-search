@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sage
+
+# TODO: Replace MYBENCHMARK with your benchmark name (lowercase)
+namePrefix: MYBENCHMARK-
+commonLabels:
+  benchmark: MYBENCHMARK
+
+resources:
+  - ../base
+  - results-pvc.yaml
+
+patches:
+  - path: env.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-evaluator"
+  - path: data-loader-env.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-data-loader"
+  # Uncomment if using GPUs:
+  # - path: gpus.yaml
+  #   target:
+  #     kind: Deployment
+  #     labelSelector: "app=benchmark-data-loader"
+  - path: results-pvc-patch.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-evaluator"
+
+images:
+  # TODO: Replace MYBENCHMARK with your benchmark name and update registry if needed
+  - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-MYBENCHMARK-evaluator
+    newTag: latest
+  - name: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-MYBENCHMARK-data-loader
+    newTag: latest
+

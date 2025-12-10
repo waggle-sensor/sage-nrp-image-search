@@ -1,0 +1,32 @@
+# MYBENCHMARK Data Loader Dockerfile
+# Based on benchmarking/benchmarks/template/Dockerfile.template
+#
+# Instructions:
+# 1. Replace MYBENCHMARK with your benchmark name in the comment
+# 2. Verify the CMD line runs your load_data.py script
+# 3. Adjust PYTHONPATH if your structure differs
+
+ARG PYTHON_VERSION=3.11-slim
+FROM python:${PYTHON_VERSION}
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Set Python path to include parent directories (framework, adapters, app)
+# Adjust these paths based on your benchmark's directory structure
+ENV PYTHONPATH=/app:/app/../../framework:/app/../../adapters:/app/../../../app
+
+# Run data loader
+CMD ["python", "load_data.py"]
+
