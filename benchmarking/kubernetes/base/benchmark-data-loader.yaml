@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: benchmark-data-loader
+  labels:
+    app: benchmark-data-loader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: benchmark-data-loader
+  template:
+    metadata:
+      labels:
+        app: benchmark-data-loader
+    spec:
+      containers:
+        - name: benchmark-data-loader
+          image: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE:latest
+          env:
+            - name: WEAVIATE_HOST
+              value: "$(WEAVIATE_SERVICE)"
+            - name: WEAVIATE_PORT
+              value: "8080"
+            - name: WEAVIATE_GRPC_PORT
+              value: "50051"
+            - name: TRITON_HOST
+              value: "$(TRITON_SERVICE)"
+            - name: TRITON_PORT
+              value: "8001"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: PYTHONPATH
+              value: "/app:/app/../framework:/app/../../app"
+          resources:
+            limits:
+              cpu: 4
+              memory: 8Gi
+            requests:
+              cpu: 2
+              memory: 4Gi
+          volumeMounts:
+            - name: huggingface-cache
+              mountPath: /root/.cache/huggingface
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "ps aux | grep '[p]ython load_data.py' || exit 1"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "test -f /app/.ready || exit 1"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: huggingface-cache
+          persistentVolumeClaim:
+            claimName: huggingface-pvc
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: benchmark-data-loader
+  labels:
+    app: benchmark-data-loader
+spec:
+  selector:
+    app: benchmark-data-loader
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+

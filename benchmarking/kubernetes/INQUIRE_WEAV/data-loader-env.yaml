@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: benchmark-data-loader
+spec:
+  template:
+    spec:
+      containers:
+        - name: benchmark-data-loader
+          env:
+            - name: INQUIRE_DATASET
+              value: "sagecontinuum/INQUIRE-Benchmark-small"
+            - name: COLLECTION_NAME
+              value: "INQUIRE_WEAV"
+            - name: IMAGE_BATCH_SIZE
+              value: "100"
+            - name: SAMPLE_SIZE
+              value: "0"
+            - name: WORKERS
+              value: "5"
+

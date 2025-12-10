@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sage
+
+resources:
+  - benchmark-evaluator.yaml
+  - benchmark-data-loader.yaml
+
+vars:
+  - name: WEAVIATE_SERVICE
+    objref:
+      kind: Service
+      name: weaviate
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name
+  - name: TRITON_SERVICE
+    objref:
+      kind: Service
+      name: triton
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name
+

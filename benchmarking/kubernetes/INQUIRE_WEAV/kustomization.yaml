@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sage
+
+namePrefix: inquire-weav-
+commonLabels:
+  benchmark: inquire-weav
+
+resources:
+  - ../base
+  - results-pvc.yaml
+
+patches:
+  - path: env.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-evaluator"
+  - path: data-loader-env.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-data-loader"
+  - path: gpus.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-data-loader"
+  - path: results-pvc-patch.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-evaluator"
+
+images:
+  - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-weav-evaluator
+    newTag: latest
+  - name: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-weav-data-loader
+    newTag: latest
+
