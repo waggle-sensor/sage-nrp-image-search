@@ -1,0 +1,126 @@
+name: Build/Push Benchmark Images
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths:
+      - 'benchmarking/benchmarks/**'
+      - '.github/workflows/benchmarking.yml'
+      - 'benchmarking/framework/**'
+      - 'benchmarking/adapters/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'benchmarking/benchmarks/**'
+      - '.github/workflows/benchmarking.yml'
+      - 'benchmarking/framework/**'
+      - 'benchmarking/adapters/**'
+
+jobs:
+  discover-benchmarks:
+    runs-on: ubuntu-latest
+    outputs:
+      benchmarks: ${{ steps.set-matrix.outputs.benchmarks }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Discover Benchmarks
+        id: set-matrix
+        run: |
+          # Find all benchmark directories, excluding template
+          BENCHMARKS=$(find benchmarking/benchmarks -mindepth 1 -maxdepth 1 -type d -not -name 'template' -not -name '.git' -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+          echo "benchmarks=$BENCHMARKS" >> $GITHUB_OUTPUT
+          echo "Found benchmarks: $BENCHMARKS"
+
+  build-push-benchmarks:
+    needs: discover-benchmarks
+    if: needs.discover-benchmarks.outputs.benchmarks != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        benchmark: ${{ fromJson(needs.discover-benchmarks.outputs.benchmarks) }}
+        image_type: [evaluator, data-loader]
+    env:
+      REGISTRY_URL: ${{ secrets.NRP_GITLAB_REGISTRY_URL }}
+      IMAGE_PATH: /ndp/sage/hybrid-search
+      BENCHMARK_NAME: ${{ matrix.benchmark }}
+      IMAGE_TYPE: ${{ matrix.image_type }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Image Tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/heads/* ]]; then
+            IMAGE_TAG="${GITHUB_REF#refs/heads/}"
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            IMAGE_TAG="${GITHUB_REF#refs/tags/}"
+          elif [[ "$GITHUB_REF" == refs/pull/* ]]; then
+            PR_NUMBER=$(echo "$GITHUB_REF" | cut -d'/' -f3)
+            IMAGE_TAG="pr-${PR_NUMBER}"
+          fi
+          IMAGE_TAG=$(echo "$IMAGE_TAG" | tr '/' '-')
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Determine Dockerfile and Image Name
+        id: docker-config
+        run: |
+          BENCHMARK_DIR="benchmarking/benchmarks/${{ matrix.benchmark }}"
+          
+          # Determine Dockerfile based on image type
+          if [ "${{ matrix.image_type }}" == "evaluator" ]; then
+            DOCKERFILE="$BENCHMARK_DIR/Dockerfile.benchmark"
+            IMAGE_NAME="benchmark-${{ matrix.benchmark }}-evaluator"
+          else
+            DOCKERFILE="$BENCHMARK_DIR/Dockerfile.data_loader"
+            IMAGE_NAME="benchmark-${{ matrix.benchmark }}-data-loader"
+          fi
+          
+          # Check if Dockerfile exists
+          if [ ! -f "$DOCKERFILE" ]; then
+            echo "Dockerfile not found: $DOCKERFILE"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "dockerfile=$DOCKERFILE" >> $GITHUB_OUTPUT
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          echo "skip=false" >> $GITHUB_OUTPUT
+          echo "Building $IMAGE_NAME from $DOCKERFILE"
+
+      - name: Log in to NRP GitLab Container Registry
+        if: steps.docker-config.outputs.skip != 'true'
+        run: echo "${{ secrets.NRP_GITLAB_PAT }}" | docker login ${{ secrets.NRP_GITLAB_REGISTRY_URL }} -u ${{ secrets.NRP_GITLAB_USERNAME }} --password-stdin
+
+      - name: Build & Tag Benchmark Image
+        if: steps.docker-config.outputs.skip != 'true'
+        env:
+          REGISTRY_URL: ${{ secrets.NRP_GITLAB_REGISTRY_URL }}
+          IMAGE_PATH: ${{ env.IMAGE_PATH }}
+          IMAGE_NAME: ${{ steps.docker-config.outputs.image_name }}
+        run: |
+          BENCHMARK_DIR="benchmarking/benchmarks/${{ matrix.benchmark }}"
+          DOCKERFILE="${{ steps.docker-config.outputs.dockerfile }}"
+          
+          # Build from benchmark directory with Dockerfile path relative to repo root
+          docker build -f "$DOCKERFILE" -t "$REGISTRY_URL$IMAGE_PATH/$IMAGE_NAME:$IMAGE_TAG" "$BENCHMARK_DIR"
+          
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            docker tag "$REGISTRY_URL$IMAGE_PATH/$IMAGE_NAME:$IMAGE_TAG" "$REGISTRY_URL$IMAGE_PATH/$IMAGE_NAME:latest"
+          fi
+
+      - name: Push Benchmark Image to NRP GitLab Image Registry
+        if: steps.docker-config.outputs.skip != 'true'
+        env:
+          REGISTRY_URL: ${{ secrets.NRP_GITLAB_REGISTRY_URL }}
+          IMAGE_PATH: ${{ env.IMAGE_PATH }}
+          IMAGE_NAME: ${{ steps.docker-config.outputs.image_name }}
+        run: |
+          docker push "$REGISTRY_URL$IMAGE_PATH/$IMAGE_NAME:$IMAGE_TAG"
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            docker push "$REGISTRY_URL$IMAGE_PATH/$IMAGE_NAME:latest"
+          fi
+
