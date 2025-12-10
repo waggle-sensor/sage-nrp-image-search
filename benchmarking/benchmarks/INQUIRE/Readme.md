@@ -1,4 +1,4 @@
-# INQUIRE_WEAV Benchmark
+# INQUIRE Benchmark
 
 Here we use [INQUIRE](https://github.com/inquire-benchmark/INQUIRE) with Weaviate as the vector database for benchmarking. Different models were used to generate captions and keywords for the images. Also different models were used to generate the embeddings for the images.
 
@@ -23,7 +23,7 @@ The new framework:
 
 ## Usage
 
-This benchmark is supposed to be used in conjuction with [Hybrid Search](../HybridSearch_example/). The Makefile references components that are deployed in [Hybrid Search](../HybridSearch_example/). The Makefile in here deploys additional containers that are used to run the INQUIRE_WEAV Benchmark.
+This benchmark is supposed to be used in conjuction with [Hybrid Search](../HybridSearch_example/). The Makefile references components that are deployed in [Hybrid Search](../HybridSearch_example/). The Makefile in here deploys additional containers that are used to run the INQUIRE Benchmark.
 
 ## Running the Example
 
@@ -46,16 +46,16 @@ To run this example, you'll need:
 2. **Build and Push Images**:
    - Build the benchmark images:
      ```bash
-     cd benchmarking/benchmarks/INQUIRE_WEAV
+     cd benchmarking/benchmarks/INQUIRE
      make build
      ```
    - Push to registry (update registry in Makefile if needed):
      ```bash
-     docker push <registry>/benchmark-inquire-weav-evaluator:latest
-     docker push <registry>/benchmark-inquire-weav-data-loader:latest
+     docker push <registry>/benchmark-inquire-evaluator:latest
+     docker push <registry>/benchmark-inquire-data-loader:latest
      ```
 
-3. **Deploy INQUIRE_WEAV Benchmark**:
+3. **Deploy INQUIRE Benchmark**:
    - Deploy to Kubernetes:
      ```bash
      make deploy
@@ -70,7 +70,7 @@ To run this example, you'll need:
      ```bash
      make logs-data-loader
      ```
-   >NOTE: This loads in [INQUIRE-Benchmark-small](https://huggingface.co/datasets/sagecontinuum/INQUIRE-Benchmark-small) into Weaviate for the INQUIRE_WEAV benchmark.
+   >NOTE: This loads in [INQUIRE-Benchmark-small](https://huggingface.co/datasets/sagecontinuum/INQUIRE-Benchmark-small) into Weaviate for the INQUIRE benchmark.
 
 5. **Calculate the Query Metrics**:
    - After dataset is fully loaded into Weaviate, run:
@@ -89,7 +89,7 @@ To run this example, you'll need:
      make get
      ```
    >NOTE: This will copy the csv files into your current working directory from the pod
-   >Alternatively, results are stored in the `inquire-weav-results-pvc` PVC
+   >Alternatively, results are stored in the `inquire-results-pvc` PVC
 
 ### Results
 

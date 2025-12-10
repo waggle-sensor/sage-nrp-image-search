@@ -14,8 +14,8 @@ benchmarks/
 ├── MAKEFILE.md              # Makefile documentation
 ├── Dockerfile.template       # Base Dockerfile template
 ├── DOCKER.md                # Dockerfile documentation
-    ├── INQUIRE_WEAV/
-│   └── Makefile             # INQUIRE_WEAV-specific variables + includes base
+    ├── INQUIRE/
+│   └── Makefile             # INQUIRE-specific variables + includes base
     └── template/
     └── Makefile             # Template Makefile
 ```
@@ -100,19 +100,19 @@ These can be overridden but have defaults:
 
 Add any benchmark-specific environment variables that will be used by your Kubernetes deployments. These should match the environment variables expected by your benchmark code.
 
-## Example: INQUIRE_WEAV Makefile
+## Example: INQUIRE Makefile
 
-See `benchmarks/INQUIRE_WEAV/Makefile` for a complete example:
+See `benchmarks/INQUIRE/Makefile` for a complete example:
 
 ```makefile
-BENCHMARK_NAME := inquire-weav
-KUSTOMIZE_DIR := ../../kubernetes/INQUIRE_WEAV
+BENCHMARK_NAME := inquire
+KUSTOMIZE_DIR := ../../kubernetes/INQUIRE
 DOCKERFILE_EVALUATOR := Dockerfile.benchmark
 DOCKERFILE_DATA_LOADER := Dockerfile.data_loader
 RESULTS_PVC_NAME := $(BENCHMARK_NAME)-benchmark-results-pvc
 RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
 
-# INQUIRE_WEAV-specific env vars
+# INQUIRE-specific env vars
 INQUIRE_DATASET ?= sagecontinuum/INQUIRE-Benchmark-small
 IMAGE_BATCH_SIZE ?= 25
 QUERY_BATCH_SIZE ?= 5

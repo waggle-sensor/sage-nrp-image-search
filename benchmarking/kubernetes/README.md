@@ -11,8 +11,8 @@ benchmarking/kubernetes/
 │   ├── benchmark-evaluator.yaml
 │   └── benchmark-data-loader.yaml
 │
-└── INQUIRE_WEAV/                 # INQUIRE_WEAV benchmark overlay
-    ├── kustomization.yaml   # Extends base with INQUIRE_WEAV-specific config
+└── INQUIRE/                 # INQUIRE benchmark overlay
+    ├── kustomization.yaml   # Extends base with INQUIRE-specific config
     ├── env.yaml             # Environment variables for evaluator
     ├── data-loader-env.yaml # Environment variables for data loader
     ├── gpus.yaml            # GPU configuration for data loader
@@ -93,7 +93,7 @@ images:
 ### Deploy
 
 ```bash
-cd benchmarking/benchmarks/INQUIRE_WEAV
+cd benchmarking/benchmarks/INQUIRE
 make deploy
 ```
 

@@ -1,8 +1,8 @@
-# INQUIRE_WEAV Benchmark Structure
+# INQUIRE Benchmark Structure
 
 ## Overview
 
-INQUIRE_WEAV is a benchmark instance that uses the abstract benchmarking framework located at `../../framework/`. This structure allows multiple benchmark instances to share the same framework code. This instance uses the INQUIRE dataset with Weaviate as the vector database.
+INQUIRE is a benchmark instance that uses the abstract benchmarking framework located at `../../framework/`. This structure allows multiple benchmark instances to share the same framework code. This instance uses the INQUIRE dataset with Weaviate as the vector database.
 
 ## Directory Structure
 
@@ -18,13 +18,13 @@ benchmarking/
 │   ├── weaviate.py              # WeaviateAdapter and WeaviateQuery (implements Query interface)
 │   └── triton.py                 # TritonModelProvider and TritonModelUtils (implements ModelUtils interface)
 │
-└── INQUIRE_WEAV/                      # INQUIRE_WEAV benchmark instance
+└── INQUIRE/                      # INQUIRE benchmark instance
     ├── dataset_loader.py        # INQUIRE-specific dataset loader (DatasetLoader)
-    ├── data_loader.py           # INQUIRE_WEAV-specific data loader (DataLoader)
-    ├── config.py                # INQUIRE_WEAV-specific configuration (Config)
+    ├── data_loader.py           # INQUIRE-specific data loader (DataLoader)
+    ├── config.py                # INQUIRE-specific configuration (Config)
     ├── load_data.py              # Script to load data into vector DB
     ├── main.py                  # Entry point for benchmarking
-    └── README.md                # INQUIRE_WEAV-specific instructions
+    └── README.md                # INQUIRE-specific instructions
 ```
 
 ## Key Components
@@ -65,7 +65,7 @@ Wires everything together:
 ## Usage
 
 ```bash
-cd benchmarking/benchmarks/INQUIRE_WEAV
+cd benchmarking/benchmarks/INQUIRE
 python main.py
 ```
 
@@ -74,18 +74,18 @@ python main.py
 - `INQUIRE_DATASET`: HuggingFace dataset name
 - `WEAVIATE_HOST`: Weaviate host (default: 127.0.0.1)
 - `TRITON_HOST`: Triton host (default: triton)
-- `COLLECTION_NAME`: Weaviate collection (default: INQUIRE_WEAV)
+- `COLLECTION_NAME`: Weaviate collection (default: INQUIRE)
 - `QUERY_METHOD`: Query method to use (default: clip_hybrid_query)
 
-## Extending INQUIRE_WEAV
+## Extending INQUIRE
 
-To add new components to INQUIRE_WEAV:
+To add new components to INQUIRE:
 
 1. **New Vector DB**: Add adapter in `../../adapters/` (shared across benchmarks)
 2. **New Model**: Add provider in `../../adapters/` (shared across benchmarks)
 3. **New Query Method**: Add method to `WeaviateQuery` in `../../adapters/weaviate.py`
 4. **New Model Function**: Add method to `TritonModelUtils` in `../../adapters/triton.py` or implement `ModelUtils` interface
-5. **New Dataset**: Create dataset loader in INQUIRE_WEAV directory
+5. **New Dataset**: Create dataset loader in INQUIRE directory
 
 ## Shared Components Location
 

@@ -1,4 +1,4 @@
-"""Load INQUIRE dataset into vector database for INQUIRE_WEAV benchmark."""
+"""Load INQUIRE dataset into vector database for INQUIRE benchmark."""
 
 import os
 import sys
@@ -28,7 +28,7 @@ WORKERS = int(os.environ.get("WORKERS", 0))
 IMAGE_BATCH_SIZE = int(os.environ.get("IMAGE_BATCH_SIZE", 100))
 TRITON_HOST = os.environ.get("TRITON_HOST", "triton")
 TRITON_PORT = os.environ.get("TRITON_PORT", "8001")
-COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "INQUIRE_WEAV")
+COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "INQUIRE")
 
 
 def batched(iterable, batch_size):
@@ -39,7 +39,7 @@ def batched(iterable, batch_size):
 
 
 def load_data():
-    """Load INQUIRE dataset into Weaviate for INQUIRE_WEAV benchmark."""
+    """Load INQUIRE dataset into Weaviate for INQUIRE benchmark."""
     
     # Configure logging
     logging.basicConfig(

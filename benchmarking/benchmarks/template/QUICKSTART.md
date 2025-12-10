@@ -86,6 +86,6 @@ make get      # Get results
 ## Need Help?
 
 - See `README.md` for detailed instructions
-- Check `../INQUIRE_WEAV/` for a complete example (same directory level)
+- Check `../INQUIRE/` for a complete example (same directory level)
 - Review `../README.md` for framework overview
 

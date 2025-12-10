@@ -8,7 +8,7 @@
 # Required Variables (must be set by benchmark-specific Makefile)
 # ============================================================================
 # BENCHMARK_NAME - Name of the benchmark (e.g., "inquire")
-# KUSTOMIZE_DIR - Path to kustomize directory (e.g., "../../kubernetes/INQUIRE_WEAV")
+# KUSTOMIZE_DIR - Path to kustomize directory (e.g., "../../kubernetes/INQUIRE")
 # DOCKERFILE_EVALUATOR - Dockerfile for evaluator (e.g., "Dockerfile.benchmark")
 # DOCKERFILE_DATA_LOADER - Dockerfile for data loader (e.g., "Dockerfile.data_loader")
 # RESULTS_PVC_NAME - Name of the results PVC (e.g., "$(BENCHMARK_NAME)-benchmark-results-pvc")

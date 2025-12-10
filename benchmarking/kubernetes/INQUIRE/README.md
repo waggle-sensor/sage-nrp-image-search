@@ -1,10 +1,10 @@
-# INQUIRE_WEAV Benchmark Kubernetes Deployment
+# INQUIRE Benchmark Kubernetes Deployment
 
-Kubernetes deployment for the INQUIRE_WEAV benchmark using kustomize.
+Kubernetes deployment for the INQUIRE benchmark using kustomize.
 
 ## Structure
 
-This overlay extends `../base/` with INQUIRE_WEAV-specific configuration:
+This overlay extends `../base/` with INQUIRE-specific configuration:
 
 - **env.yaml**: Environment variables for benchmark evaluator
 - **data-loader-env.yaml**: Environment variables for data loader
@@ -23,7 +23,7 @@ This overlay extends `../base/` with INQUIRE_WEAV-specific configuration:
 ### Deploy
 
 ```bash
-cd benchmarking/benchmarks/INQUIRE_WEAV
+cd benchmarking/benchmarks/INQUIRE
 make deploy
 ```
 
@@ -55,7 +55,7 @@ make logs-evaluator
 make get
 ```
 
-Results are also stored in the `inquire-weav-results-pvc` PVC.
+Results are also stored in the `inquire-results-pvc` PVC.
 
 ### Status
 
@@ -88,8 +88,8 @@ make clean     # Remove deployments and PVCs
 ## Image Registry
 
 Images should be built and pushed to:
-- `gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-weav-evaluator:latest`
-- `gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-weav-data-loader:latest`
+- `gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-evaluator:latest`
+- `gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-data-loader:latest`
 
 Update the registry in `kustomization.yaml` if using a different registry.
 

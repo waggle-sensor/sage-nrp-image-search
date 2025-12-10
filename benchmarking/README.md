@@ -26,7 +26,7 @@ The framework is organized into three main components:
 
 1. **Framework** (`framework/`): Abstract interfaces and evaluation logic (dataset-agnostic)
 2. **Adapters** (`adapters/`): Shared concrete implementations for vector databases and models
-3. **Benchmark Instances** (e.g., `benchmarks/INQUIRE_WEAV/`): Specific benchmark implementations using the framework
+3. **Benchmark Instances** (e.g., `benchmarks/INQUIRE/`): Specific benchmark implementations using the framework
 
 ### File Structure
 
@@ -44,7 +44,7 @@ benchmarking/
 │
 └── benchmarks/                   # Benchmark instances
     ├── template/                # Template for creating new benchmarks
-    └── INQUIRE_WEAV/            # Example benchmark implementation
+    └── INQUIRE/            # Example benchmark implementation
 ```
 
 ## Key Features
@@ -302,7 +302,7 @@ The framework provides a reusable Makefile system for building, deploying, and m
 ### Structure
 
 - **Base Makefile** (`benchmarks/Makefile`): Contains generic commands for all benchmarks
-- **Benchmark Makefiles** (e.g., `benchmarks/INQUIRE_WEAV/Makefile`): Set benchmark-specific variables and include the base
+- **Benchmark Makefiles** (e.g., `benchmarks/INQUIRE/Makefile`): Set benchmark-specific variables and include the base
 
 ### Common Commands
 
@@ -423,11 +423,11 @@ The `ModelProvider` and `ModelUtils` interfaces accept `model_name` parameters:
 
 ## Existing Benchmarks
 
-### INQUIRE_WEAV
+### INQUIRE
 
-- **Location**: `benchmarks/INQUIRE_WEAV/`
+- **Location**: `benchmarks/INQUIRE/`
 - **Dataset**: INQUIRE benchmark for natural world image retrieval (using Weaviate)
-- **Usage**: See `benchmarks/INQUIRE_WEAV/Readme.md`
+- **Usage**: See `benchmarks/INQUIRE/Readme.md`
 - **Example**: Complete working implementation using the framework
 
 ## Adding New Components

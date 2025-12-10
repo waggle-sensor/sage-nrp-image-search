@@ -11,7 +11,7 @@ spec:
             - name: INQUIRE_DATASET
               value: "sagecontinuum/INQUIRE-Benchmark-small"
             - name: COLLECTION_NAME
-              value: "INQUIRE_WEAV"
+              value: "INQUIRE"
             - name: IMAGE_BATCH_SIZE
               value: "100"
             - name: SAMPLE_SIZE

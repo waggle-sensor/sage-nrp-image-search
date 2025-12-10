@@ -1,4 +1,4 @@
-"""INQUIRE_WEAV-specific configuration/hyperparameters."""
+"""INQUIRE-specific configuration/hyperparameters."""
 
 import os
 import sys
@@ -14,7 +14,7 @@ from framework.interfaces import Config
 
 
 class INQUIREConfig(Config):
-    """Configuration for INQUIRE_WEAV benchmark."""
+    """Configuration for INQUIRE benchmark."""
     
     def __init__(self):
         """Initialize INQUIRE configuration."""

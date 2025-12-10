@@ -1,4 +1,4 @@
-# INQUIRE_WEAV Benchmark Evaluator Dockerfile
+# INQUIRE Benchmark Evaluator Dockerfile
 # Based on benchmarking/benchmarks/template/Dockerfile.template
 
 ARG PYTHON_VERSION=3.11-slim

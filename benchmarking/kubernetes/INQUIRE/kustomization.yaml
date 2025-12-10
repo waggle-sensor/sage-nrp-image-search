@@ -2,9 +2,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: sage
 
-namePrefix: inquire-weav-
+namePrefix: inquire-
 commonLabels:
-  benchmark: inquire-weav
+  benchmark: inquire
 
 resources:
   - ../base
@@ -30,9 +30,9 @@ patches:
 
 images:
   - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-weav-evaluator
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-evaluator
     newTag: latest
   - name: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-weav-data-loader
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-data-loader
     newTag: latest
 

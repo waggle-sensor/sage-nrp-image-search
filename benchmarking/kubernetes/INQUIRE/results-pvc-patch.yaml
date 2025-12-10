@@ -8,5 +8,5 @@ spec:
       volumes:
         - name: results
           persistentVolumeClaim:
-            claimName: inquire-weav-results-pvc
+            claimName: inquire-results-pvc
 

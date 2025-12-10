@@ -1,4 +1,4 @@
-"""INQUIRE_WEAV-specific data loader for loading data into vector databases."""
+"""INQUIRE-specific data loader for loading data into vector databases."""
 
 import os
 import sys
@@ -166,7 +166,7 @@ class INQUIREDataLoader(DataLoader):
         from weaviate.classes.config import Configure, Property, DataType
         
         return {
-            "name": "INQUIRE_WEAV",
+            "name": "INQUIRE",
             "description": "A collection to test our set up using INQUIRE with Weaviate",
             "properties": [
                 Property(name="inat24_image_id", data_type=DataType.NUMBER),

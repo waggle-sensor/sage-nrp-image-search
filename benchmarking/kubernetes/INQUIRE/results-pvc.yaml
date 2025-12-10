@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: inquire-weav-results-pvc
+  name: inquire-results-pvc
   labels:
-    benchmark: inquire-weav
+    benchmark: inquire
 spec:
   storageClassName: rook-ceph-block-central
   accessModes:

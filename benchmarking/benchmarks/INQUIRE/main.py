@@ -1,4 +1,4 @@
-"""Main entry point for INQUIRE_WEAV benchmarking using abstract framework."""
+"""Main entry point for INQUIRE benchmarking using abstract framework."""
 
 import os
 import sys
@@ -24,12 +24,12 @@ IMAGE_RESULTS_FILE = os.environ.get("IMAGE_RESULTS_FILE", "image_search_results.
 QUERY_EVAL_METRICS_FILE = os.environ.get("QUERY_EVAL_METRICS_FILE", "query_eval_metrics.csv")
 TRITON_HOST = os.environ.get("TRITON_HOST", "triton")
 TRITON_PORT = os.environ.get("TRITON_PORT", "8001")
-COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "INQUIRE_WEAV")
+COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "INQUIRE")
 QUERY_METHOD = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
 
 
 def main():
-    """Run the INQUIRE_WEAV benchmark evaluation."""
+    """Run the INQUIRE benchmark evaluation."""
     
     # Configure logging
     logging.basicConfig(

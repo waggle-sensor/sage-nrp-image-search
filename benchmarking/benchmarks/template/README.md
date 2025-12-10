@@ -278,8 +278,8 @@ benchmarking/
 │
 └── benchmarks/            # Benchmark instances
     ├── template/         # Template for new benchmarks
-    └── INQUIRE_WEAV/     # Example benchmark implementation
-```
+    └── INQUIRE/     # Example benchmark implementation
+   ```
 
 ## Next Steps
 
@@ -287,11 +287,11 @@ benchmarking/
 - Review `../MAKEFILE.md` for Makefile details (same directory level)
 - Review `../DOCKER.md` for Dockerfile details (same directory level)
 - Review `../../kubernetes/README.md` for Kubernetes setup
-- Look at `../INQUIRE_WEAV/` as a complete example (same directory level)
+- Look at `../INQUIRE/` as a complete example (same directory level)
 
 ## Getting Help
 
-- Check existing benchmarks (e.g., `../INQUIRE_WEAV/`) for examples
+- Check existing benchmarks (e.g., `../INQUIRE/`) for examples
 - Review framework documentation in `../../framework/`
 - Review adapter documentation in `../../adapters/`
 

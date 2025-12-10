@@ -71,9 +71,9 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 ```
 
-## Example: INQUIRE_WEAV Dockerfiles
+## Example: INQUIRE Dockerfiles
 
-See `benchmarks/INQUIRE_WEAV/` for complete examples:
+See `benchmarks/INQUIRE/` for complete examples:
 
 - **Dockerfile.benchmark**: Runs `main.py` (evaluator)
 - **Dockerfile.data_loader**: Runs `load_data.py` (data loader)

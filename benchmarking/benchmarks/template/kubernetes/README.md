@@ -258,5 +258,5 @@ Verify:
 
 - `../../kubernetes/README.md` - Kubernetes overview
 - `../../kubernetes/base/` - Base deployment definitions
-- `../../../benchmarks/INQUIRE_WEAV/` - Complete example
+- `../../../benchmarks/INQUIRE/` - Complete example
 
