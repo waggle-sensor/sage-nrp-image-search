@@ -7,13 +7,13 @@ on:
     tags:
       - 'v*'
     paths:
-      - 'HybridSearch_example/triton/**'
+      - 'triton/**'
       - '.github/workflows/triton.yml'
   pull_request:
     branches:
       - main
     paths:
-      - 'HybridSearch_example/triton/**'
+      - 'triton/**'
       - '.github/workflows/triton.yml'
 
 jobs:
