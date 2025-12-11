@@ -1,4 +1,5 @@
 #!/bin/bash
+#Test
 set -e
 
 # Download CLIP model if not already present and check if directory is empty
