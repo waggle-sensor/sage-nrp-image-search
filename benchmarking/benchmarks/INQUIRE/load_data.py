@@ -83,7 +83,7 @@ def load_data():
             all_processed = []
             for batch in batched(dataset, IMAGE_BATCH_SIZE):
                 processed_batch = data_loader.process_batch(batch, model_provider)
-                all_processed.extend([p for p in processed_batch if p is not None])
+                all_processed.extend(processed_batch)
             
             # Insert all at once
             inserted = vector_db.insert_data(COLLECTION_NAME, all_processed, batch_size=IMAGE_BATCH_SIZE)
@@ -102,7 +102,7 @@ def load_data():
                 
                 for future in as_completed(futures):
                     processed_batch = future.result()
-                    all_processed.extend([p for p in processed_batch if p is not None])
+                    all_processed.extend(processed_batch)
             
             # Insert all at once
             inserted = vector_db.insert_data(COLLECTION_NAME, all_processed, batch_size=IMAGE_BATCH_SIZE)
