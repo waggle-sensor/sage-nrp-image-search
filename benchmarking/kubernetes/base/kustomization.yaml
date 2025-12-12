@@ -6,19 +6,6 @@ resources:
   - benchmark-evaluator.yaml
   - benchmark-data-loader.yaml
 
-vars:
-  - name: WEAVIATE_SERVICE
-    objref:
-      kind: Service
-      name: weaviate
-      apiVersion: v1
-    fieldref:
-      fieldpath: metadata.name
-  - name: TRITON_SERVICE
-    objref:
-      kind: Service
-      name: triton
-      apiVersion: v1
-    fieldref:
-      fieldpath: metadata.name
+# Note: Vector DB and inference server configuration should be added
+# in benchmark-specific overlays via environment variable patches
 

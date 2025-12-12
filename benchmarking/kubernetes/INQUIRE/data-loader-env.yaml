@@ -8,6 +8,19 @@ spec:
       containers:
         - name: benchmark-data-loader
           env:
+            # Vector DB configuration (Weaviate)
+            - name: WEAVIATE_HOST
+              value: "weaviate.sage.svc.cluster.local"
+            - name: WEAVIATE_PORT
+              value: "8080"
+            - name: WEAVIATE_GRPC_PORT
+              value: "50051"
+            # Inference server configuration (Triton)
+            - name: TRITON_HOST
+              value: "triton.sage.svc.cluster.local"
+            - name: TRITON_PORT
+              value: "8001"
+            # Benchmark-specific configuration
             - name: INQUIRE_DATASET
               value: "sagecontinuum/INQUIRE-Benchmark-small"
             - name: COLLECTION_NAME
