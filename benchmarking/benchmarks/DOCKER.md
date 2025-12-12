@@ -52,12 +52,13 @@ CMD ["python", "main.py"]
 CMD ["python", "load_data.py"]
 ```
 
-### Step 3: Adjust Python Path (if needed)
+### Step 3: Install Dependencies
 
-If your benchmark has a different directory structure, adjust the `PYTHONPATH`:
+The `imsearch-eval` package is installed via `requirements.txt`. No need to set `PYTHONPATH` as the package is installed in the Python environment.
 
-```dockerfile
-ENV PYTHONPATH=/app:/app/../framework:/app/../../adapters:/app/../../app
+Make sure your `requirements.txt` includes:
+```txt
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
 ```
 
 ### Step 4: Add Benchmark-Specific Dependencies (if needed)
@@ -101,8 +102,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Set Python path to include parent directories
-ENV PYTHONPATH=/app:/app/../framework:/app/../../adapters:/app/../../app
+# Note: The imsearch-eval package is installed via requirements.txt
+# No need to set PYTHONPATH as the package is installed in the Python environment
 
 # Set your entrypoint script here
 CMD ["python", "main.py"]
@@ -136,12 +137,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 ```
 
-### Custom Python Path
+### Custom Dependencies
 
-If your benchmark structure differs, adjust `PYTHONPATH`:
+If your benchmark needs additional Python packages, add them to `requirements.txt`:
 
-```dockerfile
-ENV PYTHONPATH=/app:/app/../framework:/app/../../custom:/app/../../app
+```txt
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
+your-custom-package>=1.0.0
 ```
 
 ## Best Practices
@@ -172,9 +174,17 @@ DOCKERFILE_DATA_LOADER := Dockerfile.data_loader
 
 Ensure `requirements.txt` exists in your benchmark directory.
 
-### Import Errors: "No module named 'framework'"
+### Import Errors: "No module named 'imsearch_eval'"
 
-Check that `PYTHONPATH` includes the correct paths to framework, adapters, and app directories.
+Ensure `requirements.txt` includes the `imsearch-eval` package:
+```txt
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
+```
+
+Verify the package is installed by checking the build logs or running:
+```bash
+docker run <your-image> pip list | grep imsearch-eval
+```
 
 ### Command Not Found: "python: command not found"
 

@@ -4,7 +4,7 @@
 # Usage:
 #   1. Copy this file to your benchmark directory as Dockerfile.benchmark or Dockerfile.data_loader
 #   2. Update the CMD line with your entrypoint script (e.g., "main.py" or "load_data.py")
-#   3. Adjust PYTHONPATH if your benchmark has a different structure
+#   3. Ensure requirements.txt includes imsearch-eval package
 #
 # Example for Dockerfile.benchmark:
 #   CMD ["python", "main.py"]
@@ -29,9 +29,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Set Python path to include parent directories (framework, adapters, app)
-# Adjust these paths based on your benchmark's directory structure
-ENV PYTHONPATH=/app:/app/../framework:/app/../../adapters:/app/../../app
+# Note: The imsearch-eval package is installed via requirements.txt
+# No need to set PYTHONPATH as the package is installed in the Python environment
 
 # Set your entrypoint script here
 # For evaluator: CMD ["python", "main.py"]

@@ -10,16 +10,11 @@
 #   - triton.py: TritonModelProvider, TritonModelUtils
 #   - weaviate.py: WeaviateAdapter, WeaviateQuery
 
-import sys
 import os
 import logging
-
-# Add framework and adapters to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../framework'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../adapters'))
-
-from adapters import WeaviateAdapter, TritonModelProvider
 from tritonclient.grpc import InferenceServerClient as TritonClient
+
+from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
 # from data_loader import MyDataLoader  # TODO: Import if you have a custom DataLoader
 # from config import MyConfig  # TODO: Import if you have a Config
 

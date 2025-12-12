@@ -67,7 +67,7 @@ python main.py
 
 1. Create adapter in `adapters/`:
 ```python
-from framework.interfaces import VectorDBAdapter, QueryResult
+from imsearch_eval.framework.interfaces import VectorDBAdapter, QueryResult
 
 class MyVectorDBAdapter(VectorDBAdapter):
     def search(self, query, collection_name, limit=25, **kwargs):
@@ -89,7 +89,7 @@ evaluator = BenchmarkEvaluator(vector_db=vector_db, ...)
 
 1. Create provider in `adapters/`:
 ```python
-from framework.interfaces import ModelProvider
+from imsearch_eval.framework.interfaces import ModelProvider
 
 class MyModelProvider(ModelProvider):
     def get_embedding(self, text, image=None, model_name="default"):
@@ -116,7 +116,7 @@ evaluator = BenchmarkEvaluator(
 
 1. Create loader implementing `DatasetLoader`:
 ```python
-from framework.interfaces import DatasetLoader
+from imsearch_eval.framework.interfaces import DatasetLoader
 
 class MyDatasetLoader(DatasetLoader):
     def load(self, split="test", **kwargs):
@@ -147,11 +147,11 @@ evaluator = BenchmarkEvaluator(
 ## Files Removed/Deprecated
 
 - `benchmarking/INQUIRE/app/main.py` → Use `benchmarking/INQUIRE/main.py`
-- `benchmarking/INQUIRE/app/inquire_eval.py` → Logic moved to `benchmarking/framework/evaluator.py`
+- `benchmarking/INQUIRE/app/inquire_eval.py` → Logic moved to `imsearch-eval` package (`BenchmarkEvaluator`)
 - `benchmarking/INQUIRE/app/query.py` → Now imports from `app/query.py`
 - `benchmarking/INQUIRE/app/model.py` → Now imports from `app/model.py`
 - `benchmarking/INQUIRE/app/client.py` → Now imports from `weavloader/client.py`
-- `benchmarking/INQUIRE/framework/` → Moved to `benchmarking/framework/` (shared across all benchmarks)
+- `benchmarking/INQUIRE/framework/` → Moved to `imsearch-eval` package (shared across all benchmarks)
 
 ## Backward Compatibility
 

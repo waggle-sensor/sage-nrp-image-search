@@ -1,16 +1,10 @@
 """INQUIRE-specific configuration/hyperparameters."""
 
 import os
-import sys
-
-# Add framework to path
-framework_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../framework'))
-if framework_path not in sys.path:
-    sys.path.insert(0, framework_path)
-
 from weaviate.classes.config import VectorDistances, Configure
 from weaviate.collections.classes.config_vector_index import VectorFilterStrategy
-from framework.interfaces import Config
+
+from imsearch_eval.framework.interfaces import Config
 
 
 class INQUIREConfig(Config):

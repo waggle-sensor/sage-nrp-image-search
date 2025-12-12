@@ -65,13 +65,11 @@ The Dockerfiles are already set up, but verify:
 #### `dataset_loader.py` - Implement DatasetLoader
 
 ```python
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../framework'))
-
-from framework.interfaces import DatasetLoader
 import pandas as pd
 from datasets import load_dataset
+
+from imsearch_eval.framework.interfaces import DatasetLoader
 
 class MyDatasetLoader(DatasetLoader):
     def load(self, split="test", **kwargs) -> pd.DataFrame:
@@ -95,16 +93,12 @@ class MyDatasetLoader(DatasetLoader):
 #### `main.py` - Benchmark Entry Point
 
 ```python
-import sys
 import os
 import logging
+from tritonclient.grpc import InferenceServerClient as TritonClient
 
-# Add framework and adapters to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../framework'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../adapters'))
-
-from framework.evaluator import BenchmarkEvaluator
-from adapters import WeaviateAdapter, TritonModelProvider
+from imsearch_eval import BenchmarkEvaluator
+from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
 from dataset_loader import MyDatasetLoader
 
 # Environment variables
@@ -119,7 +113,7 @@ def main():
     
     # Initialize clients
     weaviate_client = WeaviateAdapter.init_client(host=WEAVIATE_HOST)
-    triton_client = TritonClient.InferenceServerClient(url=TRITON_HOST)
+    triton_client = TritonClient(url=TRITON_HOST)
     
     # Create adapters
     vector_db = WeaviateAdapter(weaviate_client=weaviate_client, triton_client=triton_client)
@@ -154,12 +148,10 @@ if __name__ == "__main__":
 #### `load_data.py` - Data Loading Script
 
 ```python
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../framework'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../adapters'))
+from tritonclient.grpc import InferenceServerClient as TritonClient
 
-from adapters import WeaviateAdapter, TritonModelProvider
+from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
 from data_loader import MyDataLoader  # If you have a DataLoader
 from config import MyConfig  # If you have a Config
 
@@ -200,10 +192,13 @@ See `kubernetes/README.md` for detailed instructions.
 Create a `requirements.txt` with your dependencies:
 
 ```txt
-pandas
-datasets
-scikit-learn
+# Core benchmarking framework
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
+
 # Add other dependencies as needed
+# datasets>=2.14.0
+# huggingface-hub>=0.16.0
+# Pillow>=10.0.0
 ```
 
 ## Required Components
@@ -221,20 +216,25 @@ scikit-learn
 
 ## Using Shared Adapters
 
-The framework provides shared adapters you can use:
+The `imsearch-eval` package provides shared adapters you can use:
 
-**Triton adapters** (`adapters/triton.py`):
+**Triton adapters**:
 - **TritonModelProvider**: For Triton inference server (implements `ModelProvider`)
 - **TritonModelUtils**: Triton implementation of `ModelUtils` interface
 
-**Weaviate adapters** (`adapters/weaviate.py`):
+**Weaviate adapters**:
 - **WeaviateAdapter**: For Weaviate vector database (implements `VectorDBAdapter`)
 - **WeaviateQuery**: Weaviate query implementation (implements `Query` interface)
 
 Import them:
 
 ```python
-from adapters import WeaviateAdapter, TritonModelProvider, WeaviateQuery, TritonModelUtils
+from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider, WeaviateQuery, TritonModelUtils
+```
+
+**Note**: Install the package with the `[weaviate]` extra to get all adapters:
+```bash
+pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
 ```
 
 ## Deployment
@@ -263,23 +263,19 @@ Once everything is set up:
 
 ## Framework Structure
 
-The benchmarking framework is organized as follows:
+The benchmarking framework is now provided as a Python package (`imsearch-eval`) installed from GitHub:
 
 ```
 benchmarking/
-├── framework/              # Abstract interfaces and evaluation logic
-│   ├── interfaces.py      # VectorDBAdapter, ModelProvider, Query, DatasetLoader, etc.
-│   ├── model_utils.py     # Abstract ModelUtils interface
-│   └── evaluator.py      # BenchmarkEvaluator class
-│
-├── adapters/              # Shared concrete implementations
-│   ├── triton.py         # TritonModelProvider, TritonModelUtils
-│   └── weaviate.py       # WeaviateAdapter, WeaviateQuery
-│
 └── benchmarks/            # Benchmark instances
     ├── template/         # Template for new benchmarks
-    └── INQUIRE/     # Example benchmark implementation
-   ```
+    └── INQUIRE/         # Example benchmark implementation
+```
+
+The framework code (`framework/` and `adapters/`) is now in a separate repository:
+- **Repository**: https://github.com/waggle-sensor/imsearch_eval
+- **Package name**: `imsearch-eval`
+- **Installation**: `pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main`
 
 ## Next Steps
 
@@ -292,6 +288,6 @@ benchmarking/
 ## Getting Help
 
 - Check existing benchmarks (e.g., `../INQUIRE/`) for examples
-- Review framework documentation in `../../framework/`
-- Review adapter documentation in `../../adapters/`
+- Review framework documentation: https://github.com/waggle-sensor/imsearch_eval
+- Review adapter documentation in the `imsearch-eval` package
 

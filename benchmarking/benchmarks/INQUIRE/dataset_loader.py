@@ -3,14 +3,8 @@
 import os
 import pandas as pd
 from datasets import load_dataset
-import sys
 
-# Add framework to path
-framework_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../framework'))
-if framework_path not in sys.path:
-    sys.path.insert(0, framework_path)
-
-from framework.interfaces import DatasetLoader
+from imsearch_eval.framework.interfaces import DatasetLoader
 
 # Load INQUIRE benchmark dataset from Hugging Face
 INQUIRE_DATASET = os.environ.get("INQUIRE_DATASET", "sagecontinuum/INQUIRE-Benchmark-small")

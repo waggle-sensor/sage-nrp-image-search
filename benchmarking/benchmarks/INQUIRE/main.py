@@ -1,22 +1,13 @@
 """Main entry point for INQUIRE benchmarking using abstract framework."""
 
 import os
-import sys
 import logging
 import time
 import tritonclient.grpc as TritonClient
 
-# Add framework and adapters to path
-framework_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../framework'))
-adapters_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../adapters'))
-if framework_path not in sys.path:
-    sys.path.insert(0, framework_path)
-if adapters_path not in sys.path:
-    sys.path.insert(0, adapters_path)
-
-from framework.evaluator import BenchmarkEvaluator
+from imsearch_eval import BenchmarkEvaluator
+from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
 from dataset_loader import INQUIREDatasetLoader
-from adapters import WeaviateAdapter, TritonModelProvider
 
 # Environment variables
 INQUIRE_DATASET = os.environ.get("INQUIRE_DATASET", "sagecontinuum/INQUIRE-Benchmark-small")

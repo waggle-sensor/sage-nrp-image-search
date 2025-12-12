@@ -1,25 +1,16 @@
 """Load INQUIRE dataset into vector database for INQUIRE benchmark."""
 
 import os
-import sys
 import logging
 import time
 import random
 from datasets import load_dataset
 from itertools import islice
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-# Add framework and adapters to path
-framework_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../framework'))
-adapters_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../adapters'))
-if framework_path not in sys.path:
-    sys.path.insert(0, framework_path)
-if adapters_path not in sys.path:
-    sys.path.insert(0, adapters_path)
-
-from adapters import WeaviateAdapter, TritonModelProvider
-from data_loader import INQUIREDataLoader
 import tritonclient.grpc as TritonClient
+
+from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
+from data_loader import INQUIREDataLoader
 
 # Environment variables
 INQUIRE_DATASET = os.environ.get("INQUIRE_DATASET", "sagecontinuum/INQUIRE-Benchmark-small")

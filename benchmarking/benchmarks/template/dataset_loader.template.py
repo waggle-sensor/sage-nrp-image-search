@@ -6,12 +6,10 @@
 #   - DatasetLoader: Interface for loading datasets
 #   - Other interfaces: VectorDBAdapter, ModelProvider, Query, DataLoader, Config
 
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../framework'))
-
-from framework.interfaces import DatasetLoader
 import pandas as pd
+
+from imsearch_eval.framework.interfaces import DatasetLoader
 
 class MyDatasetLoader(DatasetLoader):
     """

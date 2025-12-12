@@ -1,0 +1,13 @@
+# INQUIRE Benchmark Requirements
+# Core benchmarking framework
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
+
+# Dataset loading
+datasets>=2.14.0
+huggingface-hub>=0.16.0
+
+# Image processing
+Pillow>=10.0.0
+
+# Date parsing
+python-dateutil>=2.8.0

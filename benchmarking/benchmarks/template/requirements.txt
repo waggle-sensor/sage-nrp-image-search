@@ -1,14 +1,14 @@
 # Python dependencies for benchmark
 # Add your benchmark-specific dependencies here
 
-# Core dependencies (required by framework)
-pandas>=2.0.0
-scikit-learn>=1.3.0
-
+# Core benchmarking framework
+# Install with weaviate extras to get WeaviateAdapter and TritonModelProvider
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
 
 # Add other dependencies as needed
 # Example:
-# numpy>=1.24.0
-# pillow>=10.0.0
 # datasets>=2.14.0
+# huggingface-hub>=0.16.0
+# Pillow>=10.0.0
+# python-dateutil>=2.8.0
 

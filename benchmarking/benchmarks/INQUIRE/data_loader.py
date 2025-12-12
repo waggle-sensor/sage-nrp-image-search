@@ -1,7 +1,6 @@
 """INQUIRE-specific data loader for loading data into vector databases."""
 
 import os
-import sys
 import logging
 import random
 from dateutil.parser import parse
@@ -10,12 +9,7 @@ from PIL import Image
 import weaviate
 from weaviate.classes.data import GeoCoordinate
 
-# Add framework to path
-framework_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../framework'))
-if framework_path not in sys.path:
-    sys.path.insert(0, framework_path)
-
-from framework.interfaces import DataLoader, ModelProvider
+from imsearch_eval.framework.interfaces import DataLoader, ModelProvider
 
 
 class INQUIREDataLoader(DataLoader):
