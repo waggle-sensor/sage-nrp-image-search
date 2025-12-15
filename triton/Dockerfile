@@ -35,18 +35,14 @@ FROM nvcr.io/nvidia/tritonserver:24.06-pyt-python-py3
 # Fix missing GPG key error
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 
-# Install system dependencies and clean up in one layer
+# Install system dependencies
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
+  && apt-get install -y \
   wget \
   curl \
   libgl1 \
   libglib2.0-0 \
-  git \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
-  && rm -rf /tmp/* \
-  && rm -rf /var/tmp/*
+  git
 
 # Set working directory
 WORKDIR /app
@@ -56,13 +52,9 @@ COPY requirements.txt .
 COPY torch_requirements.txt .
 #COPY flash_requirements.txt . enable for flash attention, flash attention must have have CUDA 11.7 and above 
 
-# Install dependencies using pip and clean up in one layer to save space
-RUN pip install --no-cache-dir --force-reinstall -r torch_requirements.txt \
-  && pip install --no-cache-dir --no-build-isolation -r requirements.txt \
-  && pip cache purge \
-  && rm -rf /root/.cache/pip \
-  && rm -rf /tmp/* \
-  && rm -rf /var/tmp/*
+# Install dependencies using pip
+RUN pip install --no-cache-dir --force-reinstall -r torch_requirements.txt
+RUN pip install --no-cache-dir  --no-build-isolation -r requirements.txt
 # RUN pip install --no-cache-dir --no-build-isolation -r flash_requirements.txt enable for flash attention, flash attention must have have CUDA 11.7 and above 
 
 # Copy and install the Triton wheel from builder for Gemma3, enable this step for H100
