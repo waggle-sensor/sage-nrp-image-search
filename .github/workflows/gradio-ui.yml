@@ -7,13 +7,13 @@ on:
     tags:
       - 'v*'
     paths:
-      - 'HybridSearch_example/app/**'
+      - 'app/**'
       - '.github/workflows/gradio-ui.yml'
   pull_request:
     branches:
       - main
     paths:
-      - 'HybridSearch_example/app/**'
+      - 'app/**'
       - '.github/workflows/gradio-ui.yml'
 
 jobs:
@@ -45,7 +45,7 @@ jobs:
         env:
           REGISTRY_URL: ${{ secrets.NRP_GITLAB_REGISTRY_URL }}
         run: |
-          docker build -t "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" HybridSearch_example/app
+          docker build -t "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" app
           if [ "$GITHUB_REF" = "refs/heads/main" ]; then
             docker tag "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" "$REGISTRY_URL$IMAGE_PATH:latest"
           fi
