@@ -66,13 +66,16 @@ jobs:
         run: |
           BENCHMARK_DIR="benchmarking/benchmarks/${{ matrix.benchmark }}"
           
+          # Convert benchmark name to lowercase for Docker image name (Docker requires lowercase)
+          BENCHMARK_NAME_LOWER=$(echo "${{ matrix.benchmark }}" | tr '[:upper:]' '[:lower:]')
+          
           # Determine Dockerfile based on image type
           if [ "${{ matrix.image_type }}" == "evaluator" ]; then
             DOCKERFILE="$BENCHMARK_DIR/Dockerfile.benchmark"
-            IMAGE_NAME="benchmark-${{ matrix.benchmark }}-evaluator"
+            IMAGE_NAME="benchmark-${BENCHMARK_NAME_LOWER}-evaluator"
           else
             DOCKERFILE="$BENCHMARK_DIR/Dockerfile.data_loader"
-            IMAGE_NAME="benchmark-${{ matrix.benchmark }}-data-loader"
+            IMAGE_NAME="benchmark-${BENCHMARK_NAME_LOWER}-data-loader"
           fi
           
           # Check if Dockerfile exists
