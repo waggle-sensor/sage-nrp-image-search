@@ -40,17 +40,12 @@ jobs:
       - name: Log in to NRP GitLab Container Registry
         run: echo "${{ secrets.NRP_GITLAB_DEPLOY_TOKEN }}" | docker login ${{ secrets.NRP_GITLAB_REGISTRY_URL }} -u ${{ secrets.NRP_GITLAB_DEPLOY_TOKEN_USERNAME }} --password-stdin
 
-      - name: Clean up Docker to free space
-        run: |
-          docker system prune -af --volumes || true
-          docker builder prune -af || true
 
       - name: Build & Tag Triton Image
         env:
           REGISTRY_URL: ${{ secrets.NRP_GITLAB_REGISTRY_URL }}
-          DOCKER_BUILDKIT: 1
         run: |
-          docker build --progress=plain -t "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" triton
+          docker build -t "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" triton
           if [ "$GITHUB_REF" = "refs/heads/main" ]; then
             docker tag "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" "$REGISTRY_URL$IMAGE_PATH:latest"
           fi
