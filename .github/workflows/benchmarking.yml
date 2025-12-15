@@ -89,7 +89,7 @@ jobs:
 
       - name: Log in to NRP GitLab Container Registry
         if: steps.docker-config.outputs.skip != 'true'
-        run: echo "${{ secrets.NRP_GITLAB_PAT }}" | docker login ${{ secrets.NRP_GITLAB_REGISTRY_URL }} -u ${{ secrets.NRP_GITLAB_USERNAME }} --password-stdin
+        run: echo "${{ secrets.NRP_GITLAB_DEPLOY_TOKEN }}" | docker login ${{ secrets.NRP_GITLAB_REGISTRY_URL }} -u ${{ secrets.NRP_GITLAB_DEPLOY_TOKEN_USERNAME }} --password-stdin
 
       - name: Build & Tag Benchmark Image
         if: steps.docker-config.outputs.skip != 'true'
