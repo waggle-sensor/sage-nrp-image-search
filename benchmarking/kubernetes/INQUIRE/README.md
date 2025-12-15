@@ -88,8 +88,8 @@ make clean     # Remove deployments and PVCs
 ## Image Registry
 
 Images should be built and pushed to:
-- `gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-evaluator:latest`
-- `gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-inquire-data-loader:latest`
+- `gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-evaluator:latest`
+- `gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-data-loader:latest`
 
 Update the registry in `kustomization.yaml` if using a different registry.
 

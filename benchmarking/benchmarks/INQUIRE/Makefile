@@ -16,7 +16,7 @@ RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
 # ============================================================================
 KUBECTL_NAMESPACE := sage
 KUBECTL_CONTEXT ?= nrp-dev
-REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search
+REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search
 EVALUATOR_TAG ?= latest
 DATA_LOADER_TAG ?= latest
 

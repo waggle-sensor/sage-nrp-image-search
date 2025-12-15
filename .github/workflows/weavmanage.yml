@@ -19,7 +19,7 @@ jobs:
   build-push-weavmanage:
     runs-on: ubuntu-latest
     env:
-      IMAGE_PATH: /ndp/sage/hybrid-search/weavmanage
+      IMAGE_PATH: /ndp/sage/nrp-image-search/weavmanage
     steps:
       - uses: actions/checkout@v4
 

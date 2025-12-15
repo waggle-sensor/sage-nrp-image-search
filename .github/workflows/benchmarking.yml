@@ -8,16 +8,12 @@ on:
     paths:
       - 'benchmarking/benchmarks/**'
       - '.github/workflows/benchmarking.yml'
-      - 'benchmarking/framework/**'
-      - 'benchmarking/adapters/**'
   pull_request:
     branches:
       - main
     paths:
       - 'benchmarking/benchmarks/**'
       - '.github/workflows/benchmarking.yml'
-      - 'benchmarking/framework/**'
-      - 'benchmarking/adapters/**'
 
 jobs:
   discover-benchmarks:
@@ -46,7 +42,7 @@ jobs:
         image_type: [evaluator, data-loader]
     env:
       REGISTRY_URL: ${{ secrets.NRP_GITLAB_REGISTRY_URL }}
-      IMAGE_PATH: /ndp/sage/hybrid-search
+      IMAGE_PATH: /ndp/sage/nrp-image-search
       BENCHMARK_NAME: ${{ matrix.benchmark }}
       IMAGE_TYPE: ${{ matrix.image_type }}
     steps:

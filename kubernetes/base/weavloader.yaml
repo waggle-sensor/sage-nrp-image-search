@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: weavloader
-          image: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/weavloader:latest
+          image: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavloader:latest
           ports:
             - containerPort: 8080
               name: metrics

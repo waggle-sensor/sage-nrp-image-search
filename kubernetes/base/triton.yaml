@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: triton
-          image: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/triton:latest
+          image: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/triton:latest
           env:
             - name: TRANSFORMERS_VERBOSITY
               value: "info"

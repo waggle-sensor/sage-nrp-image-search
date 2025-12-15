@@ -60,7 +60,7 @@ RESULTS_FILES := results.csv metrics.csv
 # ============================================================================
 KUBECTL_NAMESPACE := sage
 KUBECTL_CONTEXT ?= nrp-dev
-REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search
+REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search
 EVALUATOR_TAG ?= latest
 DATA_LOADER_TAG ?= latest
 
@@ -92,7 +92,7 @@ These can be overridden but have defaults:
 
 - `KUBECTL_NAMESPACE`: Kubernetes namespace (default: `sage`)
 - `KUBECTL_CONTEXT`: kubectl context (default: `nrp-dev`)
-- `REGISTRY`: Docker registry (default: `gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search`)
+- `REGISTRY`: Docker registry (default: `gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search`)
 - `EVALUATOR_TAG`: Evaluator image tag (default: `latest`)
 - `DATA_LOADER_TAG`: Data loader image tag (default: `latest`)
 

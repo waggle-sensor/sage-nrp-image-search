@@ -19,7 +19,7 @@ jobs:
   build-push-weavloader:
     runs-on: ubuntu-latest
     env:
-      IMAGE_PATH: /ndp/sage/hybrid-search/weavloader
+      IMAGE_PATH: /ndp/sage/nrp-image-search/weavloader
     steps:
       - uses: actions/checkout@v4
 

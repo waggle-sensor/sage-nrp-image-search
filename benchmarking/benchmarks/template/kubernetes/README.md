@@ -102,10 +102,10 @@ Edit `kustomization.yaml` and update the image names:
 ```yaml
 images:
   - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-MYBENCHMARK-evaluator
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-MYBENCHMARK-evaluator
     newTag: latest
   - name: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/benchmark-MYBENCHMARK-data-loader
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-MYBENCHMARK-data-loader
     newTag: latest
 ```
 
