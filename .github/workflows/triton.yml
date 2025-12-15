@@ -37,9 +37,15 @@ jobs:
           IMAGE_TAG=$(echo "$IMAGE_TAG" | tr '/' '-')
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
+      - name: Free up disk space
+        run: |
+          # Remove hosted toolcache (Python, Node.js, etc.)
+          sudo rm -rf /opt/hostedtoolcache
+          # Show available disk space
+          df -h
+
       - name: Log in to NRP GitLab Container Registry
         run: echo "${{ secrets.NRP_GITLAB_DEPLOY_TOKEN }}" | docker login ${{ secrets.NRP_GITLAB_REGISTRY_URL }} -u ${{ secrets.NRP_GITLAB_DEPLOY_TOKEN_USERNAME }} --password-stdin
-
 
       - name: Build & Tag Triton Image
         env:
