@@ -6,13 +6,13 @@ on:
     tags:
       - 'v*'
     paths:
-      - 'HybridSearch_example/weavloader/**'
+      - 'weavloader/**'
       - '.github/workflows/weavloader.yml'
   pull_request:
     branches:
       - main
     paths:
-      - 'HybridSearch_example/weavloader/**'
+      - 'weavloader/**'
       - '.github/workflows/weavloader.yml'
 
 jobs:
@@ -44,7 +44,7 @@ jobs:
         env:
           REGISTRY_URL: ${{ secrets.NRP_GITLAB_REGISTRY_URL }}
         run: |
-          docker build -t "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" HybridSearch_example/weavloader
+          docker build -t "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" weavloader
           if [ "$GITHUB_REF" = "refs/heads/main" ]; then
             docker tag "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" "$REGISTRY_URL$IMAGE_PATH:latest"
           fi
