@@ -6,13 +6,13 @@ on:
     tags:
       - 'v*'
     paths:
-      - 'HybridSearch_example/weavmanage/**'
+      - 'weavmanage/**'
       - '.github/workflows/weavmanage.yml'
   pull_request:
     branches:
       - main
     paths:
-      - 'HybridSearch_example/weavmanage/**'
+      - 'weavmanage/**'
       - '.github/workflows/weavmanage.yml'
 
 jobs:
@@ -37,14 +37,14 @@ jobs:
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Log in to NRP GitLab Container Registry
-        run: echo "${{ secrets.NRP_GITLAB_PAT }}" | docker login ${{ secrets.NRP_GITLAB_REGISTRY_URL }} -u ${{ secrets.NRP_GITLAB_USERNAME }} --password-stdin
+        run: echo "${{ secrets.NRP_GITLAB_DEPLOY_TOKEN }}" | docker login ${{ secrets.NRP_GITLAB_REGISTRY_URL }} -u ${{ secrets.NRP_GITLAB_DEPLOY_TOKEN_USERNAME }} --password-stdin
 
 
       - name: Build & Tag Weaviate Manage Image
         env:
           REGISTRY_URL: ${{ secrets.NRP_GITLAB_REGISTRY_URL }}
         run: |
-          docker build -t "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" HybridSearch_example/weavmanage
+          docker build -t "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" weavmanage
           if [ "$GITHUB_REF" = "refs/heads/main" ]; then
             docker tag "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" "$REGISTRY_URL$IMAGE_PATH:latest"
           fi
