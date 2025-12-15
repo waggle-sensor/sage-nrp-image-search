@@ -37,7 +37,7 @@ jobs:
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Log in to NRP GitLab Container Registry
-        run: echo "${{ secrets.NRP_GITLAB_PAT }}" | docker login ${{ secrets.NRP_GITLAB_REGISTRY_URL }} -u ${{ secrets.NRP_GITLAB_USERNAME }} --password-stdin
+        run: echo "${{ secrets.NRP_GITLAB_DEPLOY_TOKEN }}" | docker login ${{ secrets.NRP_GITLAB_REGISTRY_URL }} -u ${{ secrets.NRP_GITLAB_USERNAME }} --password-stdin
 
 
       - name: Build & Tag Weaviate Loader Image
