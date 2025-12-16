@@ -41,30 +41,21 @@ Client Version: v1.29.1
 Kustomize Version: v5.0.4
 ```
 
-Create k8s secrets for credentials:
-```
-kubectl create secret generic hybridsearch-env --from-env-file=.env -nsage
-```
+Create k8s secrets for Sage credentials by editing the `sage-user-secret.yaml` file.
 
-Create pvc for weaviate:
-```
-kubectl create -f nrp-dev/pvc.yaml
-```
+Create k8s secrets for Hugging Face credentials by editing the `huggingface-secret.yaml` file.
 
 Deploy all services:
 ```
-kubectl kustomize nrp-dev | kubectl apply -f -
-kubectl kustomize nrp-prod | kubectl apply -f -
+kubectl apply -k nrp-dev or nrp-prod
 ```
 Delete all services:
 ```
-kubectl kustomize nrp-dev | kubectl delete -f -
-kubectl kustomize nrp-prod | kubectl delete -f -
+kubectl delete -k nrp-dev or nrp-prod
 ```
 Debugging - output to yaml:
 ```
-kubectl kustomize nrp-dev -o hybrid-search-dev.yaml
-kubectl kustomize nrp-prod -o hybrid-search-dev.yaml
+kubectl kustomize nrp-dev -o sage-image-search-dev.yaml or kubectl kustomize nrp-prod -o sage-image-search-prod.yaml
 ```
 
 ---

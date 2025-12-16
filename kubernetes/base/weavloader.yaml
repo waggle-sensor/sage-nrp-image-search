@@ -43,7 +43,7 @@ spec:
               value: "86400.0"
           envFrom:
             - secretRef:
-                name: hybridsearch-env
+                name: sage-user-secret
           resources:
             limits:
               cpu: 2
