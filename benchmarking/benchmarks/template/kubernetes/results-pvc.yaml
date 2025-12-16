@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  # TODO: Replace MYBENCHMARK with your benchmark name (lowercase)
+  name: MYBENCHMARK-benchmark-results-pvc
+  labels:
+    benchmark: MYBENCHMARK
+spec:
+  storageClassName: rook-ceph-block-central
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # TODO: Adjust storage size as needed
+      storage: 10Gi
+

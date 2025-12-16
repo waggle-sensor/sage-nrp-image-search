@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: benchmark-data-loader
+  labels:
+    app: benchmark-data-loader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: benchmark-data-loader
+  template:
+    metadata:
+      labels:
+        app: benchmark-data-loader
+    spec:
+      containers:
+        - name: benchmark-data-loader
+          image: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE:latest
+          # Note: Vector DB and inference server environment variables should be
+          # added via patches in benchmark-specific overlays (e.g., data-loader-env.yaml)
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: PYTHONPATH
+              value: "/app"
+          resources:
+            limits:
+              cpu: 4
+              memory: 8Gi
+            requests:
+              cpu: 2
+              memory: 4Gi
+          volumeMounts:
+            - name: huggingface-cache
+              mountPath: /root/.cache/huggingface
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "ps aux | grep '[p]ython load_data.py' || exit 1"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "test -f /app/.ready || exit 1"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: huggingface-cache
+          persistentVolumeClaim:
+            claimName: huggingface-pvc
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: benchmark-data-loader
+  labels:
+    app: benchmark-data-loader
+spec:
+  selector:
+    app: benchmark-data-loader
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+
