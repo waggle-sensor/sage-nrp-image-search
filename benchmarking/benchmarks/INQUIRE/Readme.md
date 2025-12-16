@@ -18,7 +18,7 @@ To run this example, you'll need:
 ### Step-by-Step Setup
 
 1. **Deploy Sage Image Search Infrastructure**:
-   - Navigate to the main `kubernetes/` directory and deploy base services:
+   - Navigate to the main [kubernetes](../../../kubernetes) directory and deploy base services:
      ```bash
      kubectl apply -k nrp-dev or nrp-prod
      ```
