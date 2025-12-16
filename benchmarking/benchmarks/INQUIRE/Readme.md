@@ -2,28 +2,9 @@
 
 Here we use [INQUIRE](https://github.com/inquire-benchmark/INQUIRE) with Weaviate as the vector database for benchmarking. Different models were used to generate captions and keywords for the images. Also different models were used to generate the embeddings for the images.
 
-## New Framework (Recommended)
-
-**The benchmarking code has been refactored to use an abstract framework that reuses code from `app/` and `weavloader/` without duplication.**
-
-- **New entry point**: `main.py` (uses abstract framework)
-- **Framework**: `framework/` (abstract interfaces and evaluation logic)
-- **Adapters**: `adapters/` (concrete implementations reusing app code)
-- **Documentation**: See `README_FRAMEWORK.md` for details
-
-The new framework:
-- ✅ Independent implementations in `adapters/` (no dependency on `app/`)
-- ✅ Abstract interfaces in `framework/` for extensibility
-- ✅ Supports multiple vector databases and models
-- ✅ Easy to extend with new implementations
-- ✅ Uses `Query` interface for query classes
-- ✅ Uses `ModelUtils` interface for model utilities
-
-> **Note**: The old benchmarking code in `app/` is deprecated. Use `main.py` instead.
-
 ## Usage
 
-This benchmark is supposed to be used in conjuction with [Hybrid Search](../HybridSearch_example/). The Makefile references components that are deployed in [Hybrid Search](../HybridSearch_example/). The Makefile in here deploys additional containers that are used to run the INQUIRE Benchmark.
+This benchmark is supposed to be used in conjuction with [Sage Image Search](../../../kubernetes/base/). The Makefile references components that are deployed in [Sage Image Search](../../../kubernetes/base/) and deploys additional containers that are used to run the INQUIRE Benchmark.
 
 ## Running the Example
 
@@ -32,16 +13,15 @@ To run this example, you'll need:
 - **Kubernetes cluster** access with `kubectl` configured
 - **kustomize** (or kubectl with kustomize support)
 - **Docker** for building images
-- **Weaviate and Triton** deployed (from main `kubernetes/` directory)
+- **Weaviate and Triton** deployed (from `kubernetes/nrp-dev` or `kubernetes/nrp-prod` depending on the environment you want to use)
 
 ### Step-by-Step Setup
 
-1. **Deploy Hybrid Search Infrastructure**:
+1. **Deploy Sage Image Search Infrastructure**:
    - Navigate to the main `kubernetes/` directory and deploy base services:
      ```bash
-     kubectl apply -k base
+     kubectl apply -k nrp-dev or nrp-prod
      ```
-   - Or use the nrp-dev/nrp-prod overlays as needed
 
 2. **Build and Push Images**:
    - Build the benchmark images:
@@ -54,6 +34,7 @@ To run this example, you'll need:
      docker push <registry>/benchmark-inquire-evaluator:latest
      docker push <registry>/benchmark-inquire-data-loader:latest
      ```
+>NOTE: You can also use the github actions to build and push the images to the registry. See `.github/workflows/benchmarking.yml` for more details.
 
 3. **Deploy INQUIRE Benchmark**:
    - Deploy to Kubernetes:

@@ -64,7 +64,7 @@ python main.py  # Test locally first
 ## Step 8: Deploy
 
 ```bash
-make build    # Build images
+make build    # Build images or use the github actions to build and push the images to the registry. See `.github/workflows/benchmarking.yml` for more details.
 make deploy   # Deploy to Kubernetes
 make load     # Load data
 make calculate # Run evaluation
