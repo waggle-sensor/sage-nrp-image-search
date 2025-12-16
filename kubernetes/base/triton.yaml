@@ -22,9 +22,11 @@ spec:
               value: "info"
             - name: TORCHDYNAMO_DISABLE
               value: "1"
-          envFrom:
-          - secretRef:
-              name: hybridsearch-env
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: huggingface-secret
+                  key: token
           resources:
             limits:
               cpu: 1

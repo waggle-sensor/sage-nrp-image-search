@@ -6,6 +6,7 @@ resources:
   - reranker-transformers.yaml
   - weaviate.yaml
   - huggingface-secret.yaml
+  - sage-user-secret.yaml
   - triton.yaml
   - gradio-ui.yaml
   - weavmanage.yaml
