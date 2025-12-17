@@ -35,7 +35,7 @@ images:
   - name: semitechnologies/weaviate
     newTag: 1.32.0
   - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/triton
-    newTag: pr-15
+    newTag: latest
   - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/gradio-ui
     newTag: latest
   - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavmanage
