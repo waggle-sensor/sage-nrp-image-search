@@ -55,7 +55,7 @@ spec:
       volumes:
         - name: huggingface-cache
           persistentVolumeClaim:
-            claimName: huggingface-pvc
+            claimName: PLACEHOLDER_HUGGINGFACE_PVC
         - name: results
           persistentVolumeClaim:
             claimName: PLACEHOLDER_RESULTS_PVC

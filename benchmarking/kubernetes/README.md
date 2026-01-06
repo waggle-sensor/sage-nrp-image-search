@@ -15,9 +15,11 @@ benchmarking/kubernetes/
     ├── kustomization.yaml   # Extends base with INQUIRE-specific config
     ├── env.yaml             # Environment variables for evaluator
     ├── data-loader-env.yaml # Environment variables for data loader
-    ├── gpus.yaml            # GPU configuration for data loader
     ├── results-pvc.yaml     # PVC for storing results
-    └── results-pvc-patch.yaml # Patch to mount results PVC
+    ├── results-pvc-patch.yaml # Patch to mount results PVC
+    ├── eval-hf-pvc-patch.yaml # Patch to mount HuggingFace cache PVC in evaluator
+    ├── load-hf-pvc-patch.yaml # Patch to mount HuggingFace cache PVC in data loader
+    └── nrp-prod/            # Prod environment overlay
 ```
 
 ## Base Components
@@ -111,6 +113,27 @@ images:
 
 4. **Update Makefile** in your benchmark directory to use the new overlay
 
+## Environment Switching (Dev/Prod)
+
+Benchmarks can be deployed to use either **dev** or **prod** environment resources. Each benchmark can have a `nrp-prod/` overlay that patch service names and PVC references to match the prod environment.
+>NOTE: By default, the benchmark will use the dev environment resources.
+
+### Using Environment Overlays
+
+From the benchmark directory (e.g., `benchmarking/benchmarks/INQUIRE/`):
+
+```bash
+# Deploy to prod environment  
+make deploy ENV=prod
+
+# Deploy to default (dev environment)
+make deploy
+```
+
+The `ENV` variable controls which kustomize overlay is used:
+- `ENV=prod` → Uses `kubernetes/INQUIRE/nrp-prod/`
+- No `ENV` → Uses `kubernetes/INQUIRE/` (base overlay using dev environment resources)
+
 ## Usage
 
 ### Prerequisites
@@ -123,19 +146,22 @@ images:
 
 ```bash
 cd benchmarking/benchmarks/INQUIRE
-make deploy
+make deploy              # Default deployment (dev environment)
+make deploy ENV=prod     # Deploy to prod environment
 ```
 
 ### Load Data
 
 ```bash
-make load
+make load                # Default deployment (dev environment)
+make load ENV=prod       # Load using prod resources
 ```
 
 ### Run Evaluation
 
 ```bash
-make calculate
+make calculate           # Default deployment (dev environment)
+make calculate ENV=prod  # Evaluate using prod resources
 ```
 
 ### Get Results
@@ -155,8 +181,9 @@ make logs-data-loader
 ### Cleanup
 
 ```bash
-make down
-make clean  # Also removes PVCs
+make down                # Default deployment (dev environment)
+make down ENV=prod       # Clean up prod deployment
+make clean               # Also removes PVCs
 ```
 
 ## Environment Variables

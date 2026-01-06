@@ -39,24 +39,24 @@ To run this example, you'll need:
 3. **Deploy INQUIRE Benchmark**:
    - Deploy to Kubernetes:
      ```bash
-     make deploy
+     make deploy #default to dev environment
      ```
 
 4. **Load in the dataset**:
    - Start the data loader:
      ```bash
-     make load
+     make load #default to dev environment
      ```
    - Monitor progress:
      ```bash
-     make logs-data-loader
+     make logs-data-loader #default to dev environment
      ```
    >NOTE: This loads in [INQUIRE-Benchmark-small](https://huggingface.co/datasets/sagecontinuum/INQUIRE-Benchmark-small) into Weaviate for the INQUIRE benchmark.
 
 5. **Calculate the Query Metrics**:
    - After dataset is fully loaded into Weaviate, run:
      ```bash
-     make calculate
+     make calculate #default to dev environment
      ```
    - Monitor progress:
      ```bash

@@ -5,11 +5,16 @@
 # Required Variables (must be set for base Makefile)
 # ============================================================================
 BENCHMARK_NAME := inquire
-KUSTOMIZE_DIR := ../../kubernetes/INQUIRE
 DOCKERFILE_EVALUATOR := Dockerfile.benchmark
 DOCKERFILE_DATA_LOADER := Dockerfile.data_loader
 RESULTS_PVC_NAME := $(BENCHMARK_NAME)-benchmark-results-pvc
 RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
+ENV ?= dev
+ifeq ($(ENV),prod)
+  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE/nrp-prod
+else
+  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE
+endif
 
 # ============================================================================
 # Optional Variables (can be overridden)

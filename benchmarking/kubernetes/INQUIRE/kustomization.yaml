@@ -19,14 +19,18 @@ patches:
     target:
       kind: Deployment
       labelSelector: "app=benchmark-data-loader"
-  - path: gpus.yaml
-    target:
-      kind: Deployment
-      labelSelector: "app=benchmark-data-loader"
   - path: results-pvc-patch.yaml
     target:
       kind: Deployment
       labelSelector: "app=benchmark-evaluator"
+  - path: eval-hf-pvc-patch.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-evaluator"
+  - path: load-hf-pvc-patch.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-data-loader"
 
 images:
   - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE

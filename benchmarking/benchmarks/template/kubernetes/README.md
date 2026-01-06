@@ -233,6 +233,27 @@ make deploy    # Deploys using kustomize
 make down      # Removes deployment
 ```
 
+## Environment Switching (Dev/Prod)
+
+Benchmarks can be deployed to use either **dev** or **prod** environment resources. Each benchmark can have a `nrp-prod/` overlay that patch service names and PVC references to match the prod environment.
+>NOTE: By default, the benchmark will use the dev environment resources.
+
+### Using Environment Overlays
+
+From the benchmark directory (e.g., `benchmarking/benchmarks/MYBENCHMARK/`):
+
+```bash
+# Deploy to prod environment  
+make deploy ENV=prod
+
+# Deploy to default (dev environment)
+make deploy
+```
+
+The `ENV` variable controls which kustomize overlay is used:
+- `ENV=prod` → Uses `kubernetes/MYBENCHMARK/nrp-prod/`
+- No `ENV` → Uses `kubernetes/MYBENCHMARK/` (base overlay using dev environment resources)
+
 ## Troubleshooting
 
 ### Error: "no matches for kind"

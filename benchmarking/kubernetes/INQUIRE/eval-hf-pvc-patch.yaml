@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: benchmark-evaluator
+spec:
+  template:
+    spec:
+      volumes:
+        - name: huggingface-cache
+          persistentVolumeClaim:
+            claimName: dev-huggingface-pvc   
+

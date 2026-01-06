@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sage
+
+# This overlay references the MYBENCHMARK benchmark base and patches it
+# to work with the prod environment
+resources:
+  - ..
+
+patches:
+  # add patches here...
+  # # Patch evaluator environment variables to use dev services
+  # - path: env.yaml
+  #   target:
+  #     kind: Deployment
+  #     labelSelector: "app=benchmark-evaluator"
+  # # Patch data loader environment variables to use dev services
+  # - path: data-loader-env.yaml
+  #   target:
+  #     kind: Deployment
+  #     labelSelector: "app=benchmark-data-loader"
+  # # Patch PVC references to use dev PVCs
+  # - path: eval-hf-pvc-patch.yaml
+  #   target:
+  #     kind: Deployment
+  #     labelSelector: "app=benchmark-evaluator"
+  # - path: load-hf-pvc-patch.yaml
+  #   target:
+  #     kind: Deployment
+  #     labelSelector: "app=benchmark-data-loader"
+

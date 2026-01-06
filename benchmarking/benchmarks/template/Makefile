@@ -14,17 +14,22 @@ include ../Makefile
 # ============================================================================
 # TODO: Replace MYBENCHMARK with your benchmark name
 BENCHMARK_NAME := mybenchmark
-KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
 DOCKERFILE_EVALUATOR := Dockerfile.benchmark
 DOCKERFILE_DATA_LOADER := Dockerfile.data_loader
 RESULTS_PVC_NAME := $(BENCHMARK_NAME)-benchmark-results-pvc
 RESULTS_FILES := results.csv metrics.csv
+ENV ?= dev
+ifeq ($(ENV),prod)
+  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE/nrp-prod
+else
+  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE
+endif
 
 # ============================================================================
 # Optional Variables (can be overridden)
 # ============================================================================
 KUBECTL_NAMESPACE := sage
-KUBECTL_CONTEXT ?= nrp-dev
+KUBECTL_CONTEXT ?= nautilus
 REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search
 EVALUATOR_TAG ?= latest
 DATA_LOADER_TAG ?= latest
