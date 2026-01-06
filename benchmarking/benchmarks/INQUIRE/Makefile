@@ -15,7 +15,7 @@ RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
 # Optional Variables (can be overridden)
 # ============================================================================
 KUBECTL_NAMESPACE := sage
-KUBECTL_CONTEXT ?= nrp-dev
+KUBECTL_CONTEXT ?= nautilus
 REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search
 EVALUATOR_TAG ?= latest
 DATA_LOADER_TAG ?= latest
