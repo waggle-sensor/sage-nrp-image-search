@@ -9,7 +9,6 @@ commonLabels:
 
 resources:
   - ../base
-  - results-pvc.yaml
 
 patches:
   - path: env.yaml
@@ -17,18 +16,6 @@ patches:
       kind: Deployment
       labelSelector: "app=benchmark-evaluator"
   - path: data-loader-env.yaml
-    target:
-      kind: Deployment
-      labelSelector: "app=benchmark-data-loader"
-  - path: results-pvc-patch.yaml
-    target:
-      kind: Deployment
-      labelSelector: "app=benchmark-evaluator"
-  - path: eval-hf-pvc-patch.yaml
-    target:
-      kind: Deployment
-      labelSelector: "app=benchmark-evaluator"
-  - path: load-hf-pvc-patch.yaml
     target:
       kind: Deployment
       labelSelector: "app=benchmark-data-loader"

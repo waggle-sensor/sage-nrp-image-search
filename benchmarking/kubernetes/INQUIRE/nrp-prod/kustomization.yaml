@@ -18,12 +18,3 @@ patches:
     target:
       kind: Deployment
       labelSelector: "app=benchmark-data-loader"
-  # Patch PVC references to use prod PVCs
-  - path: prod-eval-hf-pvc-patch.yaml
-    target:
-      kind: Deployment
-      labelSelector: "app=benchmark-evaluator"
-  - path: prod-load-hf-pvc-patch.yaml
-    target:
-      kind: Deployment
-      labelSelector: "app=benchmark-data-loader"

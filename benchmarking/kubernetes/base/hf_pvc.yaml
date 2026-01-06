@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: inquire-results-pvc
+  name: huggingface-pvc
   labels:
-    benchmark: inquire
+    app: huggingface-pvc
+  namespace: sage
 spec:
   storageClassName: rook-ceph-block-central
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
-
+      storage: 25Gi

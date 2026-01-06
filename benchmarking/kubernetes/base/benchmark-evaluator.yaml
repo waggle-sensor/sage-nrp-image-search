@@ -55,10 +55,10 @@ spec:
       volumes:
         - name: huggingface-cache
           persistentVolumeClaim:
-            claimName: PLACEHOLDER_HUGGINGFACE_PVC
+            claimName: huggingface-pvc
         - name: results
           persistentVolumeClaim:
-            claimName: PLACEHOLDER_RESULTS_PVC
+            claimName: results-pvc
       restartPolicy: Always
 ---
 apiVersion: v1
