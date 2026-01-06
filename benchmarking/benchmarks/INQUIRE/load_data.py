@@ -8,7 +8,7 @@ from datasets import load_dataset
 from itertools import islice
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import tritonclient.grpc as TritonClient
-
+from config import INQUIREConfig
 from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
 from data_loader import INQUIREDataLoader
 
@@ -55,7 +55,7 @@ def load_data():
     model_provider = TritonModelProvider(triton_client=triton_client)
     
     # Create data loader
-    data_loader = INQUIREDataLoader(triton_client=triton_client)
+    data_loader = INQUIREDataLoader(config=INQUIREConfig(), model_provider=model_provider)
     
     try:
         # Create collection schema
@@ -82,7 +82,7 @@ def load_data():
             logging.info("Processing sequentially...")
             all_processed = []
             for batch in batched(dataset, IMAGE_BATCH_SIZE):
-                processed_batch = data_loader.process_batch(batch, model_provider)
+                processed_batch = data_loader.process_batch(batch)
                 all_processed.extend(processed_batch)
             
             # Insert all at once
@@ -96,7 +96,7 @@ def load_data():
             all_processed = []
             with ThreadPoolExecutor(max_workers=num_workers) as executor:
                 futures = {
-                    executor.submit(data_loader.process_batch, batch, model_provider): batch
+                    executor.submit(data_loader.process_batch, batch): batch
                     for batch in batched(dataset, IMAGE_BATCH_SIZE)
                 }
                 

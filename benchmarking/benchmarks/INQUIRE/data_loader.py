@@ -8,6 +8,7 @@ from io import BytesIO, BufferedReader
 from PIL import Image
 import weaviate
 from weaviate.classes.data import GeoCoordinate
+from config import INQUIREConfig
 
 from imsearch_eval.framework.interfaces import DataLoader, ModelProvider
 
@@ -15,27 +16,15 @@ from imsearch_eval.framework.interfaces import DataLoader, ModelProvider
 class INQUIREDataLoader(DataLoader):
     """Data loader for INQUIRE dataset."""
     
-    def __init__(self, triton_client=None):
-        """
-        Initialize INQUIRE data loader.
-        
-        Args:
-            triton_client: Triton client for model inference (optional, can be passed via model_provider)
-        """
-        self.triton_client = triton_client
-    
     def process_item(
         self,
-        item: dict,
-        model_provider: ModelProvider
+        item: dict
     ) -> dict:
         """
         Process a single INQUIRE dataset item.
         
         Args:
             item: Dictionary containing INQUIRE dataset item
-            model_provider: Model provider for generating captions and embeddings
-            
         Returns:
             Dictionary with 'properties' and 'vector' keys for Weaviate insertion
         """
@@ -85,12 +74,13 @@ class INQUIREDataLoader(DataLoader):
             encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
             
             # Generate caption using model provider
-            caption = model_provider.generate_caption(image, model_name="gemma3")
+            caption = self.model_provider.generate_caption(image, self.config.gemma3_prompt, model_name="gemma3")
+            
             if not caption:
                 caption = ""  # Fallback if caption generation fails
             
             # Generate CLIP embeddings
-            clip_embedding = model_provider.get_embedding(caption, image=image, model_name="clip")
+            clip_embedding = self.model_provider.get_embedding(caption, image=image, model_name="clip")
             if clip_embedding is None:
                 raise ValueError("Failed to generate CLIP embedding")
             
@@ -129,34 +119,7 @@ class INQUIREDataLoader(DataLoader):
         
         Returns:
             Dictionary containing schema configuration
-        """
-        # Import config to get hyperparameters
-        config_path = os.path.join(os.path.dirname(__file__), 'config.py')
-        if os.path.exists(config_path):
-            import importlib.util
-            spec = importlib.util.spec_from_file_location("config", config_path)
-            config_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(config_module)
-            # Get config instance
-            config = config_module.INQUIREConfig()
-            # Create a simple namespace-like object for compatibility
-            class ConfigNamespace:
-                def __init__(self, config):
-                    self.hnsw_dist_metric = config.hnsw_dist_metric
-                    self.hnsw_ef_factor = config.hnsw_ef_factor
-                    self.hsnw_dynamicEfMax = config.hsnw_dynamicEfMax
-                    self.hsnw_dynamicEfMin = config.hsnw_dynamicEfMin
-                    self.hnsw_ef = config.hnsw_ef
-                    self.hnsw_ef_construction = config.hnsw_ef_construction
-                    self.hsnw_filterStrategy = config.hsnw_filterStrategy
-                    self.hnsw_flatSearchCutoff = config.hnsw_flatSearchCutoff
-                    self.hnsw_maxConnections = config.hnsw_maxConnections
-                    self.hnsw_vector_cache_max_objects = config.hnsw_vector_cache_max_objects
-                    self.hnsw_quantizer = config.hnsw_quantizer
-            hp = ConfigNamespace(config)
-        else:
-            raise ImportError("Could not find config.py")
-        
+        """        
         from weaviate.classes.config import Configure, Property, DataType
         
         return {
@@ -186,17 +149,17 @@ class INQUIREDataLoader(DataLoader):
                 Configure.NamedVectors.none(
                     name="clip",
                     vector_index_config=Configure.VectorIndex.hnsw(
-                        distance_metric=hp.hnsw_dist_metric,
-                        dynamic_ef_factor=hp.hnsw_ef_factor,
-                        dynamic_ef_max=hp.hsnw_dynamicEfMax,
-                        dynamic_ef_min=hp.hsnw_dynamicEfMin,
-                        ef=hp.hnsw_ef,
-                        ef_construction=hp.hnsw_ef_construction,
-                        filter_strategy=hp.hsnw_filterStrategy,
-                        flat_search_cutoff=hp.hnsw_flatSearchCutoff,
-                        max_connections=hp.hnsw_maxConnections,
-                        vector_cache_max_objects=int(hp.hnsw_vector_cache_max_objects),
-                        quantizer=hp.hnsw_quantizer,
+                        distance_metric=self.config.hnsw_dist_metric,
+                        dynamic_ef_factor=self.config.hnsw_ef_factor,
+                        dynamic_ef_max=self.config.hsnw_dynamicEfMax,
+                        dynamic_ef_min=self.config.hsnw_dynamicEfMin,
+                        ef=self.config.hnsw_ef,
+                        ef_construction=self.config.hnsw_ef_construction,
+                        filter_strategy=self.config.hsnw_filterStrategy,
+                        flat_search_cutoff=self.config.hnsw_flatSearchCutoff,
+                        max_connections=self.config.hnsw_maxConnections,
+                        vector_cache_max_objects=int(self.config.hnsw_vector_cache_max_objects),
+                        quantizer=self.config.hnsw_quantizer,
                     )
                 )
             ],
