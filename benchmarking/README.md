@@ -35,41 +35,14 @@ See `benchmarks/template/README.md` for detailed setup instructions, or `benchma
 benchmarking/
 ├── benchmarks/                   # Benchmark implementations
 │   ├── template/                # Template for creating new benchmarks
-│   │   ├── Makefile            # Template Makefile
-│   │   ├── Dockerfile.benchmark
-│   │   ├── Dockerfile.data_loader
-│   │   ├── main.template.py
-│   │   ├── load_data.template.py
-│   │   ├── dataset_loader.template.py
-│   │   ├── requirements.txt
-│   │   └── kubernetes/         # Kubernetes template
-│   │
 │   ├── INQUIRE/                # INQUIRE benchmark implementation
-│   │   ├── main.py             # Benchmark evaluator
-│   │   ├── load_data.py        # Data loading script
-│   │   ├── dataset_loader.py   # INQUIRE DatasetLoader
-│   │   ├── data_loader.py      # INQUIRE DataLoader
-│   │   ├── config.py           # INQUIRE configuration
-│   │   ├── Makefile
-│   │   ├── Dockerfile.benchmark
-│   │   ├── Dockerfile.data_loader
-│   │   └── requirements.txt
-│   │
 │   ├── Makefile                # Base Makefile (included by benchmarks)
 │   ├── MAKEFILE.md             # Makefile documentation
 │   ├── Dockerfile.template      # Base Dockerfile template
 │   └── DOCKER.md               # Dockerfile documentation
-│
 └── kubernetes/                  # Kubernetes deployment configurations
     ├── base/                   # Base Kubernetes resources
-    │   ├── benchmark-evaluator.yaml
-    │   ├── benchmark-data-loader.yaml
-    │   └── kustomization.yaml
     └── INQUIRE/                # INQUIRE-specific Kubernetes configs
-        ├── kustomization.yaml
-        ├── env.yaml
-        ├── data-loader-env.yaml
-        └── results-pvc.yaml
 ```
 
 ## Existing Benchmarks

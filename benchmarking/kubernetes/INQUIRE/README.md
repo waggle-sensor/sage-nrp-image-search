@@ -8,9 +8,6 @@ This overlay extends `../base/` with INQUIRE-specific configuration:
 
 - **env.yaml**: Environment variables for benchmark evaluator
 - **data-loader-env.yaml**: Environment variables for data loader
-- **gpus.yaml**: GPU configuration for data loader (requires GPU for model inference)
-- **results-pvc.yaml**: Persistent volume claim for storing results
-- **results-pvc-patch.yaml**: Patch to mount results PVC in evaluator
 
 ## Usage
 

@@ -143,29 +143,7 @@ env:
     value: "5"
 ```
 
-### 5. Adjust Storage (if needed)
-
-Edit `results-pvc.yaml` to adjust storage size:
-
-```yaml
-resources:
-  requests:
-    storage: 10Gi  # Adjust as needed
-```
-
-### 6. Configure GPUs (if needed)
-
-If your data loader needs GPUs, keep `gpus.yaml`. Otherwise, remove it and delete the reference from `kustomization.yaml`:
-
-```yaml
-# Remove this from kustomization.yaml if not using GPUs:
-# - path: gpus.yaml
-#   target:
-#     kind: Deployment
-#     labelSelector: "app=benchmark-data-loader"
-```
-
-### 7. Update Makefile
+### 5. Update Makefile
 
 Ensure your benchmark's Makefile points to the correct kustomize directory:
 
@@ -270,10 +248,7 @@ Check that image names in `kustomization.yaml` match your registry and image nam
 
 ### PVC not mounting
 
-Verify:
-1. `results-pvc.yaml` has the correct name
-2. `results-pvc-patch.yaml` references the same PVC name
-3. PVC is created before the deployment
+Verify PVC is created before the deployment
 
 ## See Also
 

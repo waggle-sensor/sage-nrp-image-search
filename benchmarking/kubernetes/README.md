@@ -9,16 +9,14 @@ benchmarking/kubernetes/
 ├── base/                    # Base kustomization (shared across all benchmarks)
 │   ├── kustomization.yaml
 │   ├── benchmark-evaluator.yaml
-│   └── benchmark-data-loader.yaml
+│   ├── benchmark-data-loader.yaml
+│   ├── hf_pvc.yaml
+│   └── results-pvc.yaml
 │
 └── INQUIRE/                 # INQUIRE benchmark overlay
     ├── kustomization.yaml   # Extends base with INQUIRE-specific config
     ├── env.yaml             # Environment variables for evaluator
     ├── data-loader-env.yaml # Environment variables for data loader
-    ├── results-pvc.yaml     # PVC for storing results
-    ├── results-pvc-patch.yaml # Patch to mount results PVC
-    ├── eval-hf-pvc-patch.yaml # Patch to mount HuggingFace cache PVC in evaluator
-    ├── load-hf-pvc-patch.yaml # Patch to mount HuggingFace cache PVC in data loader
     └── nrp-prod/            # Prod environment overlay
 ```
 
@@ -28,12 +26,13 @@ The `base/` directory contains generic deployments that can be reused by any ben
 
 - **benchmark-evaluator.yaml**: Deployment for running benchmark evaluations
 - **benchmark-data-loader.yaml**: Deployment for loading data into vector databases
+- **hf_pvc.yaml**: Persistent volume claim for HuggingFace cache
+- **results-pvc.yaml**: Persistent volume claim for storing results
 
 Both deployments are **vector database and inference server agnostic**:
-- Mount HuggingFace cache PVC
 - Include health checks and resource limits
 - Only include generic environment variables (PYTHONUNBUFFERED, PYTHONPATH)
-- Vector DB and inference server environment variables should be added via patches in benchmark-specific overlays
+- Vector DB and inference server environment variables should be added via patches in benchmark-specific overlays (env.yaml and data-loader-env.yaml)
 
 ## Creating a New Benchmark Overlay
 
@@ -56,7 +55,6 @@ commonLabels:
 
 resources:
   - ../base
-  - results-pvc.yaml
 
 patches:
   - path: env.yaml
@@ -80,8 +78,6 @@ images:
 3. **Create environment patches**:
    - `env.yaml`: Benchmark-specific environment variables for evaluator (including vector DB and inference server config)
    - `data-loader-env.yaml`: Environment variables for data loader (including vector DB and inference server config)
-   - `results-pvc.yaml`: PVC for storing results
-   - `results-pvc-patch.yaml`: Patch to mount results PVC
 
    Example `env.yaml` for Weaviate + Triton:
    ```yaml
