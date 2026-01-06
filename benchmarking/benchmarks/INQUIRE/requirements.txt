@@ -1,6 +1,6 @@
 # INQUIRE Benchmark Requirements
 # Core benchmarking framework
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.1
 
 # Dataset loading
 datasets>=2.14.0
