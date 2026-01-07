@@ -54,14 +54,7 @@ find . -type f -name "*.yaml" -exec sed -i '' 's/MYBENCHMARK/mybenchmark/g' {} +
 # Update environment variables in env.yaml and data-loader-env.yaml
 ```
 
-## Step 7: Test Locally
-
-```bash
-cd ../../MYBENCHMARK
-python main.py  # Test locally first
-```
-
-## Step 8: Deploy
+## Step 7: Deploy
 
 ```bash
 make build    # Build images or use the github actions to build and push the images to the registry. See `.github/workflows/benchmarking.yml` for more details.
