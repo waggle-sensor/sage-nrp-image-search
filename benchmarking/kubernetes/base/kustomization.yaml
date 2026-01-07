@@ -5,7 +5,6 @@ namespace: sage
 resources:
   - benchmark-evaluator.yaml
   - benchmark-data-loader.yaml
-  - hf_pvc.yaml
   - results-pvc.yaml
 
 # Note: Vector DB and inference server configuration should be added
