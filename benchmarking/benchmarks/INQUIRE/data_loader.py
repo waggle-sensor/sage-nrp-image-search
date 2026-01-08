@@ -120,9 +120,10 @@ class INQUIREDataLoader(DataLoader):
             Dictionary containing schema configuration
         """        
         from weaviate.classes.config import Configure, Property, DataType
-        
+        TARGET_VECTOR = os.environ.get("TARGET_VECTOR", "clip")
+        COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "INQUIRE")
         return {
-            "name": "INQUIRE",
+            "name": COLLECTION_NAME,
             "description": "A collection to test our set up using INQUIRE with Weaviate",
             "properties": [
                 Property(name="inat24_image_id", data_type=DataType.NUMBER),
@@ -146,7 +147,7 @@ class INQUIREDataLoader(DataLoader):
             ],
             "vectorizer_config": [
                 Configure.NamedVectors.none(
-                    name="clip",
+                    name=TARGET_VECTOR,
                     vector_index_config=Configure.VectorIndex.hnsw(
                         distance_metric=self.config.hnsw_dist_metric,
                         dynamic_ef_factor=self.config.hnsw_ef_factor,

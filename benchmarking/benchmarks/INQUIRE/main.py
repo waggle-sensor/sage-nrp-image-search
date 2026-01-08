@@ -17,6 +17,7 @@ TRITON_HOST = os.environ.get("TRITON_HOST", "triton")
 TRITON_PORT = os.environ.get("TRITON_PORT", "8001")
 COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "INQUIRE")
 QUERY_METHOD = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
+TARGET_VECTOR = os.environ.get("TARGET_VECTOR", "clip")
 
 
 def main():
@@ -61,7 +62,8 @@ def main():
         dataset_loader=dataset_loader,
         collection_name=COLLECTION_NAME,
         query_method=QUERY_METHOD,
-        score_columns=["rerank_score", "clip_score", "score", "distance"]
+        score_columns=["rerank_score", "clip_score", "score", "distance"],
+        target_vector=TARGET_VECTOR
     )
 
     # Run evaluation
