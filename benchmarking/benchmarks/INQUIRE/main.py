@@ -7,7 +7,7 @@ import tritonclient.grpc as TritonClient
 
 from imsearch_eval import BenchmarkEvaluator
 from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
-from dataset_loader import INQUIREDatasetLoader
+from benchmark_dataset import INQUIRE
 
 # Environment variables
 INQUIRE_DATASET = os.environ.get("INQUIRE_DATASET", "sagecontinuum/INQUIRE-Benchmark-small")
@@ -50,16 +50,16 @@ def main():
     
     model_provider = TritonModelProvider(triton_client=triton_client)
     
-    # Create dataset loader
-    logging.info("Creating dataset loader...")
-    dataset_loader = INQUIREDatasetLoader()
+    # Create benchmark dataset
+    logging.info("Creating benchmark dataset class...")
+    benchmark_dataset = INQUIRE()
 
     # Create evaluator
     logging.info("Creating benchmark evaluator...")
     evaluator = BenchmarkEvaluator(
         vector_db=vector_db,
         model_provider=model_provider,
-        dataset_loader=dataset_loader,
+        dataset=benchmark_dataset,
         collection_name=COLLECTION_NAME,
         query_method=QUERY_METHOD,
         score_columns=["rerank_score", "clip_score", "score", "distance"],

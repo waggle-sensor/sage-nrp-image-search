@@ -22,14 +22,14 @@ KUSTOMIZE_DIR := ../kubernetes/MYBENCHMARK  # Change this!
 ## Step 3: Rename Template Files
 
 ```bash
-mv dataset_loader.py.template dataset_loader.py
+mv benchmark_dataset.py.template benchmark_dataset.py
 mv main.py.template main.py
 mv load_data.py.template load_data.py
 ```
 
-## Step 4: Implement DatasetLoader
+## Step 4: Implement BenchmarkDataset
 
-Edit `dataset_loader.py` and implement:
+Edit `benchmark_dataset.py` and implement:
 - `load()` - Load your dataset
 - `get_query_column()` - Return query column name
 - `get_query_id_column()` - Return query ID column name
@@ -38,7 +38,7 @@ Edit `dataset_loader.py` and implement:
 ## Step 5: Update main.py
 
 Edit `main.py` and:
-- Import your `DatasetLoader` class
+- Import your `BenchmarkDataset` class
 - Update `COLLECTION_NAME` default
 - Update `RESULTS_FILE` and `METRICS_FILE` names
 
@@ -69,7 +69,7 @@ make get      # Get results
 | File | What to Change |
 |------|----------------|
 | `Makefile` | Benchmark name, kustomize dir, result files |
-| `dataset_loader.py` | Implement dataset loading logic |
+| `benchmark_dataset.py` | Implement benchmark dataset logic |
 | `main.py` | Update collection name, result file names |
 | `load_data.py` | Implement data loading logic (if needed) |
 | `Dockerfile.benchmark` | Usually no changes needed |

@@ -1,21 +1,21 @@
-"""INQUIRE dataset loader implementation."""
+"""INQUIRE benchmark dataset implementation."""
 
 import os
 import pandas as pd
 from datasets import load_dataset
 
-from imsearch_eval.framework.interfaces import DatasetLoader
+from imsearch_eval.framework.interfaces import BenchmarkDataset
 
 # Load INQUIRE benchmark dataset from Hugging Face
 INQUIRE_DATASET = os.environ.get("INQUIRE_DATASET", "sagecontinuum/INQUIRE-Benchmark-small")
 
 
-class INQUIREDatasetLoader(DatasetLoader):
-    """Dataset loader for INQUIRE benchmark."""
+class INQUIRE(BenchmarkDataset):
+    """Benchmark dataset class for INQUIRE dataset."""
     
     def __init__(self, dataset_name: str = None):
         """
-        Initialize INQUIRE dataset loader.
+        Initialize INQUIRE benchmark dataset.
         
         Args:
             dataset_name: HuggingFace dataset name (defaults to INQUIRE_DATASET env var)

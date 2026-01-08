@@ -115,7 +115,7 @@ INQUIRE is a benchmark instance that uses the abstract benchmarking framework pr
 benchmarking/
 └── benchmarks/
     └── INQUIRE/                      # INQUIRE benchmark instance
-        ├── dataset_loader.py        # INQUIRE-specific dataset loader (DatasetLoader)
+        ├── benchmark_dataset.py        # INQUIRE-specific benchmark dataset (BenchmarkDataset)
         ├── data_loader.py           # INQUIRE-specific data loader (DataLoader)
         ├── config.py                # INQUIRE-specific configuration (Config)
         ├── load_data.py              # Script to load data into vector DB
@@ -131,9 +131,9 @@ The framework and adapters are provided by the imsearch-eval package:
 
 ## Key Components
 
-### 1. Dataset Loader (`dataset_loader.py`)
+### 1. Benchmark Dataset Class (`benchmark_dataset.py`)
 
-Implements `DatasetLoader` interface for INQUIRE dataset:
+Implements `BenchmarkDataset` interface for INQUIRE dataset:
 - Loads from HuggingFace: `sagecontinuum/INQUIRE-Benchmark-small`
 - Defines column mappings: `query`, `query_id`, `relevant`
 - Provides metadata columns: `category`, `supercategory`, `iconic_group`
@@ -161,7 +161,7 @@ Implements `DatasetLoader` interface for INQUIRE dataset:
 Wires everything together:
 1. Initializes clients (Weaviate, Triton)
 2. Creates adapters
-3. Creates dataset loader
+3. Creates benchmark dataset class
 4. Creates evaluator with all components
 5. Runs evaluation
 6. Saves results
@@ -189,7 +189,7 @@ To add new components to INQUIRE:
 2. **New Model**: Add provider to the `imsearch-eval` package (contribute to the repository)
 3. **New Query Method**: Add method to `WeaviateQuery` in the `imsearch-eval` package
 4. **New Model Function**: Add method to `TritonModelUtils` in the `imsearch-eval` package or implement `ModelUtils` interface
-5. **New Dataset**: Create dataset loader in INQUIRE directory (benchmark-specific)
+5. **New Dataset**: Create benchmark dataset class in INQUIRE directory (benchmark-specific)
 
 ## Framework Package
 

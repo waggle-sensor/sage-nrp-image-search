@@ -1,19 +1,19 @@
-# Template for dataset_loader.py
-# Copy this file to dataset_loader.py and implement the DatasetLoader interface
+# Template for benchmark_dataset.py
+# Copy this file to benchmark_dataset.py and implement the BenchmarkDataset interface
 #
 # This template uses the abstract benchmarking framework:
 # - Framework: Abstract interfaces (framework/interfaces.py)
-#   - DatasetLoader: Interface for loading datasets
+#   - BenchmarkDataset: Interface for your benchmark dataset
 #   - Other interfaces: VectorDBAdapter, ModelProvider, Query, DataLoader, Config
 
 import os
 import pandas as pd
 
-from imsearch_eval.framework.interfaces import DatasetLoader
+from imsearch_eval.framework.interfaces import BenchmarkDataset
 
-class MyDatasetLoader(DatasetLoader):
+class MyBenchmarkDataset(BenchmarkDataset):
     """
-    DatasetLoader implementation for MYBENCHMARK.
+    Benchmark dataset class for MYBENCHMARK.
     
     TODO: Replace MYBENCHMARK with your benchmark name
     TODO: Implement all required methods

@@ -24,7 +24,7 @@ cd benchmarks/MYBENCHMARK
 
 The `benchmarks/template/` directory contains everything you need:
 - ✅ Ready-to-use Makefile and Dockerfiles
-- ✅ Python templates for `main.py`, `load_data.py`, `dataset_loader.py`
+- ✅ Python templates for `main.py`, `load_data.py`, `benchmark_dataset.py`
 - ✅ Comprehensive documentation and quick start guide
 
 See `benchmarks/template/README.md` for detailed setup instructions, or `benchmarks/template/QUICKSTART.md` for a 5-minute guide.
@@ -65,15 +65,15 @@ cp -r template MYBENCHMARK
 cd MYBENCHMARK
 ```
 
-### Step 2: Implement DatasetLoader
+### Step 2: Implement BenchmarkDataset
 
-Create `dataset_loader.py` implementing the `DatasetLoader` interface from `imsearch_eval`:
+Create `benchmark_dataset.py` implementing the `BenchmarkDataset` interface from `imsearch_eval`:
 
 ```python
-from imsearch_eval.framework.interfaces import DatasetLoader
+from imsearch_eval.framework.interfaces import BenchmarkDataset
 import pandas as pd
 
-class MyDatasetLoader(DatasetLoader):
+class MyBenchmarkDataset(BenchmarkDataset):
     def load(self, split="test", **kwargs) -> pd.DataFrame:
         # Load your dataset
         return dataset_df
@@ -94,12 +94,12 @@ class MyDatasetLoader(DatasetLoader):
 
 ### Step 3: Update main.py
 
-Edit `main.py` to use your dataset loader and configure your benchmark:
+Edit `main.py` to use your benchmark dataset class and configure your benchmark:
 
 ```python
 from imsearch_eval import BenchmarkEvaluator
 from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
-from dataset_loader import MyDatasetLoader
+from benchmark_dataset import MyBenchmarkDataset
 
 # Your benchmark-specific code here
 ```
@@ -213,14 +213,14 @@ The `benchmarks/template/` directory provides a complete starting point for new 
 - **QUICKSTART.md**: 5-minute quick start guide
 - **Makefile**: Template with all required variables
 - **Dockerfile.benchmark** & **Dockerfile.data_loader**: Ready-to-use Dockerfiles
-- **Python Templates**: Template files for `main.py`, `load_data.py`, `dataset_loader.py`
+- **Python Templates**: Template files for `main.py`, `load_data.py`, `benchmark_dataset.py`
 - **requirements.txt**: Base dependencies including `imsearch_eval`
 - **kubernetes/**: Complete Kubernetes template
 
 ## Dependencies
 
 All benchmarks depend on the [`imsearch_eval`](https://github.com/waggle-sensor/imsearch_eval) package, which provides:
-- Abstract interfaces (`VectorDBAdapter`, `ModelProvider`, `Query`, `DatasetLoader`, etc.)
+- Abstract interfaces (`VectorDBAdapter`, `ModelProvider`, `Query`, `BenchmarkDataset`, etc.)
 - Evaluation logic (`BenchmarkEvaluator`)
 - Shared adapters (`WeaviateAdapter`, `TritonModelProvider`, etc.)
 

@@ -15,7 +15,7 @@ import logging
 from tritonclient.grpc import InferenceServerClient as TritonClient
 
 from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
-# from data_loader import MyDataLoader  # TODO: Import if you have a custom DataLoader
+# from data_loader import MyDataLoader  # TODO: Import if you have a custom BenchmarkDataset
 # from config import MyConfig  # TODO: Import if you have a Config
 
 # Environment variables
@@ -65,7 +65,7 @@ def main():
     
     # TODO: Implement data loading logic
     # Example:
-    # 1. Load dataset using your DatasetLoader
+    # 1. Load dataset using your BenchmarkDataset
     # 2. Create collection using vector_db.create_collection()
     # 3. Process and insert data using vector_db.insert_data()
     # 4. Or use a custom DataLoader if you have one

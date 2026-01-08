@@ -25,7 +25,7 @@ MYBENCHMARK/
 ├── requirements.txt            # Python dependencies
 ├── main.py                     # Benchmark evaluator entry point
 ├── load_data.py                # Data loading script
-├── dataset_loader.py           # DatasetLoader implementation
+├── benchmark_dataset.py        # BenchmarkDataset implementation
 ├── data_loader.py              # DataLoader implementation (optional)
 ├── config.py                   # Config implementation (optional)
 └── README.md                   # Benchmark-specific documentation
@@ -62,16 +62,16 @@ The Dockerfiles are already set up, but verify:
 
 ### 4. Create Python Files
 
-#### `dataset_loader.py` - Implement DatasetLoader
+#### `benchmark_dataset.py` - Implement BenchmarkDataset
 
 ```python
 import os
 import pandas as pd
 from datasets import load_dataset
 
-from imsearch_eval.framework.interfaces import DatasetLoader
+from imsearch_eval.framework.interfaces import BenchmarkDataset
 
-class MyDatasetLoader(DatasetLoader):
+class MyBenchmarkDataset(BenchmarkDataset):
     def load(self, split="test", **kwargs) -> pd.DataFrame:
         """Load your dataset."""
         dataset = load_dataset("your-dataset/name", split=split)
@@ -99,7 +99,7 @@ from tritonclient.grpc import InferenceServerClient as TritonClient
 
 from imsearch_eval import BenchmarkEvaluator
 from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
-from dataset_loader import MyDatasetLoader
+from benchmark_dataset import MyBenchmarkDataset
 
 # Environment variables
 WEAVIATE_HOST = os.getenv("WEAVIATE_HOST", "127.0.0.1")
@@ -119,14 +119,14 @@ def main():
     vector_db = WeaviateAdapter(weaviate_client=weaviate_client, triton_client=triton_client)
     model_provider = TritonModelProvider(triton_client=triton_client)
     
-    # Create dataset loader
-    dataset_loader = MyDatasetLoader()
+    # Create benchmark dataset class
+    benchmark_dataset = MyBenchmarkDataset()
     
     # Create evaluator
     evaluator = BenchmarkEvaluator(
         vector_db=vector_db,
         model_provider=model_provider,
-        dataset_loader=dataset_loader,
+        dataset=benchmark_dataset,
         collection_name=COLLECTION_NAME,
         query_method=QUERY_METHOD
     )
@@ -152,7 +152,7 @@ import os
 from tritonclient.grpc import InferenceServerClient as TritonClient
 
 from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
-from data_loader import MyDataLoader  # If you have a DataLoader
+from benchmark_dataset import MyBenchmarkDataset  # If you have a BenchmarkDataset
 from config import MyConfig  # If you have a Config
 
 def main():
@@ -205,7 +205,7 @@ imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git
 
 ### Must Implement
 
-1. **DatasetLoader** (`dataset_loader.py`): Loads your dataset and defines column mappings
+1. **BenchmarkDataset** (`benchmark_dataset.py`): Loads your dataset and defines column mappings
 2. **main.py**: Entry point that wires everything together
 
 ### Optional Components

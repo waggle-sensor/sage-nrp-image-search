@@ -13,7 +13,7 @@ from tritonclient.grpc import InferenceServerClient as TritonClient
 
 from imsearch_eval import BenchmarkEvaluator
 from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
-from dataset_loader import MyDatasetLoader  # TODO: Import your DatasetLoader
+from benchmark_dataset import MyBenchmarkDataset  # TODO: Import your BenchmarkDataset
 
 # Environment variables
 WEAVIATE_HOST = os.getenv("WEAVIATE_HOST", "127.0.0.1")
@@ -61,16 +61,16 @@ def main():
     
     model_provider = TritonModelProvider(triton_client=triton_client)
     
-    # Create dataset loader
-    logging.info("Creating dataset loader...")
-    dataset_loader = MyDatasetLoader()  # TODO: Use your DatasetLoader
+    # Create benchmark dataset class
+    logging.info("Creating benchmark dataset class...")
+    benchmark_dataset = MyBenchmarkDataset()  # TODO: Use your BenchmarkDataset
     
     # Create evaluator
     logging.info("Creating benchmark evaluator...")
     evaluator = BenchmarkEvaluator(
         vector_db=vector_db,
         model_provider=model_provider,
-        dataset_loader=dataset_loader,
+        dataset=benchmark_dataset,
         collection_name=COLLECTION_NAME,
         query_method=QUERY_METHOD,
         score_columns=["rerank_score", "clip_score", "score", "distance"]  # TODO: Adjust as needed
