@@ -1,8 +1,8 @@
 # INQUIRE Benchmark Requirements
 # Core benchmarking framework
 # TODO: Pin to a specific version once you have the eval working
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.7
-# imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git
+# imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.7
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git
 # Dataset loading
 datasets>=2.14.0
 huggingface-hub>=0.16.0
