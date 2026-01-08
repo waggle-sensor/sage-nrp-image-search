@@ -61,8 +61,7 @@ def load_data():
         # Create collection schema
         logging.info("Creating collection schema...")
         schema_config = data_loader.get_schema_config()
-        schema_config["name"] = COLLECTION_NAME
-        vector_db.create_collection(COLLECTION_NAME, schema_config)
+        vector_db.create_collection(schema_config)
         
         # Load dataset
         logging.info(f"Loading dataset: {INQUIRE_DATASET}")
