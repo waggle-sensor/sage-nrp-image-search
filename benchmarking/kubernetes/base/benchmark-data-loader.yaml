@@ -19,6 +19,7 @@ spec:
           image: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE:latest
           # Note: Vector DB and inference server environment variables should be
           # added via patches in benchmark-specific overlays (e.g., data-loader-env.yaml)
+          imagePullPolicy: Always #TODO: remove this after testing
           env:
             - name: PYTHONUNBUFFERED
               value: "1"
@@ -26,11 +27,11 @@ spec:
               value: "/app"
           resources:
             limits:
-              cpu: 4
-              memory: 8Gi
+              cpu: 8
+              memory: 16Gi
             requests:
-              cpu: 2
-              memory: 4Gi
+              cpu: 5
+              memory: 12Gi
           volumeMounts:
             - name: huggingface-cache
               mountPath: /root/.cache/huggingface
@@ -42,18 +43,9 @@ spec:
                 - "ps aux | grep '[p]ython load_data.py' || exit 1"
             initialDelaySeconds: 60
             periodSeconds: 30
-          readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - "test -f /app/.ready || exit 1"
-            initialDelaySeconds: 30
-            periodSeconds: 10
       volumes:
         - name: huggingface-cache
-          persistentVolumeClaim:
-            claimName: huggingface-pvc
+          emptyDir: {}
       restartPolicy: Always
 ---
 apiVersion: v1
