@@ -98,9 +98,9 @@ load: kubectl
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
 	fi
 	@echo "Scaling down evaluator to free resources..."
-	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-evaluator --replicas=0 -n $(KUBECTL_NAMESPACE) --ignore-not-found=true || true
+	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-evaluator --replicas=0 -n $(KUBECTL_NAMESPACE) || true
 	@echo "Starting data loader job..."
-	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-data-loader --replicas=1 -n $(KUBECTL_NAMESPACE) --ignore-not-found=true || true
+	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-data-loader --replicas=1 -n $(KUBECTL_NAMESPACE) || true
 	@echo "Data loader started. Monitor with:"
 	@echo "  kubectl logs -n $(KUBECTL_NAMESPACE) -l app=benchmark-data-loader,benchmark=$(BENCHMARK_NAME) -f"
 
@@ -110,9 +110,9 @@ calculate: kubectl
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
 	fi
 	@echo "Scaling down data loader to free resources..."
-	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-data-loader --replicas=0 -n $(KUBECTL_NAMESPACE) --ignore-not-found=true || true
+	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-data-loader --replicas=0 -n $(KUBECTL_NAMESPACE) || true
 	@echo "Starting benchmark evaluation..."
-	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-evaluator --replicas=1 -n $(KUBECTL_NAMESPACE) --ignore-not-found=true || true
+	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-evaluator --replicas=1 -n $(KUBECTL_NAMESPACE) || true
 	@echo "Benchmark evaluator started. Monitor with:"
 	@echo "  kubectl logs -n $(KUBECTL_NAMESPACE) -l app=benchmark-evaluator,benchmark=$(BENCHMARK_NAME) -f"
 
