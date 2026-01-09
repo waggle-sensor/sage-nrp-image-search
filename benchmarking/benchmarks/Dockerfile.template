@@ -1,0 +1,41 @@
+# Benchmark Dockerfile Template
+# Copy this file to your benchmark directory and customize as needed.
+# 
+# Usage:
+#   1. Copy this file to your benchmark directory as Dockerfile.benchmark or Dockerfile.data_loader
+#   2. Update the CMD line with your entrypoint script (e.g., "main.py" or "load_data.py")
+#   3. Ensure requirements.txt includes imsearch-eval package
+#
+# Example for Dockerfile.benchmark:
+#   CMD ["python", "main.py"]
+#
+# Example for Dockerfile.data_loader:
+#   CMD ["python", "load_data.py"]
+
+ARG PYTHON_VERSION=3.11-slim
+FROM python:${PYTHON_VERSION}
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Note: The imsearch-eval package is installed via requirements.txt
+# No need to set PYTHONPATH as the package is installed in the Python environment
+
+# Set your entrypoint script here
+# For evaluator: CMD ["python", "main.py"]
+# For data loader: CMD ["python", "load_data.py"]
+CMD ["python", "main.py"]
+

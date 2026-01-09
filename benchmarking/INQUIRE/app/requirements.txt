@@ -1,7 +1,0 @@
-weaviate_client==4.14.* #https://weaviate.io/developers/weaviate/release-notes#weaviate-core-and-client-releases
-Pillow==10.4.*
-plotly==6.0.*
-scikit_learn==1.6.*
-datasets==3.2.*
-tritonclient[grpc]==2.53.*
-Requests

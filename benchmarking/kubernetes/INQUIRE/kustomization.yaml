@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sage
+
+namePrefix: inquire-
+commonLabels:
+  benchmark: inquire
+
+resources:
+  - ../base
+
+patches:
+  - path: env.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-evaluator"
+  - path: data-loader-env.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=benchmark-data-loader"
+
+images:
+  - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-evaluator
+    newTag: pr-1 #TODO: Change to the latest tag
+  - name: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-data-loader
+    newTag: pr-1 #TODO: Change to the latest tag
+
