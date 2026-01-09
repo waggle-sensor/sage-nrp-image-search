@@ -2,19 +2,31 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: sage
 
-# This overlay references the INQUIRE benchmark base and patches it
-# to work with the prod environment (prod-weaviate, prod-triton, etc.)
+namePrefix: inquire-prod-
+commonLabels:
+  benchmark: inquire
+
+# This overlay references the base and applies INQUIRE-specific patches
+# configured for the prod environment (prod-weaviate, prod-triton, etc.)
 resources:
-  - ..
+  - ../../base
 
 patches:
-  # Patch evaluator environment variables to use prod services
+  # Patch evaluator environment variables (INQUIRE-specific + prod services)
   - path: env.yaml
     target:
       kind: Deployment
       labelSelector: "app=benchmark-evaluator"
-  # Patch data loader environment variables to use prod services
+  # Patch data loader environment variables (INQUIRE-specific + prod services)
   - path: data-loader-env.yaml
     target:
       kind: Deployment
       labelSelector: "app=benchmark-data-loader"
+
+images:
+  - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-evaluator
+    newTag: pr-1 #TODO: Change to the latest tag
+  - name: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-data-loader
+    newTag: pr-1 #TODO: Change to the latest tag
