@@ -7,21 +7,15 @@ import sys
 import pandas as pd
 from pathlib import Path
 import tritonclient.grpc as TritonClient
-from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter, ModelProvider
+from datasets import Dataset
+from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter, BatchedIterator
 from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
 from benchmark_dataset import INQUIRE
 from config import INQUIREConfig
 from data_loader import INQUIREDataLoader
-from itertools import islice
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 config = INQUIREConfig()
-
-def batched(iterable, batch_size):
-    """Yield successive batch_size chunks from iterable."""
-    it = iter(iterable)
-    while batch := list(islice(it, batch_size)):
-        yield batch
 
 
 def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, dataset: pd.DataFrame):
@@ -35,14 +29,14 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, datase
         # Process and insert data
         logging.info("Processing and inserting data...")
         
-        # Convert DataFrame to list of dictionaries for processing
-        dataset_records = dataset.to_dict('records')
+        # Convert DataFrame to HuggingFace Dataset for BatchedIterator
+        hf_dataset = Dataset.from_pandas(dataset)
         
         if config.WORKERS == -1:
             # Sequential processing
             logging.info("Processing sequentially...")
             all_processed = []
-            for batch in batched(dataset_records, config.IMAGE_BATCH_SIZE):
+            for batch in BatchedIterator(hf_dataset, config.IMAGE_BATCH_SIZE):
                 processed_batch = data_loader.process_batch(batch)
                 all_processed.extend(processed_batch)
             
@@ -58,7 +52,7 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, datase
             with ThreadPoolExecutor(max_workers=num_workers) as executor:
                 futures = {
                     executor.submit(data_loader.process_batch, batch): batch
-                    for batch in batched(dataset_records, config.IMAGE_BATCH_SIZE)
+                    for batch in BatchedIterator(hf_dataset, config.IMAGE_BATCH_SIZE)
                 }
                 
                 for future in as_completed(futures):
