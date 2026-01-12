@@ -44,7 +44,7 @@ To run this example, you'll need:
 4. **Run Benchmark Job**:
    - Run the complete benchmark (loads data and evaluates):
      ```bash
-     make run-job  # defaults to dev environment
+     make run  # defaults to dev environment
      ```
    - Monitor progress:
      ```bash
@@ -180,7 +180,7 @@ The script uses a `config` object (instance of `INQUIREConfig`) to access all co
 cd benchmarking/benchmarks/INQUIRE
 make build      # Build Docker image
 make deploy     # Deploy to Kubernetes
-make run-job    # Run benchmark job
+make run    # Run benchmark job
 make logs       # Monitor logs
 ```
 

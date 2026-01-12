@@ -228,7 +228,7 @@ Once everything is set up:
 
 2. **Run benchmark job**:
    ```bash
-   make run-job
+   make run
    ```
 
 3. **Monitor logs**:

@@ -180,7 +180,7 @@ Then use:
 ```bash
 make build     # Build Docker image
 make deploy    # Deploys using kustomize
-make run-job   # Run benchmark job
+make run   # Run benchmark job
 make logs      # View logs
 make down      # Removes deployment
 ```

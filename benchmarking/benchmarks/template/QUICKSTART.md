@@ -88,7 +88,7 @@ These are typically set via environment variables in Kubernetes.
 cd ../../benchmarks/MYBENCHMARK
 make build    # Build image or use GitHub Actions to build and push to registry
 make deploy   # Deploy to Kubernetes
-make run-job  # Run benchmark job (loads data and evaluates)
+make run  # Run benchmark job (loads data and evaluates)
 make logs     # Monitor logs
 ```
 

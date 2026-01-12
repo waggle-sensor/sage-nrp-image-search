@@ -26,7 +26,7 @@ make deploy
 ### Run Benchmark Job
 
 ```bash
-make run-job
+make run
 ```
 
 Monitor with:

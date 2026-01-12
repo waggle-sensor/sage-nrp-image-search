@@ -142,8 +142,8 @@ make deploy ENV=prod     # Deploy to prod environment
 ### Run Benchmark Job
 
 ```bash
-make run-job             # Default deployment (dev environment)
-make run-job ENV=prod    # Run using prod resources
+make run             # Default deployment (dev environment)
+make run ENV=prod    # Run using prod resources
 ```
 
 ### Monitor

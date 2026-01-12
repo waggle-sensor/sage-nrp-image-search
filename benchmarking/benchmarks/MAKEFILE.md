@@ -26,7 +26,7 @@ The base `benchmarks/Makefile` contains all generic commands that work for any b
 
 - **Build**: `make build` - Build Docker job image
 - **Deploy**: `make deploy` - Deploy to Kubernetes
-- **Run Job**: `make run-job` - Run benchmark job (loads data and evaluates)
+- **Run Job**: `make run` - Run benchmark job (loads data and evaluates)
 - **Run Local**: `make run-local` - Run benchmark locally with port-forwarding
 - **Status**: `make status` - Show deployment status
 - **Logs**: `make logs` - View job logs
@@ -150,7 +150,7 @@ make build
 make deploy
 
 # Run benchmark job (loads data and evaluates)
-make run-job
+make run
 
 # Monitor logs
 make logs

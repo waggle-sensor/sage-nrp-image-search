@@ -2,7 +2,7 @@
 # This file contains generic benchmark commands that can be reused by any benchmark instance.
 # Each benchmark should define its specific variables and include this file.
 
-.PHONY: down build deploy run-job kubectl port-forward-start port-forward-stop run-local status logs
+.PHONY: down build deploy run kubectl port-forward-start port-forward-stop run-local status logs
 
 # ============================================================================
 # Required Variables (must be set by benchmark-specific Makefile)
@@ -94,7 +94,7 @@ down: kubectl
 # ============================================================================
 
 # Run benchmark job (loads data and evaluates)
-run-job: kubectl
+run: kubectl
 	@if [ -z "$(BENCHMARK_NAME)" ]; then \
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
 	fi
