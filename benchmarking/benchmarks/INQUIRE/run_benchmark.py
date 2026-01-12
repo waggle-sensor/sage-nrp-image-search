@@ -4,7 +4,6 @@ import os
 import logging
 import time
 import sys
-import pandas as pd
 from pathlib import Path
 import tritonclient.grpc as TritonClient
 from datasets import Dataset
@@ -18,7 +17,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 config = INQUIREConfig()
 
 
-def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, dataset: pd.DataFrame):
+def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, hf_dataset: Dataset):
     """Load INQUIRE dataset into Weaviate for INQUIRE benchmark."""    
     try:
         # Create collection schema
@@ -28,9 +27,6 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, datase
 
         # Process and insert data
         logging.info("Processing and inserting data...")
-        
-        # Convert DataFrame to HuggingFace Dataset for BatchedIterator
-        hf_dataset = Dataset.from_pandas(dataset)
         
         if config.WORKERS == -1:
             # Sequential processing
@@ -71,11 +67,11 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, datase
     finally:
         vector_db.close()
 
-def run_evaluation(evaluator: BenchmarkEvaluator, dataset: pd.DataFrame):
+def run_evaluation(evaluator: BenchmarkEvaluator, hf_dataset: Dataset):
     """Run the INQUIRE benchmark evaluation."""
     # Run evaluation
     logging.info("Starting evaluation...")
-    image_results, query_evaluation = evaluator.evaluate_queries(dataset=dataset)
+    image_results, query_evaluation = evaluator.evaluate_queries(dataset=hf_dataset)
     
     return image_results, query_evaluation
 
@@ -150,7 +146,7 @@ def main():
     # Create benchmark dataset
     logging.info("Creating benchmark dataset class...")
     benchmark_dataset = INQUIRE(dataset_name=config.INQUIRE_DATASET)
-    dataset = benchmark_dataset.load(split="test", sample_size=config.SAMPLE_SIZE, seed=config.SEED)
+    hf_dataset = benchmark_dataset.load_as_dataset(split="test", sample_size=config.SAMPLE_SIZE, seed=config.SEED)
 
     # Create data loader
     logging.info("Creating data loader...")
@@ -173,7 +169,7 @@ def main():
     logging.info("Step 1: Loading data into vector database")
     logging.info("=" * 80)
     try:
-        load_data(data_loader, vector_db, dataset)
+        load_data(data_loader, vector_db, hf_dataset)
         logging.info("Data loading completed successfully.")
     except Exception as e:
         logging.error(f"Error loading data: {e}")
@@ -184,7 +180,7 @@ def main():
     logging.info("Step 2: Running benchmark evaluation")
     logging.info("=" * 80)
     try:
-        image_results, query_evaluation = run_evaluation(evaluator, dataset)
+        image_results, query_evaluation = run_evaluation(evaluator, hf_dataset)
         logging.info("Evaluation completed successfully.")
     except Exception as e:
         logging.error(f"Error running evaluation: {e}")
