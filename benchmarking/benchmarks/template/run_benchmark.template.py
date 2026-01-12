@@ -4,6 +4,7 @@ import os
 import logging
 import time
 import sys
+import pandas as pd
 from pathlib import Path
 import tritonclient.grpc as TritonClient
 
@@ -11,10 +12,9 @@ from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter, ModelProvider
 from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
 from benchmark_dataset import MyBenchmarkDataset  # TODO: Import your BenchmarkDataset
 # from data_loader import MyDataLoader  # TODO: Import if you have a custom DataLoader
-from config import MyConfig  # TODO:set a Config class for your benchmark
+from config import MyConfig  # TODO: Set a Config class for your benchmark
 
 config = MyConfig()
-
 
 def batched(iterable, batch_size):
     """Yield successive batch_size chunks from iterable."""
@@ -24,59 +24,48 @@ def batched(iterable, batch_size):
         yield batch
 
 
-def load_data(vector_db: VectorDBAdapter, model_provider: ModelProvider):
+def load_data(data_loader, vector_db: VectorDBAdapter, dataset: pd.DataFrame):
     """Load MYBENCHMARK dataset into vector database.
     
     TODO: Implement your data loading logic here.
     See benchmarks/INQUIRE/run_benchmark.py for a complete example.
+    
+    Args:
+        data_loader: Your DataLoader instance
+        vector_db: VectorDBAdapter instance
+        dataset: DataFrame containing the dataset to load
     """
-    
-    # TODO: Create your data loader if you have one
-    # data_loader = MyDataLoader(config=MyConfig(), model_provider=model_provider)
-    
     try:
         # TODO: Create collection schema
         # logging.info("Creating collection schema...")
         # schema_config = data_loader.get_schema_config()
         # vector_db.create_collection(schema_config)
         
-        # TODO: Load dataset
-        # logging.info(f"Loading dataset: {MYBENCHMARK_DATASET}")
-        # from datasets import load_dataset
-        # dataset = load_dataset(MYBENCHMARK_DATASET, split="test")
-        
-        # TODO: Sample if needed
-        # if SAMPLE_SIZE > 0:
-        #     import random
-        #     sampled_indices = random.sample(range(len(dataset)), SAMPLE_SIZE)
-        #     dataset = dataset.select(sampled_indices)
-        #     logging.info(f"Sampled {SAMPLE_SIZE} records from the dataset.")
-        
         # TODO: Process and insert data
         # logging.info("Processing and inserting data...")
         # 
-        # if WORKERS == -1:
+        # if config.WORKERS == -1:
         #     # Sequential processing
         #     logging.info("Processing sequentially...")
         #     all_processed = []
-        #     for batch in batched(dataset, BATCH_SIZE):
+        #     for batch in batched(dataset, config.IMAGE_BATCH_SIZE):
         #         processed_batch = data_loader.process_batch(batch)
         #         all_processed.extend(processed_batch)
         #     
         #     # Insert all at once
-        #     inserted = vector_db.insert_data(COLLECTION_NAME, all_processed, batch_size=BATCH_SIZE)
+        #     inserted = vector_db.insert_data(config.COLLECTION_NAME, all_processed, batch_size=config.IMAGE_BATCH_SIZE)
         #     logging.info(f"Inserted {inserted} items.")
         # else:
         #     # Parallel processing
         #     from concurrent.futures import ThreadPoolExecutor, as_completed
-        #     num_workers = WORKERS if WORKERS > 0 else os.cpu_count()
+        #     num_workers = config.WORKERS if config.WORKERS > 0 else os.cpu_count()
         #     logging.info(f"Processing with {num_workers} parallel workers...")
         #     
         #     all_processed = []
         #     with ThreadPoolExecutor(max_workers=num_workers) as executor:
         #         futures = {
         #             executor.submit(data_loader.process_batch, batch): batch
-        #             for batch in batched(dataset, BATCH_SIZE)
+        #             for batch in batched(dataset, config.IMAGE_BATCH_SIZE)
         #         }
         #         
         #         for future in as_completed(futures):
@@ -84,7 +73,7 @@ def load_data(vector_db: VectorDBAdapter, model_provider: ModelProvider):
         #             all_processed.extend(processed_batch)
         #     
         #     # Insert all at once
-        #     inserted = vector_db.insert_data(COLLECTION_NAME, all_processed, batch_size=BATCH_SIZE)
+        #     inserted = vector_db.insert_data(config.COLLECTION_NAME, all_processed, batch_size=config.IMAGE_BATCH_SIZE)
         #     logging.info(f"Inserted {inserted} items.")
         
         logging.info(f"Successfully loaded {config.MYBENCHMARK_DATASET} into Weaviate collection '{config.COLLECTION_NAME}'")
@@ -93,9 +82,23 @@ def load_data(vector_db: VectorDBAdapter, model_provider: ModelProvider):
         logging.error(f"Error loading data: {e}")
         raise
     finally:
-        # vector_db.close()
-        pass
+        vector_db.close()
 
+def run_evaluation(evaluator: BenchmarkEvaluator, dataset: pd.DataFrame):
+    """Run the MYBENCHMARK benchmark evaluation.
+    
+    Args:
+        evaluator: BenchmarkEvaluator instance
+        dataset: DataFrame containing the dataset to evaluate
+    
+    Returns:
+        Tuple of (image_results, query_evaluation) DataFrames
+    """
+    # Run evaluation
+    logging.info("Starting evaluation...")
+    image_results, query_evaluation = evaluator.evaluate_queries(dataset=dataset)
+    
+    return image_results, query_evaluation
 
 def upload_to_s3(local_file_path: str, s3_key: str):
     """Upload a file to S3-compatible storage using MinIO."""
@@ -132,37 +135,6 @@ def upload_to_s3(local_file_path: str, s3_key: str):
         logging.error(f"Unexpected error uploading to S3: {e}")
         raise
 
-
-def run_evaluation(vector_db: VectorDBAdapter, model_provider: ModelProvider):
-    """Run the MYBENCHMARK benchmark evaluation."""
-    
-    # Create benchmark dataset
-    logging.info("Creating benchmark dataset class...")
-    benchmark_dataset = MyBenchmarkDataset()  # TODO: Use your BenchmarkDataset
-
-    # Create evaluator
-    logging.info("Creating benchmark evaluator...")
-    evaluator = BenchmarkEvaluator(
-        vector_db=vector_db,
-        model_provider=model_provider,
-        dataset=benchmark_dataset,
-        collection_name=config.COLLECTION_NAME,
-        query_method=config.QUERY_METHOD,
-        score_columns=["rerank_score", "clip_score", "score", "distance"],  # TODO: Adjust as needed
-        target_vector=config.TARGET_VECTOR
-    )
-
-    # Run evaluation
-    logging.info("Starting evaluation...")
-    try:
-        image_results, query_evaluation = evaluator.evaluate_queries(split="test")
-    finally:
-        # Clean up
-        vector_db.close()
-    
-    return image_results, query_evaluation
-
-
 def main():
     """Main entry point for running the complete benchmark."""
     
@@ -195,13 +167,38 @@ def main():
     )
 
     model_provider = TritonModelProvider(triton_client=triton_client)  # TODO: Update with your model provider
+
+    # Create benchmark dataset
+    logging.info("Creating benchmark dataset class...")
+    benchmark_dataset = MyBenchmarkDataset()  # TODO: Use your BenchmarkDataset
+    # TODO: Load dataset with your parameters
+    # dataset = benchmark_dataset.load(split="test", sample_size=config.SAMPLE_SIZE, seed=config.SEED)
+    dataset = benchmark_dataset.load(split="test")  # TODO: Add sample_size and seed if your dataset supports it
+
+    # Create data loader
+    logging.info("Creating data loader...")
+    # TODO: Create your data loader if you have one
+    # data_loader = MyDataLoader(config=config, model_provider=model_provider)
+    data_loader = None  # TODO: Replace with your data loader or None if not using one
+
+    # Create evaluator
+    logging.info("Creating benchmark evaluator...")
+    evaluator = BenchmarkEvaluator(
+        vector_db=vector_db,
+        model_provider=model_provider,
+        dataset=benchmark_dataset,
+        collection_name=config.COLLECTION_NAME,
+        query_method=config.QUERY_METHOD,
+        score_columns=["rerank_score", "clip_score", "score", "distance"],  # TODO: Adjust as needed
+        target_vector=config.TARGET_VECTOR
+    )
     
     # Step 1: Load data
     logging.info("=" * 80)
     logging.info("Step 1: Loading data into vector database")
     logging.info("=" * 80)
     try:
-        load_data(vector_db, model_provider)  # Call the load_data function defined in this file
+        load_data(data_loader, vector_db, dataset)
         logging.info("Data loading completed successfully.")
     except Exception as e:
         logging.error(f"Error loading data: {e}")
@@ -212,7 +209,7 @@ def main():
     logging.info("Step 2: Running benchmark evaluation")
     logging.info("=" * 80)
     try:
-        image_results, query_evaluation = run_evaluation(vector_db, model_provider)
+        image_results, query_evaluation = run_evaluation(evaluator, dataset)
         logging.info("Evaluation completed successfully.")
     except Exception as e:
         logging.error(f"Error running evaluation: {e}")
@@ -223,7 +220,7 @@ def main():
     logging.info("Step 3: Saving results")
     logging.info("=" * 80)
     
-    # Determine results directory (use /app/results if mounted, otherwise current directory)
+    # Determine results directory (use /app/results if PVC is mounted, otherwise current directory)
     results_dir = Path("/app/results" if os.path.exists("/app/results") else ".")
     results_dir.mkdir(parents=True, exist_ok=True)
     
@@ -265,6 +262,7 @@ def main():
     else:
         logging.info("S3 upload is disabled (UPLOAD_TO_S3=false or not set).")
     
+    vector_db.close()
     logging.info("=" * 80)
     logging.info("Benchmark run completed successfully!")
     logging.info("=" * 80)
@@ -272,4 +270,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

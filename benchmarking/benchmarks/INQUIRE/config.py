@@ -25,6 +25,7 @@ class INQUIREConfig(Config):
         self.QUERY_METHOD = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
         self.TARGET_VECTOR = os.environ.get("TARGET_VECTOR", "clip")
         self.SAMPLE_SIZE = int(os.environ.get("SAMPLE_SIZE", 0))
+        self.SEED = int(os.environ.get("SEED", 42))
         self.WORKERS = int(os.environ.get("WORKERS", 0))
         self.IMAGE_BATCH_SIZE = int(os.environ.get("IMAGE_BATCH_SIZE", 100))
         self.UPLOAD_TO_S3 = os.environ.get("UPLOAD_TO_S3", "false").lower() == "true"

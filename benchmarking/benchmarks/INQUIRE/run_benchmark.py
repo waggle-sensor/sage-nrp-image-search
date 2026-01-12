@@ -4,6 +4,7 @@ import os
 import logging
 import time
 import sys
+import pandas as pd
 from pathlib import Path
 import tritonclient.grpc as TritonClient
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter, ModelProvider
@@ -11,8 +12,6 @@ from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
 from benchmark_dataset import INQUIRE
 from config import INQUIREConfig
 from data_loader import INQUIREDataLoader
-import random
-from datasets import load_dataset
 from itertools import islice
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -25,27 +24,14 @@ def batched(iterable, batch_size):
         yield batch
 
 
-def load_data(vector_db: VectorDBAdapter, model_provider: ModelProvider):
-    """Load INQUIRE dataset into Weaviate for INQUIRE benchmark."""
-    # Create data loader
-    data_loader = INQUIREDataLoader(config=config, model_provider=model_provider)
-    
+def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, dataset: pd.DataFrame):
+    """Load INQUIRE dataset into Weaviate for INQUIRE benchmark."""    
     try:
         # Create collection schema
         logging.info("Creating collection schema...")
         schema_config = data_loader.get_schema_config()
         vector_db.create_collection(schema_config)
-        
-        # Load dataset
-        logging.info(f"Loading dataset: {config.INQUIRE_DATASET}")
-        dataset = load_dataset(config.INQUIRE_DATASET, split="test")
-        
-        # Sample if needed
-        if config.SAMPLE_SIZE > 0:
-            sampled_indices = random.sample(range(len(dataset)), config.SAMPLE_SIZE)
-            dataset = dataset.select(sampled_indices)
-            logging.info(f"Sampled {config.SAMPLE_SIZE} records from the dataset.")
-        
+
         # Process and insert data
         logging.info("Processing and inserting data...")
         
@@ -88,6 +74,14 @@ def load_data(vector_db: VectorDBAdapter, model_provider: ModelProvider):
     finally:
         vector_db.close()
 
+def run_evaluation(evaluator: BenchmarkEvaluator, dataset: pd.DataFrame):
+    """Run the INQUIRE benchmark evaluation."""
+    # Run evaluation
+    logging.info("Starting evaluation...")
+    image_results, query_evaluation = evaluator.evaluate_queries(dataset=dataset)
+    
+    return image_results, query_evaluation
+
 def upload_to_s3(local_file_path: str, s3_key: str):
     """Upload a file to S3-compatible storage using MinIO."""
     try:
@@ -123,36 +117,6 @@ def upload_to_s3(local_file_path: str, s3_key: str):
         logging.error(f"Unexpected error uploading to S3: {e}")
         raise
 
-
-def run_evaluation(vector_db: VectorDBAdapter, model_provider: ModelProvider):
-    """Run the INQUIRE benchmark evaluation."""
-    # Create benchmark dataset
-    logging.info("Creating benchmark dataset class...")
-    benchmark_dataset = INQUIRE()
-
-    # Create evaluator
-    logging.info("Creating benchmark evaluator...")
-    evaluator = BenchmarkEvaluator(
-        vector_db=vector_db,
-        model_provider=model_provider,
-        dataset=benchmark_dataset,
-        collection_name=config.COLLECTION_NAME,
-        query_method=config.QUERY_METHOD,
-        score_columns=["rerank_score", "clip_score", "score", "distance"],
-        target_vector=config.TARGET_VECTOR
-    )
-
-    # Run evaluation
-    logging.info("Starting evaluation...")
-    try:
-        image_results, query_evaluation = evaluator.evaluate_queries(split="test")
-    finally:
-        # Clean up
-        vector_db.close()
-    
-    return image_results, query_evaluation
-
-
 def main():
     """Main entry point for running the complete benchmark."""
     
@@ -185,13 +149,34 @@ def main():
     )
 
     model_provider = TritonModelProvider(triton_client=triton_client)
+
+    # Create benchmark dataset
+    logging.info("Creating benchmark dataset class...")
+    benchmark_dataset = INQUIRE(dataset_name=config.INQUIRE_DATASET)
+    dataset = benchmark_dataset.load(split="test", sample_size=config.SAMPLE_SIZE, seed=config.SEED)
+
+    # Create data loader
+    logging.info("Creating data loader...")
+    data_loader = INQUIREDataLoader(config=config, model_provider=model_provider)
+
+    # Create evaluator
+    logging.info("Creating benchmark evaluator...")
+    evaluator = BenchmarkEvaluator(
+        vector_db=vector_db,
+        model_provider=model_provider,
+        dataset=benchmark_dataset,
+        collection_name=config.COLLECTION_NAME,
+        query_method=config.QUERY_METHOD,
+        score_columns=["rerank_score", "clip_score", "score", "distance"],
+        target_vector=config.TARGET_VECTOR
+    )
     
     # Step 1: Load data
     logging.info("=" * 80)
     logging.info("Step 1: Loading data into vector database")
     logging.info("=" * 80)
     try:
-        load_data(vector_db, model_provider)
+        load_data(data_loader, vector_db, dataset)
         logging.info("Data loading completed successfully.")
     except Exception as e:
         logging.error(f"Error loading data: {e}")
@@ -202,7 +187,7 @@ def main():
     logging.info("Step 2: Running benchmark evaluation")
     logging.info("=" * 80)
     try:
-        image_results, query_evaluation = run_evaluation(vector_db, model_provider)
+        image_results, query_evaluation = run_evaluation(evaluator, dataset)
         logging.info("Evaluation completed successfully.")
     except Exception as e:
         logging.error(f"Error running evaluation: {e}")
@@ -255,6 +240,7 @@ def main():
     else:
         logging.info("S3 upload is disabled (UPLOAD_TO_S3=false or not set).")
     
+    vector_db.close()
     logging.info("=" * 80)
     logging.info("Benchmark run completed successfully!")
     logging.info("=" * 80)

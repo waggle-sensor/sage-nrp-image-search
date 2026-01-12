@@ -9,36 +9,15 @@
 import os
 import pandas as pd
 
-from imsearch_eval.framework.interfaces import BenchmarkDataset
+from imsearch_eval.adapters.huggingface import HuggingFaceDataset
 
-class MyBenchmarkDataset(BenchmarkDataset):
+class MyBenchmarkDataset(HuggingFaceDataset):
     """
     Benchmark dataset class for MYBENCHMARK.
     
     TODO: Replace MYBENCHMARK with your benchmark name
     TODO: Implement all required methods
     """
-    
-    def load(self, split="test", **kwargs) -> pd.DataFrame:
-        """
-        Load the dataset for the specified split.
-        
-        Args:
-            split: Dataset split to load (e.g., "test", "train", "val")
-            **kwargs: Additional arguments for dataset loading
-        
-        Returns:
-            DataFrame with columns: query, query_id, relevant, and optional metadata
-        """
-        # TODO: Implement dataset loading
-        # Example with HuggingFace:
-        # dataset = load_dataset("your-dataset/name", split=split)
-        # return dataset.to_pandas()
-        
-        # Example with local file:
-        # return pd.read_csv(f"data/{split}.csv")
-        
-        raise NotImplementedError("Implement dataset loading logic")
     
     def get_query_column(self) -> str:
         """Return the column name containing query text."""
