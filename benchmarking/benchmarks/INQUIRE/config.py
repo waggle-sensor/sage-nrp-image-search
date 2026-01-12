@@ -26,7 +26,7 @@ class INQUIREConfig(Config):
         self.TARGET_VECTOR = os.environ.get("TARGET_VECTOR", "clip")
         self.SAMPLE_SIZE = int(os.environ.get("SAMPLE_SIZE", 0))
         self.SEED = int(os.environ.get("SEED", 42))
-        self.WORKERS = int(os.environ.get("WORKERS", 0))
+        self.WORKERS = int(os.environ.get("WORKERS", 5))
         self.IMAGE_BATCH_SIZE = int(os.environ.get("IMAGE_BATCH_SIZE", 100))
         self.UPLOAD_TO_S3 = os.environ.get("UPLOAD_TO_S3", "false").lower() == "true"
         self.S3_BUCKET = os.environ.get("S3_BUCKET", "sage_imsearch")
