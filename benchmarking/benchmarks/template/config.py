@@ -31,7 +31,8 @@ class MyConfig(Config):
         self.S3_ENDPOINT = os.environ.get("S3_ENDPOINT", "http://rook-ceph-rgw-nautiluss3.rook")
         self.S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY", "")
         self.S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY", "")
-        self.S3_SECURE = os.environ.get("S3_SECURE", "false").lower() == "true"     
+        self.S3_SECURE = os.environ.get("S3_SECURE", "false").lower() == "true"
+        self.LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
     
     def get(self, key: str, default=None):
         """Get a configuration value."""

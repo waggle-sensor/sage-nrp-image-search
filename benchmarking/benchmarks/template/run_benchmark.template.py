@@ -137,7 +137,7 @@ def main():
     
     # Configure logging
     logging.basicConfig(
-        level=getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO),
+        level=getattr(logging, config.LOG_LEVEL, logging.INFO),
         format="%(asctime)s %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
     )

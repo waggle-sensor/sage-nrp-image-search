@@ -35,7 +35,8 @@ class INQUIREConfig(Config):
         self.S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY", "")
         self.S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY", "")
         self.S3_SECURE = os.environ.get("S3_SECURE", "false").lower() == "true"
-
+        self.LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
+        
         # Weaviate HNSW hyperparameters
         self.hnsw_dist_metric = VectorDistances.COSINE
         self.hnsw_ef = -1
