@@ -8,8 +8,7 @@ from io import BytesIO, BufferedReader
 from PIL import Image
 import weaviate
 from weaviate.classes.data import GeoCoordinate
-
-from imsearch_eval.framework.interfaces import DataLoader, ModelProvider
+from imsearch_eval.framework.interfaces import DataLoader
 
 
 class INQUIREDataLoader(DataLoader):
