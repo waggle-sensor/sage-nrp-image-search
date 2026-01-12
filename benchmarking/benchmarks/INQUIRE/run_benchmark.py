@@ -35,11 +35,14 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, datase
         # Process and insert data
         logging.info("Processing and inserting data...")
         
+        # Convert DataFrame to list of dictionaries for processing
+        dataset_records = dataset.to_dict('records')
+        
         if config.WORKERS == -1:
             # Sequential processing
             logging.info("Processing sequentially...")
             all_processed = []
-            for batch in batched(dataset, config.IMAGE_BATCH_SIZE):
+            for batch in batched(dataset_records, config.IMAGE_BATCH_SIZE):
                 processed_batch = data_loader.process_batch(batch)
                 all_processed.extend(processed_batch)
             
@@ -55,7 +58,7 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, datase
             with ThreadPoolExecutor(max_workers=num_workers) as executor:
                 futures = {
                     executor.submit(data_loader.process_batch, batch): batch
-                    for batch in batched(dataset, config.IMAGE_BATCH_SIZE)
+                    for batch in batched(dataset_records, config.IMAGE_BATCH_SIZE)
                 }
                 
                 for future in as_completed(futures):
