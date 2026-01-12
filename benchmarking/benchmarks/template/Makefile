@@ -6,23 +6,18 @@
 # 2. Update the required variables below
 # 3. Add any benchmark-specific environment variables at the bottom
 
-# Include the base Makefile (after setting variables)
-include ../Makefile
-
 # ============================================================================
 # Required Variables (must be set for base Makefile)
 # ============================================================================
 # TODO: Replace MYBENCHMARK with your benchmark name
 BENCHMARK_NAME := mybenchmark
-DOCKERFILE_EVALUATOR := Dockerfile.benchmark
-DOCKERFILE_DATA_LOADER := Dockerfile.data_loader
-RESULTS_PVC_NAME := $(BENCHMARK_NAME)-benchmark-results-pvc
-RESULTS_FILES := results.csv metrics.csv
+DOCKERFILE_JOB := Dockerfile.job
+RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
 ENV ?= dev
 ifeq ($(ENV),prod)
-  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE/nrp-prod
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-prod
 else
-  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
 endif
 
 # ============================================================================
@@ -31,8 +26,7 @@ endif
 KUBECTL_NAMESPACE := sage
 KUBECTL_CONTEXT ?= nautilus
 REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search
-EVALUATOR_TAG ?= latest
-DATA_LOADER_TAG ?= latest
+JOB_TAG ?= latest
 
 # ============================================================================
 # MYBENCHMARK-Specific Environment Variables
@@ -44,3 +38,8 @@ DATA_LOADER_TAG ?= latest
 # BATCH_SIZE ?= 10
 # WORKERS ?= 5
 
+# Local run script
+RUN_SCRIPT := run_benchmark.py
+
+# Include the base Makefile (after setting variables)
+include ../Makefile

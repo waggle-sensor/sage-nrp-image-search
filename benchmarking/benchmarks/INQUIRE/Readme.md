@@ -4,7 +4,7 @@ Here we use [INQUIRE](https://github.com/inquire-benchmark/INQUIRE) with Weaviat
 
 ## Usage
 
-This benchmark is supposed to be used in conjuction with [Sage Image Search](../../../kubernetes/base/). The Makefile references components that are deployed in [Sage Image Search](../../../kubernetes/base/) and deploys additional containers that are used to run the INQUIRE Benchmark.
+This benchmark is supposed to be used in conjunction with [Sage Image Search](../../../kubernetes/base/). The Makefile references components that are deployed in [Sage Image Search](../../../kubernetes/base/) and deploys additional containers that are used to run the INQUIRE Benchmark.
 
 ## Running the Example
 
@@ -20,67 +20,54 @@ To run this example, you'll need:
 1. **Deploy Sage Image Search Infrastructure**:
    - Navigate to the main [kubernetes](../../../kubernetes) directory and deploy base services:
      ```bash
-     kubectl apply -k nrp-dev or nrp-prod
+     kubectl apply -k nrp-dev  # or nrp-prod
      ```
 
 2. **Build and Push Images**:
-   - Build the benchmark images:
+   - Build the benchmark image:
      ```bash
      cd benchmarking/benchmarks/INQUIRE
      make build
      ```
    - Push to registry (update registry in Makefile if needed):
      ```bash
-     docker push <registry>/benchmark-inquire-evaluator:latest
-     docker push <registry>/benchmark-inquire-data-loader:latest
+     docker push <registry>/benchmark-inquire-job:latest
      ```
->NOTE: You can also use the github actions to build and push the images to the registry. See `.github/workflows/benchmarking.yml` for more details.
+>NOTE: You can also use the GitHub Actions to build and push the images to the registry. See `.github/workflows/benchmarking.yml` for more details.
 
 3. **Deploy INQUIRE Benchmark**:
    - Deploy to Kubernetes:
      ```bash
-     make deploy #default to dev environment
+     make deploy  # defaults to dev environment
      ```
 
-4. **Load in the dataset**:
-   - Start the data loader:
+4. **Run Benchmark Job**:
+   - Run the complete benchmark (loads data and evaluates):
      ```bash
-     make load #default to dev environment
+     make run-job  # defaults to dev environment
      ```
    - Monitor progress:
      ```bash
-     make logs-data-loader #default to dev environment
+     make logs
      ```
-   >NOTE: This loads in [INQUIRE-Benchmark-small](https://huggingface.co/datasets/sagecontinuum/INQUIRE-Benchmark-small) into Weaviate for the INQUIRE benchmark.
+   >NOTE: This loads [INQUIRE-Benchmark-small](https://huggingface.co/datasets/sagecontinuum/INQUIRE-Benchmark-small) into Weaviate, runs the evaluation, and saves results.
 
-5. **Calculate the Query Metrics**:
-   - After dataset is fully loaded into Weaviate, run:
+5. **Run Locally (Development)**:
+   - For local development with port-forwarding:
      ```bash
-     make calculate #default to dev environment
+     make run-local
      ```
-   - Monitor progress:
-     ```bash
-     make logs-evaluator
-     ```
-   >NOTE: Data loader logs will indicate when the dataset is fully loaded into Weaviate.
-
-6. **Retrieve the Results**:
-   - After the metrics are calculated, run:
-     ```bash
-     make get
-     ```
-   >NOTE: This will copy the csv files into your current working directory from the pod
-   >Alternatively, results are stored in the `inquire-results-pvc` PVC
+   - This will automatically set up port-forwarding and run the benchmark locally.
 
 ### Results
 
-Once the benchmark is ran, two csv files will be generated:
+Once the benchmark is run, two CSV files will be generated:
 - `image_search_results.csv`
-    - This file includes the metadata of all images returned by Weaviate when different queries were being ran.
+    - This file includes the metadata of all images returned by Weaviate when different queries were being run.
 - `query_eval_metrics.csv`
     - This file includes the calculated metrics based on images returned by different queries.
 
-There is multiple results placed in version folders. Each folder has a evaluate.ipynb notebook that goes into more details what that version tested and the metrics.
+Results are saved locally when running with `make run-local`, or can be retrieved from the job pod when running on Kubernetes. Results can also be automatically uploaded to S3 if configured.
 
 ## References
 - [Weaviate Blog: NDCG](https://weaviate.io/blog/retrieval-evaluation-metrics#normalized-discounted-cumulative-gain-ndcg)
@@ -90,7 +77,7 @@ There is multiple results placed in version folders. Each folder has a evaluate.
 - [Weaviate: Batch import](https://weaviate.io/developers/weaviate/manage-data/import)
 - [Weaviate: Imports in Detail](https://weaviate.io/developers/weaviate/tutorials/import#data-import---best-practices)
 - [INQUIRE](https://inquire-benchmark.github.io/)
-- [Hugginface: Fine-tuning Florence2](https://huggingface.co/blog/finetune-florence2)
+- [Huggingface: Fine-tuning Florence2](https://huggingface.co/blog/finetune-florence2)
 - [Medium: Fine-tuning Florence2](https://medium.com/@amit25173/fine-tuning-florence-2-aa9c99b2a83d)
 
 ## Citation
@@ -116,29 +103,58 @@ benchmarking/
 └── benchmarks/
     └── INQUIRE/                      # INQUIRE benchmark instance
         ├── benchmark_dataset.py        # INQUIRE-specific benchmark dataset (BenchmarkDataset)
-        ├── data_loader.py           # INQUIRE-specific data loader (DataLoader)
-        ├── config.py                # INQUIRE-specific configuration (Config)
-        ├── load_data.py              # Script to load data into vector DB
-        ├── main.py                  # Entry point for benchmarking
-        ├── requirements.txt          # Dependencies including imsearch-eval package
-        └── README.md                # INQUIRE-specific instructions
+        ├── data_loader.py             # INQUIRE-specific data loader (DataLoader)
+        ├── config.py                  # INQUIRE-specific configuration (Config)
+        ├── run_benchmark.py           # Main script loads data and evaluates)
+        ├── requirements.txt           # Dependencies including imsearch-eval package
+        ├── Dockerfile.job             # Dockerfile for the combined job
+        ├── Makefile                   # Makefile for building and deploying
+        └── Readme.md                  # INQUIRE-specific instructions
 
 The framework and adapters are provided by the imsearch-eval package:
 - Repository: https://github.com/waggle-sensor/imsearch_eval
 - Package: imsearch_eval[weaviate]
-- Installation: pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
+- Installation: pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
 ```
 
 ## Key Components
 
-### 1. Benchmark Dataset Class (`benchmark_dataset.py`)
+### 1. Config Class (`config.py`)
+
+Implements `Config` interface for INQUIRE benchmark:
+- Loads all environment variables (dataset, collection, S3 settings, etc.)
+- Defines Weaviate HNSW hyperparameters
+- Defines model and query hyperparameters
+- Provides caption prompts for different models
+
+### 2. Benchmark Dataset Class (`benchmark_dataset.py`)
 
 Implements `BenchmarkDataset` interface for INQUIRE dataset:
 - Loads from HuggingFace: `sagecontinuum/INQUIRE-Benchmark-small`
 - Defines column mappings: `query`, `query_id`, `relevant`
 - Provides metadata columns: `category`, `supercategory`, `iconic_group`
 
-### 2. Shared Adapters (from `imsearch-eval` package)
+### 3. Data Loader Class (`data_loader.py`)
+
+Implements `DataLoader` interface for INQUIRE dataset:
+- Processes INQUIRE dataset items
+- Generates captions using model provider
+- Generates CLIP embeddings
+- Returns formatted data for Weaviate insertion
+- Provides schema configuration for Weaviate collection
+
+### 4. Main Script (`run_benchmark.py`)
+
+Combined script that:
+1. **Step 0**: Sets up benchmark environment (initializes clients and adapters)
+2. **Step 1**: Loads data into vector database (calls `load_data()` function)
+3. **Step 2**: Runs evaluation (calls `run_evaluation()` function)
+4. **Step 3**: Saves results locally
+5. **Step 4**: Optionally uploads results to S3
+
+The script uses a `config` object (instance of `INQUIREConfig`) to access all configuration values.
+
+### 5. Shared Adapters (from `imsearch-eval` package)
 
 **WeaviateAdapter and WeaviateQuery**:
 - Provided by `imsearch_eval.adapters.weaviate`
@@ -156,30 +172,48 @@ Implements `BenchmarkDataset` interface for INQUIRE dataset:
 - Supports: Gemma3, Qwen2.5-VL captioning
 - Import: `from imsearch_eval.adapters import TritonModelProvider, TritonModelUtils`
 
-### 3. Main Entry Point (`main.py`)
-
-Wires everything together:
-1. Initializes clients (Weaviate, Triton)
-2. Creates adapters
-3. Creates benchmark dataset class
-4. Creates evaluator with all components
-5. Runs evaluation
-6. Saves results
-
 ## Usage
+
+### Running on Kubernetes
 
 ```bash
 cd benchmarking/benchmarks/INQUIRE
-python main.py
+make build      # Build Docker image
+make deploy     # Deploy to Kubernetes
+make run-job    # Run benchmark job
+make logs       # Monitor logs
+```
+
+### Running Locally
+
+```bash
+cd benchmarking/benchmarks/INQUIRE
+make run-local  # Runs with automatic port-forwarding
 ```
 
 ## Environment Variables
 
+All environment variables are loaded through the `INQUIREConfig` class in `config.py`:
+
 - `INQUIRE_DATASET`: HuggingFace dataset name
 - `WEAVIATE_HOST`: Weaviate host (default: 127.0.0.1)
+- `WEAVIATE_PORT`: Weaviate HTTP port (default: 8080)
+- `WEAVIATE_GRPC_PORT`: Weaviate gRPC port (default: 50051)
 - `TRITON_HOST`: Triton host (default: triton)
+- `TRITON_PORT`: Triton port (default: 8001)
 - `COLLECTION_NAME`: Weaviate collection (default: INQUIRE)
 - `QUERY_METHOD`: Query method to use (default: clip_hybrid_query)
+- `TARGET_VECTOR`: Target vector name (default: clip)
+- `SAMPLE_SIZE`: Number of samples to use (0 = all)
+- `WORKERS`: Number of parallel workers (0 = auto)
+- `IMAGE_BATCH_SIZE`: Batch size for processing images
+- `UPLOAD_TO_S3`: Enable S3 upload (default: false)
+- `S3_BUCKET`: S3 bucket name
+- `S3_PREFIX`: S3 prefix for uploaded files
+- `S3_ENDPOINT`: S3 endpoint URL
+- `S3_ACCESS_KEY`: S3 access key (from secret)
+- `S3_SECRET_KEY`: S3 secret key (from secret)
+- `S3_SECURE`: Use TLS for S3 (default: false)
 
 ## Extending INQUIRE
 
@@ -197,7 +231,7 @@ The abstract framework and adapters are provided by the `imsearch-eval` Python p
 
 - **Repository**: https://github.com/waggle-sensor/imsearch_eval
 - **Package**: `imsearch_eval[weaviate]`
-- **Installation**: `pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0`
+- **Installation**: `pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main`
 
 This allows:
 - Multiple benchmark instances to share framework and adapter code
@@ -206,4 +240,3 @@ This allows:
 - Easy reuse of adapters across different benchmarks
 - **Independence from `app/`**: All functions are in the framework package, won't break when `app/` changes
 - **Easy distribution**: Benchmarks can be used in any environment by installing the package
-

@@ -2,20 +2,19 @@
 
 ## Overview
 
-The benchmarking framework provides a Dockerfile template that can be reused across all benchmarks. Since Dockerfiles must be in the benchmark directory for the build context, each benchmark creates its own Dockerfiles based on the template.
+The benchmarking framework provides a Dockerfile template that can be reused across all benchmarks. Since Dockerfiles must be in the benchmark directory for the build context, each benchmark creates its own Dockerfile based on the template.
 
 ## Template
 
-The base template is located at `benchmarks/template/Dockerfile.template` or `benchmarks/Dockerfile.template`. This template provides:
+The base template is located at `benchmarks/template/Dockerfile.job`. This template provides:
 
 - Python 3.11 base image (configurable via `PYTHON_VERSION` ARG)
-- System dependencies (build-essential)
+- System dependencies (build-essential, git, procps)
 - Requirements installation
 - Application code copying
-- Python path configuration for framework, adapters, and app directories
-- Configurable entrypoint script
+- Entrypoint that runs `run_benchmark.py`
 
-## Creating Dockerfiles for a New Benchmark
+## Creating Dockerfile for a New Benchmark
 
 ### Step 1: Copy the Template
 
@@ -23,10 +22,7 @@ Copy the template to your benchmark directory:
 
 ```bash
 cd benchmarks/MYBENCHMARK
-cp ../template/Dockerfile.template Dockerfile.benchmark
-cp ../template/Dockerfile.template Dockerfile.data_loader
-# Or use the template in benchmarks root:
-# cp ../Dockerfile.template Dockerfile.benchmark
+cp ../template/Dockerfile.job Dockerfile.job
 ```
 
 Or use the complete template directory:
@@ -38,53 +34,32 @@ cd MYBENCHMARK
 # Customize the files as needed
 ```
 
-### Step 2: Customize the Entrypoint
+### Step 2: Verify the Entrypoint
 
-**For `Dockerfile.benchmark` (evaluator):**
+The `Dockerfile.job` should run the combined benchmark script:
+
 ```dockerfile
-# Run benchmark evaluator
-CMD ["python", "main.py"]
+# Run combined benchmark script
+CMD ["python", "run_benchmark.py"]
 ```
 
-**For `Dockerfile.data_loader` (data loader):**
-```dockerfile
-# Run data loader
-CMD ["python", "load_data.py"]
-```
+This is already set in the template, so usually no changes are needed.
 
-### Step 3: Install Dependencies
-
-The `imsearch-eval` package is installed via `requirements.txt`. No need to set `PYTHONPATH` as the package is installed in the Python environment.
+### Step 3: Ensure requirements.txt is Complete
 
 Make sure your `requirements.txt` includes:
-```txt
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
-```
+- `imsearch_eval[weaviate]` - Core benchmarking framework
+- `minio>=7.2.0` - S3 upload support
+- Any benchmark-specific dependencies
 
-### Step 4: Add Benchmark-Specific Dependencies (if needed)
+## Dockerfile Structure
 
-If your benchmark needs additional system packages, add them to the `apt-get install` line:
-
-```dockerfile
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    your-package-here \
-    && rm -rf /var/lib/apt/lists/*
-```
-
-## Example: INQUIRE Dockerfiles
-
-See `benchmarks/INQUIRE/` for complete examples:
-
-- **Dockerfile.benchmark**: Runs `main.py` (evaluator)
-- **Dockerfile.data_loader**: Runs `load_data.py` (data loader)
-
-Both follow the template pattern and only differ in the `CMD` line.
-
-## Template Structure
+A typical `Dockerfile.job` looks like:
 
 ```dockerfile
-# Benchmark Dockerfile Template
+# MYBENCHMARK Benchmark Job Dockerfile
+# Combined Dockerfile for running both data loading and evaluation
+
 ARG PYTHON_VERSION=3.11-slim
 FROM python:${PYTHON_VERSION}
 
@@ -93,6 +68,8 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
+    git \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
@@ -102,98 +79,82 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Note: The imsearch-eval package is installed via requirements.txt
-# No need to set PYTHONPATH as the package is installed in the Python environment
-
-# Set your entrypoint script here
-CMD ["python", "main.py"]
+# Run combined benchmark script
+CMD ["python", "run_benchmark.py"]
 ```
 
-## Customization Options
+## Building Images
 
-### Python Version
-
-Override the Python version via build arg:
+### Local Build
 
 ```bash
-docker build --build-arg PYTHON_VERSION=3.10-slim -t myimage .
+cd benchmarks/MYBENCHMARK
+docker build -f Dockerfile.job -t benchmark-mybenchmark-job:latest .
 ```
 
-Or set it in the Dockerfile:
+### Using Makefile
 
-```dockerfile
-ARG PYTHON_VERSION=3.10-slim
+```bash
+cd benchmarks/MYBENCHMARK
+make build
 ```
 
-### Additional System Packages
+This will build the image using the `DOCKERFILE_JOB` specified in the Makefile.
 
-Add packages to the `apt-get install` command:
+### Using GitHub Actions
 
-```dockerfile
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    git \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-```
+The GitHub Actions workflow (`.github/workflows/benchmarking.yml`) automatically builds and pushes images when:
+- Changes are pushed to `main` branch
+- Tags are created
+- Pull requests are opened
 
-### Custom Dependencies
+The workflow builds `Dockerfile.job` for each benchmark.
 
-If your benchmark needs additional Python packages, add them to `requirements.txt`:
+## Image Naming Convention
 
-```txt
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
-your-custom-package>=1.0.0
-```
+Images should follow this naming pattern:
+- `benchmark-{benchmark-name}-job:latest`
+
+For example:
+- `benchmark-inquire-job:latest`
+- `benchmark-mybenchmark-job:latest`
+
+## Registry
+
+Images are typically pushed to:
+- `gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-{name}-job:latest`
+
+Update the `REGISTRY` variable in your Makefile if using a different registry.
 
 ## Best Practices
 
-1. **Keep it Simple**: Only customize what's necessary for your benchmark
-2. **Follow the Template**: Use the template as a starting point to maintain consistency
-3. **Document Changes**: Add comments explaining any customizations
-4. **Test Locally**: Build and test your Dockerfiles before deploying
-5. **Version Requirements**: Pin Python package versions in `requirements.txt` for reproducibility
-
-## Integration with Makefile
-
-The Makefile system automatically uses your Dockerfiles:
-
-- `DOCKERFILE_EVALUATOR` (default: `Dockerfile.benchmark`)
-- `DOCKERFILE_DATA_LOADER` (default: `Dockerfile.data_loader`)
-
-Set these in your benchmark's Makefile:
-
-```makefile
-DOCKERFILE_EVALUATOR := Dockerfile.benchmark
-DOCKERFILE_DATA_LOADER := Dockerfile.data_loader
-```
+1. **Keep Dockerfiles Simple**: The template is already optimized, avoid unnecessary changes
+2. **Pin Dependencies**: Use specific versions in `requirements.txt` when possible
+3. **Multi-stage Builds**: Not needed for benchmarks, but can be used if image size is a concern
+4. **Layer Caching**: The template is structured to maximize Docker layer caching
+5. **Security**: Keep base images updated and avoid running as root if possible
 
 ## Troubleshooting
 
-### Build Fails: "requirements.txt not found"
+### Build Fails with "Module not found"
 
-Ensure `requirements.txt` exists in your benchmark directory.
+Ensure all dependencies are in `requirements.txt` and the file is copied before `pip install`.
 
-### Import Errors: "No module named 'imsearch_eval'"
+### Build is Slow
 
-Ensure `requirements.txt` includes the `imsearch-eval` package:
-```txt
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
-```
+- Check if Docker layer caching is working
+- Consider using a local Docker registry for faster builds
+- Ensure `requirements.txt` is copied before application code (for better caching)
 
-Verify the package is installed by checking the build logs or running:
-```bash
-docker run <your-image> pip list | grep imsearch-eval
-```
+### Image is Too Large
 
-### Command Not Found: "python: command not found"
+- Use `python:3.11-slim` base image (already in template)
+- Remove unnecessary system packages after installation
+- Consider multi-stage builds if needed
 
-Ensure the Python base image is correct. The template uses `python:3.11-slim`.
+## See Also
 
-## Benefits
-
-- **Consistency**: All benchmarks use the same base setup
-- **Maintainability**: Update the template to fix issues for all benchmarks
-- **Flexibility**: Each benchmark can customize as needed
-- **Documentation**: Template serves as documentation for the structure
-
+- `template/Dockerfile.job` - Complete template example
+- `INQUIRE/Dockerfile.job` - Real-world example
+- `../README.md` - Framework overview
+- `../MAKEFILE.md` - Makefile documentation

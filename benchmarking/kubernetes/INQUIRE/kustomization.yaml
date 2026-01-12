@@ -6,24 +6,18 @@ namePrefix: inquire-
 commonLabels:
   benchmark: inquire
 
+# This overlay references the base and applies INQUIRE-specific patches
 resources:
   - ../base
 
 patches:
+  # Patch job environment variables (INQUIRE-specific + dev services)
   - path: env.yaml
     target:
-      kind: Deployment
-      labelSelector: "app=benchmark-evaluator"
-  - path: data-loader-env.yaml
-    target:
-      kind: Deployment
-      labelSelector: "app=benchmark-data-loader"
+      kind: Job
+      labelSelector: "app=benchmark-job"
 
 images:
-  - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-evaluator
-    newTag: pr-1 #TODO: Change to the latest tag
-  - name: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-data-loader
-    newTag: pr-1 #TODO: Change to the latest tag
-
+  - name: PLACEHOLDER_BENCHMARK_JOB_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-job
+    newTag: latest

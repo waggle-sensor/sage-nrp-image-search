@@ -24,14 +24,14 @@ benchmarks/
 
 The base `benchmarks/Makefile` contains all generic commands that work for any benchmark:
 
-- **Build**: `make build` - Build Docker images
+- **Build**: `make build` - Build Docker job image
 - **Deploy**: `make deploy` - Deploy to Kubernetes
-- **Load**: `make load` - Start data loader
-- **Calculate**: `make calculate` - Run benchmark evaluation
-- **Get Results**: `make get` - Copy results from pod
+- **Run Job**: `make run-job` - Run benchmark job (loads data and evaluates)
+- **Run Local**: `make run-local` - Run benchmark locally with port-forwarding
 - **Status**: `make status` - Show deployment status
-- **Logs**: `make logs-evaluator` / `make logs-data-loader` - View logs
-- **Clean**: `make clean` - Remove deployments and PVCs
+- **Logs**: `make logs` - View job logs
+- **Port Forward**: `make port-forward-start` / `make port-forward-stop` - Manage port-forwarding
+- **Clean**: `make clean` - Remove deployments
 
 ## Creating a New Benchmark Makefile
 
@@ -49,27 +49,25 @@ Create `benchmarking/MYBENCHMARK/Makefile`:
 # Required Variables (must be set for base Makefile)
 # ============================================================================
 BENCHMARK_NAME := mybenchmark
-KUSTOMIZE_DIR := ../kubernetes/MYBENCHMARK
-DOCKERFILE_EVALUATOR := Dockerfile.benchmark
-DOCKERFILE_DATA_LOADER := Dockerfile.data_loader
-RESULTS_PVC_NAME := $(BENCHMARK_NAME)-benchmark-results-pvc
-RESULTS_FILES := results.csv metrics.csv
+DOCKERFILE_JOB := Dockerfile.job
+RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
+ENV ?= dev
+ifeq ($(ENV),prod)
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-prod
+else
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
+endif
 
 # ============================================================================
 # Optional Variables (can be overridden)
 # ============================================================================
 KUBECTL_NAMESPACE := sage
-KUBECTL_CONTEXT ?= nrp-dev
+KUBECTL_CONTEXT ?= nautilus
 REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search
-EVALUATOR_TAG ?= latest
-DATA_LOADER_TAG ?= latest
+JOB_TAG ?= latest
 
-# ============================================================================
-# MYBENCHMARK-Specific Environment Variables
-# ============================================================================
-# These are used by the Kubernetes deployments via environment variable patches
-MYBENCHMARK_DATASET ?= mydataset/benchmark
-BATCH_SIZE ?= 10
+# Local run script
+RUN_SCRIPT := run_benchmark.py
 
 # Include the base Makefile (after setting variables)
 include ../Makefile
@@ -80,25 +78,38 @@ include ../Makefile
 Each benchmark Makefile **must** define:
 
 - `BENCHMARK_NAME`: Unique identifier for the benchmark (used in labels, names, etc.)
-- `KUSTOMIZE_DIR`: Path to the kustomize directory (e.g., `../kubernetes/MYBENCHMARK`)
-- `DOCKERFILE_EVALUATOR`: Name of the evaluator Dockerfile
-- `DOCKERFILE_DATA_LOADER`: Name of the data loader Dockerfile
-- `RESULTS_PVC_NAME`: Name of the PVC for storing results (typically `$(BENCHMARK_NAME)-benchmark-results-pvc`)
-- `RESULTS_FILES`: Space-separated list of result files to copy (e.g., `results.csv metrics.csv`)
+- `DOCKERFILE_JOB`: Name of the job Dockerfile (typically `Dockerfile.job`)
+- `RESULTS_FILES`: Space-separated list of result files to copy (e.g., `image_search_results.csv query_eval_metrics.csv`)
+- `KUSTOMIZE_DIR`: Path to the kustomize directory (can be conditional based on `ENV`)
 
 ### 3. Optional Variables
 
 These can be overridden but have defaults:
 
 - `KUBECTL_NAMESPACE`: Kubernetes namespace (default: `sage`)
-- `KUBECTL_CONTEXT`: kubectl context (default: `nrp-dev`)
+- `KUBECTL_CONTEXT`: kubectl context (default: `nautilus`)
 - `REGISTRY`: Docker registry (default: `gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search`)
-- `EVALUATOR_TAG`: Evaluator image tag (default: `latest`)
-- `DATA_LOADER_TAG`: Data loader image tag (default: `latest`)
+- `JOB_TAG`: Job image tag (default: `latest`)
+- `RUN_SCRIPT`: Script to run locally (default: `run_benchmark.py`)
 
-### 4. Benchmark-Specific Variables
+### 4. Environment Switching
 
-Add any benchmark-specific environment variables that will be used by your Kubernetes deployments. These should match the environment variables expected by your benchmark code.
+The Makefile supports switching between dev and prod environments:
+
+```makefile
+ENV ?= dev
+ifeq ($(ENV),prod)
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-prod
+else
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
+endif
+```
+
+Then use:
+```bash
+make deploy ENV=prod    # Deploy to prod
+make deploy            # Deploy to dev (default)
+```
 
 ## Example: INQUIRE Makefile
 
@@ -106,18 +117,22 @@ See `benchmarks/INQUIRE/Makefile` for a complete example:
 
 ```makefile
 BENCHMARK_NAME := inquire
-KUSTOMIZE_DIR := ../../kubernetes/INQUIRE
-DOCKERFILE_EVALUATOR := Dockerfile.benchmark
-DOCKERFILE_DATA_LOADER := Dockerfile.data_loader
-RESULTS_PVC_NAME := $(BENCHMARK_NAME)-benchmark-results-pvc
+DOCKERFILE_JOB := Dockerfile.job
 RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
+ENV ?= dev
+ifeq ($(ENV),prod)
+  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE/nrp-prod
+else
+  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE
+endif
 
-# INQUIRE-specific env vars
-INQUIRE_DATASET ?= sagecontinuum/INQUIRE-Benchmark-small
-IMAGE_BATCH_SIZE ?= 25
-QUERY_BATCH_SIZE ?= 5
+KUBECTL_NAMESPACE := sage
+KUBECTL_CONTEXT ?= nautilus
+REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search
+JOB_TAG ?= latest
 
-# Include the base Makefile (after setting variables)
+RUN_SCRIPT := run_benchmark.py
+
 include ../Makefile
 ```
 
@@ -128,30 +143,44 @@ Once your Makefile is set up, use it from your benchmark directory:
 ```bash
 cd benchmarking/MYBENCHMARK
 
-# Build images
+# Build image
 make build
 
 # Deploy to Kubernetes
 make deploy
 
-# Load data
-make load
+# Run benchmark job (loads data and evaluates)
+make run-job
 
-# Run evaluation
-make calculate
-
-# Get results
-make get
+# Monitor logs
+make logs
 
 # View status
 make status
 
-# View logs
-make logs-evaluator
-make logs-data-loader
+# Run locally (with port-forwarding)
+make run-local
 
 # Clean up
 make clean
+```
+
+## Local Development
+
+For local development, use port-forwarding:
+
+```bash
+# Start port-forwarding manually
+make port-forward-start
+
+# Run your benchmark script locally
+python run_benchmark.py
+
+# Stop port-forwarding
+make port-forward-stop
+
+# Or use the convenience command (does all of the above)
+make run-local
 ```
 
 ## How It Works
@@ -192,4 +221,3 @@ build:
 ```
 
 However, this should be rare - most customization should be done via variables.
-

@@ -8,31 +8,28 @@ Kubernetes deployments for benchmarking using kustomize for configuration manage
 benchmarking/kubernetes/
 ├── base/                    # Base kustomization (shared across all benchmarks)
 │   ├── kustomization.yaml
-│   ├── benchmark-evaluator.yaml
-│   ├── benchmark-data-loader.yaml
-│   ├── hf_pvc.yaml
-│   └── results-pvc.yaml
+│   ├── benchmark-job.yaml   # Combined job (loads data and evaluates)
+│   └── s3-secret.yaml       # S3 credentials secret
 │
 └── INQUIRE/                 # INQUIRE benchmark overlay
     ├── kustomization.yaml   # Extends base with INQUIRE-specific config
-    ├── env.yaml             # Environment variables for evaluator
-    ├── data-loader-env.yaml # Environment variables for data loader
+    ├── env.yaml             # Environment variables for job
     └── nrp-prod/            # Prod environment overlay
 ```
 
 ## Base Components
 
-The `base/` directory contains generic deployments that can be reused by any benchmark:
+The `base/` directory contains generic resources that can be reused by any benchmark:
 
-- **benchmark-evaluator.yaml**: Deployment for running benchmark evaluations
-- **benchmark-data-loader.yaml**: Deployment for loading data into vector databases
-- **hf_pvc.yaml**: Persistent volume claim for HuggingFace cache
-- **results-pvc.yaml**: Persistent volume claim for storing results
+- **benchmark-job.yaml**: Job that runs the combined benchmark script (loads data and evaluates)
+- **s3-secret.yaml**: Secret for S3 credentials (access key and secret key)
 
-Both deployments are **vector database and inference server agnostic**:
-- Include health checks and resource limits
-- Only include generic environment variables (PYTHONUNBUFFERED, PYTHONPATH)
-- Vector DB and inference server environment variables should be added via patches in benchmark-specific overlays (env.yaml and data-loader-env.yaml)
+The job is **vector database and inference server agnostic**:
+- Includes health checks and resource limits
+- Includes base environment variables (PYTHONUNBUFFERED, PYTHONPATH)
+- Includes S3 configuration (endpoint, bucket, secure flag) with defaults
+- S3 credentials are loaded from the secret
+- Vector DB and inference server environment variables should be added via patches in benchmark-specific overlays (env.yaml)
 
 ## Creating a New Benchmark Overlay
 
@@ -59,59 +56,54 @@ resources:
 patches:
   - path: env.yaml
     target:
-      kind: Deployment
-      labelSelector: "app=benchmark-evaluator"
-  - path: data-loader-env.yaml
-    target:
-      kind: Deployment
-      labelSelector: "app=benchmark-data-loader"
+      kind: Job
+      labelSelector: "app=benchmark-job"
 
 images:
-  - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-mybenchmark-evaluator
-    newTag: latest
-  - name: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-mybenchmark-data-loader
+  - name: PLACEHOLDER_BENCHMARK_JOB_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-mybenchmark-job
     newTag: latest
 ```
 
-3. **Create environment patches**:
-   - `env.yaml`: Benchmark-specific environment variables for evaluator (including vector DB and inference server config)
-   - `data-loader-env.yaml`: Environment variables for data loader (including vector DB and inference server config)
-
-   Example `env.yaml` for Weaviate + Triton:
-   ```yaml
-   apiVersion: apps/v1
-   kind: Deployment
-   metadata:
-     name: benchmark-evaluator
-   spec:
-     template:
-       spec:
-         containers:
-           - name: benchmark-evaluator
-             env:
-               - name: WEAVIATE_HOST
-                 value: "weaviate.sage.svc.cluster.local"
-               - name: WEAVIATE_PORT
-                 value: "8080"
-               - name: WEAVIATE_GRPC_PORT
-                 value: "50051"
-               - name: TRITON_HOST
-                 value: "triton.sage.svc.cluster.local"
-               - name: TRITON_PORT
-                 value: "8001"
-               - name: COLLECTION_NAME
-                 value: "MYBENCHMARK"
-               - name: QUERY_METHOD
-                 value: "clip_hybrid_query"
-   ```
-
-4. **Update Makefile** in your benchmark directory to use the new overlay
+3. **Create env.yaml**:
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: benchmark-job
+spec:
+  template:
+    spec:
+      containers:
+        - name: benchmark-job
+          env:
+            # Vector DB configuration (Weaviate)
+            - name: WEAVIATE_HOST
+              value: "dev-weaviate.sage.svc.cluster.local"
+            - name: WEAVIATE_PORT
+              value: "8080"
+            - name: WEAVIATE_GRPC_PORT
+              value: "50051"
+            # Inference server configuration (Triton)
+            - name: TRITON_HOST
+              value: "dev-triton.sage.svc.cluster.local"
+            - name: TRITON_PORT
+              value: "8001"
+            # Benchmark-specific configuration
+            - name: MYBENCHMARK_DATASET
+              value: "your-dataset/name"
+            - name: COLLECTION_NAME
+              value: "MYBENCHMARK"
+            - name: QUERY_METHOD
+              value: "clip_hybrid_query"
+            # S3 upload configuration (override base defaults if needed)
+            - name: S3_PREFIX
+              value: "benchmark-results/MYBENCHMARK"
+```
 
 ## Environment Switching (Dev/Prod)
 
-Benchmarks can be deployed to use either **dev** or **prod** environment resources. Each benchmark can have a `nrp-prod/` overlay that patch service names and PVC references to match the prod environment.
+Benchmarks can be deployed to use either **dev** or **prod** environment resources. Each benchmark can have a `nrp-prod/` overlay that patches service names to match the prod environment.
 >NOTE: By default, the benchmark will use the dev environment resources.
 
 ### Using Environment Overlays
@@ -137,6 +129,7 @@ The `ENV` variable controls which kustomize overlay is used:
 - `kubectl` configured with access to cluster
 - `kustomize` (or `kubectl` with kustomize support)
 - Images built and pushed to registry
+- S3 secret configured with credentials (if using S3 upload)
 
 ### Deploy
 
@@ -146,32 +139,18 @@ make deploy              # Default deployment (dev environment)
 make deploy ENV=prod     # Deploy to prod environment
 ```
 
-### Load Data
+### Run Benchmark Job
 
 ```bash
-make load                # Default deployment (dev environment)
-make load ENV=prod       # Load using prod resources
-```
-
-### Run Evaluation
-
-```bash
-make calculate           # Default deployment (dev environment)
-make calculate ENV=prod  # Evaluate using prod resources
-```
-
-### Get Results
-
-```bash
-make get
+make run-job             # Default deployment (dev environment)
+make run-job ENV=prod    # Run using prod resources
 ```
 
 ### Monitor
 
 ```bash
 make status
-make logs-evaluator
-make logs-data-loader
+make logs
 ```
 
 ### Cleanup
@@ -179,45 +158,89 @@ make logs-data-loader
 ```bash
 make down                # Default deployment (dev environment)
 make down ENV=prod       # Clean up prod deployment
-make clean               # Also removes PVCs
+make clean               # Remove all resources
 ```
 
 ## Environment Variables
 
 Benchmark-specific environment variables are set via patches in each overlay:
 
-- **Evaluator** (`env.yaml`): 
-  - Vector DB connection (e.g., WEAVIATE_HOST, WEAVIATE_PORT, or PINECONE_API_KEY, etc.)
-  - Inference server connection (e.g., TRITON_HOST, TRITON_PORT, or OPENAI_API_KEY, etc.)
+- **Job** (`env.yaml`): 
+  - Vector DB connection (e.g., WEAVIATE_HOST, WEAVIATE_PORT)
+  - Inference server connection (e.g., TRITON_HOST, TRITON_PORT)
   - Dataset name, collection name, query method, batch sizes
-- **Data Loader** (`data-loader-env.yaml`):
-  - Vector DB connection (same as evaluator)
-  - Inference server connection (same as evaluator)
-  - Dataset name, collection name, batch sizes, workers
+  - S3 prefix override (if different from base default)
 
-The base deployments are agnostic to the specific vector DB and inference server used. Each benchmark overlay should add the appropriate environment variables for its chosen stack.
+### Base Environment Variables
 
-## Image Building
+The base `benchmark-job.yaml` includes:
+- `S3_ENDPOINT`: S3 endpoint URL (override in env.yaml if needed)
+- `S3_BUCKET`: S3 bucket name (override in env.yaml if needed)
+- `S3_SECURE`: Use TLS for S3 (default: "true")
+- `S3_PREFIX`: S3 prefix for uploaded files (default: "benchmark-results")
+- `UPLOAD_TO_S3`: Enable S3 upload (default: "false")
 
-Images should be built and pushed to the registry before deployment:
+S3 credentials are loaded from the `s3-secret` secret:
+- `S3_ACCESS_KEY`: From secret
+- `S3_SECRET_KEY`: From secret
 
-```bash
-make build
-docker push <registry>/benchmark-<name>-evaluator:latest
-docker push <registry>/benchmark-<name>-data-loader:latest
+## S3 Configuration
+
+### Setting Up S3 Secret
+
+Edit `kubernetes/base/s3-secret.yaml`:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: s3-secret
+type: Opaque
+data:
+  # Base64 encoded values
+  S3_ACCESS_KEY: <base64-encoded-access-key>
+  S3_SECRET_KEY: <base64-encoded-secret-key>
 ```
 
-## Dependencies
+To generate base64 values:
+```bash
+echo -n "your-access-key" | base64
+echo -n "your-secret-key" | base64
+```
 
-The benchmark deployments depend on:
-- **Vector Database**: Any vector database service (Weaviate, Pinecone, Qdrant, etc.)
-- **Inference Server**: Any inference server or model API (Triton, OpenAI, HuggingFace, etc.)
-- **HF PVC**: HuggingFace cache (from main `kubernetes/base/`)
+### Overriding S3 Configuration
 
-The base deployments are agnostic to the specific services used. Each benchmark overlay should:
-1. Configure environment variables pointing to the vector DB and inference server services
-2. Ensure the required services are deployed in the cluster
-3. Use the appropriate service names/endpoints in the environment variable patches
+To override base S3 settings for a specific benchmark, add to `env.yaml`:
 
-For example, INQUIRE uses Weaviate and Triton, but other benchmarks could use different stacks.
+```yaml
+- name: S3_ENDPOINT
+  value: "your-custom-endpoint:9000"
+- name: S3_BUCKET
+  value: "your-bucket"
+- name: S3_PREFIX
+  value: "custom-prefix/benchmark-name"
+- name: UPLOAD_TO_S3
+  value: "true"
+```
 
+## Image Registry
+
+Images should be built and pushed to:
+- `gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-{name}-job:latest`
+
+Update the registry in `kustomization.yaml` if using a different registry.
+
+## Local Development
+
+For local development, use port-forwarding:
+
+```bash
+make run-local
+```
+
+This will:
+1. Start port-forwarding for Weaviate and Triton services
+2. Run the benchmark locally
+3. Stop port-forwarding when done
+
+Results are saved locally in the current directory.

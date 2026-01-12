@@ -5,9 +5,7 @@
 # Required Variables (must be set for base Makefile)
 # ============================================================================
 BENCHMARK_NAME := inquire
-DOCKERFILE_EVALUATOR := Dockerfile.benchmark
-DOCKERFILE_DATA_LOADER := Dockerfile.data_loader
-RESULTS_PVC_NAME := $(BENCHMARK_NAME)-benchmark-results-pvc
+DOCKERFILE_JOB := Dockerfile.job
 RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
 ENV ?= dev
 ifeq ($(ENV),prod)
@@ -22,8 +20,7 @@ endif
 KUBECTL_NAMESPACE := sage
 KUBECTL_CONTEXT ?= nautilus
 REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search
-EVALUATOR_TAG ?= latest
-DATA_LOADER_TAG ?= latest
+JOB_TAG ?= latest
 
 # ============================================================================
 # INQUIRE-Specific Environment Variables
@@ -36,6 +33,9 @@ SAMPLE_SIZE ?= 0
 WORKERS ?= 5
 IMAGE_RESULTS_FILE ?= image_search_results.csv
 QUERY_EVAL_METRICS_FILE ?= query_eval_metrics.csv
+
+# Local run script
+RUN_SCRIPT := run_benchmark.py
 
 # Include the base Makefile (after setting variables)
 include ../Makefile

@@ -39,12 +39,10 @@ jobs:
       fail-fast: false
       matrix:
         benchmark: ${{ fromJson(needs.discover-benchmarks.outputs.benchmarks) }}
-        image_type: [evaluator, data-loader]
     env:
       REGISTRY_URL: ${{ secrets.NRP_GITLAB_REGISTRY_URL }}
       IMAGE_PATH: /ndp/sage/nrp-image-search
       BENCHMARK_NAME: ${{ matrix.benchmark }}
-      IMAGE_TYPE: ${{ matrix.image_type }}
     steps:
       - uses: actions/checkout@v4
 
@@ -69,14 +67,9 @@ jobs:
           # Convert benchmark name to lowercase for Docker image name (Docker requires lowercase)
           BENCHMARK_NAME_LOWER=$(echo "${{ matrix.benchmark }}" | tr '[:upper:]' '[:lower:]')
           
-          # Determine Dockerfile based on image type
-          if [ "${{ matrix.image_type }}" == "evaluator" ]; then
-            DOCKERFILE="$BENCHMARK_DIR/Dockerfile.benchmark"
-            IMAGE_NAME="benchmark-${BENCHMARK_NAME_LOWER}-evaluator"
-          else
-            DOCKERFILE="$BENCHMARK_DIR/Dockerfile.data_loader"
-            IMAGE_NAME="benchmark-${BENCHMARK_NAME_LOWER}-data-loader"
-          fi
+          # Use Dockerfile.job for the combined job image
+          DOCKERFILE="$BENCHMARK_DIR/Dockerfile.job"
+          IMAGE_NAME="benchmark-${BENCHMARK_NAME_LOWER}-job"
           
           # Check if Dockerfile exists
           if [ ! -f "$DOCKERFILE" ]; then
@@ -122,4 +115,3 @@ jobs:
           if [ "$GITHUB_REF" = "refs/heads/main" ]; then
             docker push "$REGISTRY_URL$IMAGE_PATH/$IMAGE_NAME:latest"
           fi
-

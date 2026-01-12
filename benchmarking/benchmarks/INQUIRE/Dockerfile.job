@@ -1,10 +1,5 @@
-# MYBENCHMARK Data Loader Dockerfile
-# Based on benchmarking/benchmarks/template/Dockerfile.template
-#
-# Instructions:
-# 1. Replace MYBENCHMARK with your benchmark name in the comment
-# 2. Verify the CMD line runs your load_data.py script
-# 3. Ensure requirements.txt includes imsearch-eval package
+# INQUIRE Benchmark Job Dockerfile
+# Combined Dockerfile for running both data loading and evaluation
 
 ARG PYTHON_VERSION=3.11-slim
 FROM python:${PYTHON_VERSION}
@@ -25,6 +20,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Run data loader
-CMD ["python", "load_data.py"]
+# Run combined benchmark script
+CMD ["python", "run_benchmark.py"]
 

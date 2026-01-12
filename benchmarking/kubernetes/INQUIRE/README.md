@@ -6,8 +6,7 @@ Kubernetes deployment for the INQUIRE benchmark using kustomize.
 
 This overlay extends `../base/` with INQUIRE-specific configuration:
 
-- **env.yaml**: Environment variables for benchmark evaluator
-- **data-loader-env.yaml**: Environment variables for data loader
+- **env.yaml**: Environment variables for benchmark job
 
 ## Usage
 
@@ -24,35 +23,16 @@ cd benchmarking/benchmarks/INQUIRE
 make deploy
 ```
 
-### Load Data
+### Run Benchmark Job
 
 ```bash
-make load
+make run-job
 ```
 
 Monitor with:
 ```bash
-make logs-data-loader
+make logs
 ```
-
-### Run Evaluation
-
-```bash
-make calculate
-```
-
-Monitor with:
-```bash
-make logs-evaluator
-```
-
-### Get Results
-
-```bash
-make get
-```
-
-Results are also stored in the `inquire-results-pvc` PVC.
 
 ### Status
 
@@ -64,29 +44,24 @@ make status
 
 ```bash
 make down      # Remove deployments
-make clean     # Remove deployments and PVCs
+make clean     # Remove all resources
 ```
 
 ## Environment Variables
 
-### Evaluator
+### Job Configuration
 - `INQUIRE_DATASET`: HuggingFace dataset name
 - `COLLECTION_NAME`: Weaviate collection name
 - `QUERY_METHOD`: Query method to use
 - `QUERY_BATCH_SIZE`: Batch size for parallel queries
-
-### Data Loader
-- `INQUIRE_DATASET`: HuggingFace dataset name
-- `COLLECTION_NAME`: Weaviate collection name
 - `IMAGE_BATCH_SIZE`: Batch size for processing
 - `SAMPLE_SIZE`: Number of samples (0 = all)
 - `WORKERS`: Number of parallel workers
+- `S3_PREFIX`: S3 prefix for uploaded results (dev: "dev-metrics/inquire", prod: "prod-metrics/inquire")
 
 ## Image Registry
 
 Images should be built and pushed to:
-- `gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-evaluator:latest`
-- `gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-data-loader:latest`
+- `gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-inquire-job:latest`
 
 Update the registry in `kustomization.yaml` if using a different registry.
-

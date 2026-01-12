@@ -8,24 +8,16 @@ commonLabels:
   benchmark: MYBENCHMARK
 
 resources:
-  - ../base
+  - ../../base
 
 patches:
   - path: env.yaml
     target:
-      kind: Deployment
-      labelSelector: "app=benchmark-evaluator"
-  - path: data-loader-env.yaml
-    target:
-      kind: Deployment
-      labelSelector: "app=benchmark-data-loader"
+      kind: Job
+      labelSelector: "app=benchmark-job"
 
 images:
   # TODO: Replace MYBENCHMARK with your benchmark name and update registry if needed
-  - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-MYBENCHMARK-evaluator
+  - name: PLACEHOLDER_BENCHMARK_JOB_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-MYBENCHMARK-job
     newTag: latest
-  - name: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-MYBENCHMARK-data-loader
-    newTag: latest
-

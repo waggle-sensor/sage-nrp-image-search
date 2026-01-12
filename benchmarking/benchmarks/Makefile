@@ -2,16 +2,14 @@
 # This file contains generic benchmark commands that can be reused by any benchmark instance.
 # Each benchmark should define its specific variables and include this file.
 
-.PHONY: down build deploy load calculate get get-pvc clean status logs-evaluator logs-data-loader kubectl
+.PHONY: down build deploy run-job kubectl port-forward-start port-forward-stop run-local status logs
 
 # ============================================================================
 # Required Variables (must be set by benchmark-specific Makefile)
 # ============================================================================
 # BENCHMARK_NAME - Name of the benchmark (e.g., "inquire")
 # KUSTOMIZE_DIR - Path to kustomize directory (e.g., "../../kubernetes/INQUIRE")
-# DOCKERFILE_EVALUATOR - Dockerfile for evaluator (e.g., "Dockerfile.benchmark")
-# DOCKERFILE_DATA_LOADER - Dockerfile for data loader (e.g., "Dockerfile.data_loader")
-# RESULTS_PVC_NAME - Name of the results PVC (e.g., "$(BENCHMARK_NAME)-benchmark-results-pvc")
+# DOCKERFILE_JOB - Dockerfile for combined job (e.g., "Dockerfile.job")
 # RESULTS_FILES - Space-separated list of result files to copy (e.g., "image_search_results.csv query_eval_metrics.csv")
 
 # ============================================================================
@@ -20,13 +18,22 @@
 KUBECTL_NAMESPACE ?= sage
 KUBECTL_CONTEXT ?= nautilus
 REGISTRY ?= gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search
-EVALUATOR_TAG ?= latest
-DATA_LOADER_TAG ?= latest
+JOB_TAG ?= latest
+ENV ?= dev
+
+# Local run configuration
+WEAVIATE_SERVICE ?= $(ENV)-weaviate
+TRITON_SERVICE ?= $(ENV)-triton
+WEAVIATE_HTTP_PORT ?= 8080
+WEAVIATE_GRPC_PORT ?= 50051
+TRITON_GRPC_PORT ?= 8001
+LOCAL_WEAVIATE_HTTP_PORT ?= 8080
+LOCAL_WEAVIATE_GRPC_PORT ?= 50051
+LOCAL_TRITON_GRPC_PORT ?= 8001
+RUN_SCRIPT ?= run_benchmark.py
 
 # Derived variables
-EVALUATOR_IMAGE ?= $(REGISTRY)/benchmark-$(BENCHMARK_NAME)-evaluator
-DATA_LOADER_IMAGE ?= $(REGISTRY)/benchmark-$(BENCHMARK_NAME)-data-loader
-DEPLOYMENT_PREFIX ?= $(BENCHMARK_NAME)-benchmark
+JOB_IMAGE ?= $(REGISTRY)/benchmark-$(BENCHMARK_NAME)-job
 
 # ============================================================================
 # Helper Targets
@@ -45,19 +52,13 @@ build:
 	@if [ -z "$(BENCHMARK_NAME)" ]; then \
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
 	fi
-	@if [ -z "$(DOCKERFILE_EVALUATOR)" ]; then \
-		echo "Error: DOCKERFILE_EVALUATOR must be set"; exit 1; \
+	@if [ -z "$(DOCKERFILE_JOB)" ]; then \
+		echo "Error: DOCKERFILE_JOB must be set"; exit 1; \
 	fi
-	@if [ -z "$(DOCKERFILE_DATA_LOADER)" ]; then \
-		echo "Error: DOCKERFILE_DATA_LOADER must be set"; exit 1; \
-	fi
-	@echo "Building benchmark evaluator image..."
-	@docker build -t $(EVALUATOR_IMAGE):$(EVALUATOR_TAG) -f $(DOCKERFILE_EVALUATOR) .
-	@echo "Building data loader image..."
-	@docker build -t $(DATA_LOADER_IMAGE):$(DATA_LOADER_TAG) -f $(DOCKERFILE_DATA_LOADER) .
+	@echo "Building benchmark job image..."
+	@docker build -t $(JOB_IMAGE):$(JOB_TAG) -f $(DOCKERFILE_JOB) .
 	@echo "Build complete. Push with:"
-	@echo "  docker push $(EVALUATOR_IMAGE):$(EVALUATOR_TAG)"
-	@echo "  docker push $(DATA_LOADER_IMAGE):$(DATA_LOADER_TAG)"
+	@echo "  docker push $(JOB_IMAGE):$(JOB_TAG)"
 
 # ============================================================================
 # Deployment Targets
@@ -92,82 +93,30 @@ down: kubectl
 # Execution Targets
 # ============================================================================
 
-# Load data into vector database
-load: kubectl
+# Run benchmark job (loads data and evaluates)
+run-job: kubectl
 	@if [ -z "$(BENCHMARK_NAME)" ]; then \
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
 	fi
-	@echo "Scaling down evaluator to free resources..."
-	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-evaluator --replicas=0 -n $(KUBECTL_NAMESPACE) || true
-	@echo "Starting data loader job..."
-	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-data-loader --replicas=1 -n $(KUBECTL_NAMESPACE) || true
-	@echo "Data loader started. Monitor with:"
-	@echo "  kubectl logs -n $(KUBECTL_NAMESPACE) -l app=benchmark-data-loader,benchmark=$(BENCHMARK_NAME) -f"
+	@if [ -z "$(KUSTOMIZE_DIR)" ]; then \
+		echo "Error: KUSTOMIZE_DIR must be set"; exit 1; \
+	fi
+	@echo "Deploying and running $(BENCHMARK_NAME) benchmark job..."
+	@kubectl apply -k $(KUSTOMIZE_DIR)
+	@echo "Job started. Monitor with:"
+	@echo "  kubectl logs -n $(KUBECTL_NAMESPACE) -l app=benchmark-job,benchmark=$(BENCHMARK_NAME) -f"
 
-# Run benchmark evaluation
-calculate: kubectl
-	@if [ -z "$(BENCHMARK_NAME)" ]; then \
-		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
-	fi
-	@echo "Scaling down data loader to free resources..."
-	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-data-loader --replicas=0 -n $(KUBECTL_NAMESPACE) || true
-	@echo "Starting benchmark evaluation..."
-	@kubectl scale deployment/$(DEPLOYMENT_PREFIX)-evaluator --replicas=1 -n $(KUBECTL_NAMESPACE) || true
-	@echo "Benchmark evaluator started. Monitor with:"
-	@echo "  kubectl logs -n $(KUBECTL_NAMESPACE) -l app=benchmark-evaluator,benchmark=$(BENCHMARK_NAME) -f"
-
-# ============================================================================
-# Results Targets
-# ============================================================================
-
-# Get results from pod
-get: kubectl
-	@if [ -z "$(BENCHMARK_NAME)" ]; then \
-		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
-	fi
-	@if [ -z "$(RESULTS_FILES)" ]; then \
-		echo "Warning: RESULTS_FILES not set, using default result files"; \
-		RESULTS_FILES="image_search_results.csv query_eval_metrics.csv"; \
-	fi
-	@echo "Retrieving results..."
-	@POD_NAME=$$(kubectl get pods -n $(KUBECTL_NAMESPACE) -l app=benchmark-evaluator,benchmark=$(BENCHMARK_NAME) -o jsonpath='{.items[0].metadata.name}' 2>/dev/null) && \
-	if [ -n "$$POD_NAME" ]; then \
-		echo "Copying results from pod $$POD_NAME..."; \
-		for file in $(RESULTS_FILES); do \
-			kubectl cp $(KUBECTL_NAMESPACE)/$$POD_NAME:/app/results/$$file ./$$file 2>/dev/null || \
-			kubectl cp $(KUBECTL_NAMESPACE)/$$POD_NAME:/app/$$file ./$$file 2>/dev/null || \
-			echo "Could not copy $$file"; \
-		done; \
-		echo "Results retrieved."; \
-	else \
-		if [ -n "$(RESULTS_PVC_NAME)" ]; then \
-			echo "No evaluator pod found. Results may be in PVC: $(RESULTS_PVC_NAME)"; \
-		else \
-			echo "No evaluator pod found."; \
-		fi; \
-	fi
-
-# Get results from PVC (alternative method)
-get-pvc: kubectl
-	@if [ -z "$(RESULTS_PVC_NAME)" ]; then \
-		echo "Error: RESULTS_PVC_NAME must be set"; exit 1; \
-	fi
-	@echo "Creating temporary pod to access results PVC..."
-	@kubectl run -it --rm --restart=Never results-copy-$$(date +%s) \
-		-n $(KUBECTL_NAMESPACE) \
-		--image=busybox \
-		--overrides='{"spec":{"volumes":[{"name":"results","persistentVolumeClaim":{"claimName":"$(RESULTS_PVC_NAME)"}}],"containers":[{"name":"results-copy","image":"busybox","volumeMounts":[{"name":"results","mountPath":"/results"}],"command":["sh","-c","ls -la /results && sleep 3600"]}]}}' || true
 
 # ============================================================================
 # Utility Targets
 # ============================================================================
 
-# Clean up everything
-clean: down
-	@if [ -n "$(RESULTS_PVC_NAME)" ]; then \
-		echo "Cleaning up PVCs..."; \
-		kubectl delete pvc $(RESULTS_PVC_NAME) -n $(KUBECTL_NAMESPACE) --ignore-not-found=true || true; \
+clean: kubectl
+	@if [ -z "$(BENCHMARK_NAME)" ]; then \
+		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
 	fi
+	@echo "Cleaning up $(BENCHMARK_NAME) benchmark deployments..."
+	@kubectl delete -k $(KUSTOMIZE_DIR) --ignore-not-found=true || true
 	@echo "Cleanup complete."
 
 # Show status
@@ -176,24 +125,75 @@ status: kubectl
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
 	fi
 	@echo "=== $(BENCHMARK_NAME) Benchmark Status ==="
+	@echo "=== Jobs ==="
+	@kubectl get jobs -n $(KUBECTL_NAMESPACE) -l benchmark=$(BENCHMARK_NAME)
+	@echo ""
+	@echo "=== Pods ==="
 	@kubectl get pods -n $(KUBECTL_NAMESPACE) -l benchmark=$(BENCHMARK_NAME)
-	@echo ""
-	@echo "=== Services ==="
-	@kubectl get svc -n $(KUBECTL_NAMESPACE) -l benchmark=$(BENCHMARK_NAME)
-	@echo ""
-	@echo "=== PVCs ==="
-	@kubectl get pvc -n $(KUBECTL_NAMESPACE) -l benchmark=$(BENCHMARK_NAME)
 
 # Show logs
-logs-evaluator: kubectl
+logs: kubectl
 	@if [ -z "$(BENCHMARK_NAME)" ]; then \
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
 	fi
-	@kubectl logs -n $(KUBECTL_NAMESPACE) -l app=benchmark-evaluator,benchmark=$(BENCHMARK_NAME) -f
+	@kubectl logs -n $(KUBECTL_NAMESPACE) -l app=benchmark-job,benchmark=$(BENCHMARK_NAME) -f
 
-logs-data-loader: kubectl
+
+
+# ============================================================================
+# Local Development Targets
+# ============================================================================
+
+# Start port-forwarding for Weaviate and Triton services
+port-forward-start: kubectl
+	@echo "Starting port-forwarding for services..."
+	@echo "Weaviate HTTP: localhost:$(LOCAL_WEAVIATE_HTTP_PORT) -> $(WEAVIATE_SERVICE):$(WEAVIATE_HTTP_PORT)"
+	@echo "Weaviate gRPC: localhost:$(LOCAL_WEAVIATE_GRPC_PORT) -> $(WEAVIATE_SERVICE):$(WEAVIATE_GRPC_PORT)"
+	@echo "Triton gRPC: localhost:$(LOCAL_TRITON_GRPC_PORT) -> $(TRITON_SERVICE):$(TRITON_GRPC_PORT)"
+	@kubectl port-forward -n $(KUBECTL_NAMESPACE) svc/$(WEAVIATE_SERVICE) $(LOCAL_WEAVIATE_HTTP_PORT):$(WEAVIATE_HTTP_PORT) $(LOCAL_WEAVIATE_GRPC_PORT):$(WEAVIATE_GRPC_PORT) > /tmp/kubectl-port-forward-weaviate.log 2>&1 & \
+		echo $$! > /tmp/kubectl-port-forward-weaviate.pid
+	@kubectl port-forward -n $(KUBECTL_NAMESPACE) svc/$(TRITON_SERVICE) $(LOCAL_TRITON_GRPC_PORT):$(TRITON_GRPC_PORT) > /tmp/kubectl-port-forward-triton.log 2>&1 & \
+		echo $$! > /tmp/kubectl-port-forward-triton.pid
+	@sleep 2
+	@echo "Port-forwarding started. PIDs saved to /tmp/kubectl-port-forward-*.pid"
+	@echo "To stop port-forwarding, run: make port-forward-stop"
+
+# Stop port-forwarding
+port-forward-stop:
+	@echo "Stopping port-forwarding..."
+	@if [ -f /tmp/kubectl-port-forward-weaviate.pid ]; then \
+		kill $$(cat /tmp/kubectl-port-forward-weaviate.pid) 2>/dev/null || true; \
+		rm -f /tmp/kubectl-port-forward-weaviate.pid; \
+		echo "Stopped Weaviate port-forwarding"; \
+	fi
+	@if [ -f /tmp/kubectl-port-forward-triton.pid ]; then \
+		kill $$(cat /tmp/kubectl-port-forward-triton.pid) 2>/dev/null || true; \
+		rm -f /tmp/kubectl-port-forward-triton.pid; \
+		echo "Stopped Triton port-forwarding"; \
+	fi
+	@echo "Port-forwarding stopped."
+
+# Run benchmark locally with port-forwarding
+run-local: port-forward-start
 	@if [ -z "$(BENCHMARK_NAME)" ]; then \
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
 	fi
-	@kubectl logs -n $(KUBECTL_NAMESPACE) -l app=benchmark-data-loader,benchmark=$(BENCHMARK_NAME) -f
+	@if [ ! -f "$(RUN_SCRIPT)" ]; then \
+		echo "Error: Run script $(RUN_SCRIPT) not found"; exit 1; \
+	fi
+	@echo "Running $(BENCHMARK_NAME) benchmark locally..."
+	@echo "Using port-forwarded services:"
+	@echo "  WEAVIATE_HOST=127.0.0.1"
+	@echo "  WEAVIATE_PORT=$(LOCAL_WEAVIATE_HTTP_PORT)"
+	@echo "  WEAVIATE_GRPC_PORT=$(LOCAL_WEAVIATE_GRPC_PORT)"
+	@echo "  TRITON_HOST=127.0.0.1"
+	@echo "  TRITON_PORT=$(LOCAL_TRITON_GRPC_PORT)"
+	@WEAVIATE_HOST=127.0.0.1 \
+	 WEAVIATE_PORT=$(LOCAL_WEAVIATE_HTTP_PORT) \
+	 WEAVIATE_GRPC_PORT=$(LOCAL_WEAVIATE_GRPC_PORT) \
+	 TRITON_HOST=127.0.0.1 \
+	 TRITON_PORT=$(LOCAL_TRITON_GRPC_PORT) \
+	 python $(RUN_SCRIPT) || (make port-forward-stop && exit 1)
+	@make port-forward-stop
+	@echo "Benchmark run completed. Results saved locally."
 

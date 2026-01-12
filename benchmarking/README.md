@@ -23,8 +23,8 @@ cd benchmarks/MYBENCHMARK
 ```
 
 The `benchmarks/template/` directory contains everything you need:
-- ✅ Ready-to-use Makefile and Dockerfiles
-- ✅ Python templates for `main.py`, `load_data.py`, `benchmark_dataset.py`
+- ✅ Ready-to-use Makefile and Dockerfile.job
+- ✅ Python templates for `run_benchmark.py`, `config.py`, `benchmark_dataset.py`
 - ✅ Comprehensive documentation and quick start guide
 
 See `benchmarks/template/README.md` for detailed setup instructions, or `benchmarks/template/QUICKSTART.md` for a 5-minute guide.
@@ -92,35 +92,69 @@ class MyBenchmarkDataset(BenchmarkDataset):
 ```
 >NOTE: You can also implement new adapters for other vector databases and models. See the `imsearch_eval` repository for more information.
 
-### Step 3: Update main.py
+### Step 3: Create config.py
 
-Edit `main.py` to use your benchmark dataset class and configure your benchmark:
+Create a `config.py` that implements the `Config` interface and loads all environment variables:
 
 ```python
-from imsearch_eval import BenchmarkEvaluator
-from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
-from benchmark_dataset import MyBenchmarkDataset
+import os
+from imsearch_eval.framework.interfaces import Config
 
-# Your benchmark-specific code here
+class MyConfig(Config):
+    def __init__(self):
+        self.MYBENCHMARK_DATASET = os.environ.get("MYBENCHMARK_DATASET", "your-dataset/name")
+        self.WEAVIATE_HOST = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
+        # ... add more environment variables
 ```
 
-### Step 4: Update Makefile
+See `benchmarks/template/config.py` and `benchmarks/INQUIRE/config.py` for examples.
+
+### Step 4: Create run_benchmark.py
+
+Create `run_benchmark.py` that combines data loading and evaluation:
+
+```python
+from config import MyConfig
+config = MyConfig()
+
+def load_data(vector_db: VectorDBAdapter, model_provider: ModelProvider):
+    # Implement data loading logic
+    pass
+
+def run_evaluation(vector_db: VectorDBAdapter, model_provider: ModelProvider):
+    # Implement evaluation logic
+    pass
+
+def main():
+    # Step 0: Set up clients and adapters
+    # Step 1: Call load_data(vector_db, model_provider)
+    # Step 2: Call run_evaluation(vector_db, model_provider)
+    # Step 3: Save results
+    # Step 4: Upload to S3 (optional)
+    pass
+```
+
+See `benchmarks/INQUIRE/run_benchmark.py` for a complete example.
+
+### Step 5: Update Makefile
 
 Edit `Makefile` and set:
 - `BENCHMARK_NAME`
+- `DOCKERFILE_JOB`
 - `KUSTOMIZE_DIR`
 - `RESULTS_FILES`
 
-### Step 5: Update requirements.txt
+### Step 6: Update requirements.txt
 
-Add the `imsearch_eval` package:
+Add the required packages:
 
 ```txt
 imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
+minio>=7.2.0
 # Add other dependencies as needed
 ```
 
-### Step 6: Create Kubernetes Config
+### Step 7: Create Kubernetes Config
 
 ```bash
 cd ../../kubernetes
@@ -148,14 +182,13 @@ Each benchmark has its own `Makefile` that:
 ### Common Commands
 
 All benchmarks support:
-- `make build` - Build Docker images
+- `make build` - Build Docker job image
 - `make deploy` - Deploy to Kubernetes
-- `make load` - Start data loader
-- `make calculate` - Run benchmark evaluation
-- `make get` - Copy results from pod
+- `make run-job` - Run benchmark job (loads data and evaluates)
+- `make run-local` - Run benchmark locally with port-forwarding
 - `make status` - Show deployment status
-- `make logs-evaluator` / `make logs-data-loader` - View logs
-- `make clean` - Remove deployments and PVCs
+- `make logs` - View job logs
+- `make clean` - Remove deployments
 
 See `benchmarks/MAKEFILE.md` for detailed documentation.
 
@@ -166,14 +199,13 @@ The Dockerfile system provides templates for consistent container builds.
 ### Template Files
 
 - `benchmarks/Dockerfile.template` - Base template
-- `benchmarks/template/Dockerfile.benchmark` - Evaluator template
-- `benchmarks/template/Dockerfile.data_loader` - Data loader template
+- `benchmarks/template/Dockerfile.job` - Combined job template
 
 ### Creating Benchmark Dockerfiles
 
-1. Copy from template: `cp benchmarks/template/Dockerfile.benchmark benchmarks/MYBENCHMARK/`
-2. Update `CMD` line for your entrypoint script
-3. Ensure `requirements.txt` includes `imsearch_eval` package
+1. Copy from template: `cp benchmarks/template/Dockerfile.job benchmarks/MYBENCHMARK/`
+2. Verify `CMD` line runs `run_benchmark.py`
+3. Ensure `requirements.txt` includes `imsearch_eval` and `minio` packages
 
 See `benchmarks/DOCKER.md` for detailed documentation.
 
@@ -182,26 +214,24 @@ See `benchmarks/DOCKER.md` for detailed documentation.
 ### Base Resources
 
 Located in `kubernetes/base/`, these provide common Kubernetes resources:
-- `benchmark-evaluator.yaml` - Evaluator deployment template
-- `benchmark-data-loader.yaml` - Data loader job template
+- `benchmark-job.yaml` - Combined job template (loads data and evaluates)
+- `s3-secret.yaml` - S3 credentials secret
 - `kustomization.yaml` - Base kustomization config
 
 ### Benchmark-Specific Configs
 
 Each benchmark has its own directory under `kubernetes/` (e.g., `kubernetes/INQUIRE/`) with:
 - `kustomization.yaml` - Extends base, sets images, patches
-- `env.yaml` - Environment variables for evaluator
-- `data-loader-env.yaml` - Environment variables for data loader
-- `results-pvc.yaml` - Persistent volume for results
-- `gpus.yaml` - GPU configuration (optional)
+- `env.yaml` - Environment variables for the job
+- `nrp-prod/` - Production environment overlay (optional)
 
 ### Deployment Workflow
 
-1. **Build images**: `make build` (in benchmark directory)
+1. **Build image**: `make build` (in benchmark directory)
 2. **Deploy**: `make deploy`
-3. **Load data**: `make load`
-4. **Run evaluation**: `make calculate`
-5. **Get results**: `make get`
+3. **Run job**: `make run-job` (loads data and evaluates)
+4. **Monitor**: `make logs`
+5. **Status**: `make status`
 
 See `kubernetes/README.md` for detailed Kubernetes documentation.
 
@@ -212,9 +242,9 @@ The `benchmarks/template/` directory provides a complete starting point for new 
 - **README.md**: Comprehensive guide for creating new benchmarks
 - **QUICKSTART.md**: 5-minute quick start guide
 - **Makefile**: Template with all required variables
-- **Dockerfile.benchmark** & **Dockerfile.data_loader**: Ready-to-use Dockerfiles
-- **Python Templates**: Template files for `main.py`, `load_data.py`, `benchmark_dataset.py`
-- **requirements.txt**: Base dependencies including `imsearch_eval`
+- **Dockerfile.job**: Ready-to-use combined job Dockerfile
+- **Python Templates**: Template files for `run_benchmark.py`, `load_data.py`, `benchmark_dataset.py`
+- **requirements.txt**: Base dependencies including `imsearch_eval` and `minio`
 - **kubernetes/**: Complete Kubernetes template
 
 ## Dependencies

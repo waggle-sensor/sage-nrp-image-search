@@ -16,18 +16,27 @@ Edit `Makefile` and replace `mybenchmark` with your benchmark name:
 
 ```makefile
 BENCHMARK_NAME := mybenchmark  # Change this!
-KUSTOMIZE_DIR := ../kubernetes/MYBENCHMARK  # Change this!
+DOCKERFILE_JOB := Dockerfile.job
+KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK  # Change this!
+RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
 ```
 
 ## Step 3: Rename Template Files
 
 ```bash
-mv benchmark_dataset.py.template benchmark_dataset.py
-mv main.py.template main.py
-mv load_data.py.template load_data.py
+mv benchmark_dataset.template.py benchmark_dataset.py
+mv run_benchmark.template.py run_benchmark.py
+# config.py is already named correctly, just customize it
 ```
 
-## Step 4: Implement BenchmarkDataset
+## Step 4: Update config.py
+
+Edit `config.py` and:
+- Replace `MYBENCHMARK` with your benchmark name
+- Update default values for your dataset, collection name, etc.
+- Add any benchmark-specific hyperparameters
+
+## Step 5: Implement BenchmarkDataset
 
 Edit `benchmark_dataset.py` and implement:
 - `load()` - Load your dataset
@@ -35,14 +44,24 @@ Edit `benchmark_dataset.py` and implement:
 - `get_query_id_column()` - Return query ID column name
 - `get_relevance_column()` - Return relevance column name
 
-## Step 5: Update main.py
+## Step 6: Update run_benchmark.py
 
-Edit `main.py` and:
-- Import your `BenchmarkDataset` class
-- Update `COLLECTION_NAME` default
-- Update `RESULTS_FILE` and `METRICS_FILE` names
+Edit `run_benchmark.py` and:
+- Import your `BenchmarkDataset` class (replace `MyBenchmarkDataset`)
+- Import your `Config` class (replace `MyConfig`)
+- Update the config instance creation
+- Implement the `load_data(vector_db, model_provider)` function:
+  - Load your dataset
+  - Create collection schema
+  - Process and insert data into vector database
+- Implement the `run_evaluation(vector_db, model_provider)` function:
+  - Create evaluator
+  - Run evaluation queries
+  - Return results
 
-## Step 6: Create Kubernetes Config
+See `../INQUIRE/run_benchmark.py` for a complete example.
+
+## Step 7: Create Kubernetes Config
 
 ```bash
 cd ../../kubernetes
@@ -50,18 +69,27 @@ cp -r ../benchmarks/template/kubernetes MYBENCHMARK
 cd MYBENCHMARK
 # Replace MYBENCHMARK with your benchmark name
 find . -type f -name "*.yaml" -exec sed -i '' 's/MYBENCHMARK/mybenchmark/g' {} +
-# Update image names in kustomization.yaml
-# Update environment variables in env.yaml and data-loader-env.yaml
+# Update image name in kustomization.yaml
+# Update environment variables in env.yaml
 ```
 
-## Step 7: Deploy
+## Step 8: Update config.py (if needed)
+
+If your config needs Weaviate connection parameters, ensure they're in your config:
+- `WEAVIATE_HOST`
+- `WEAVIATE_PORT`
+- `WEAVIATE_GRPC_PORT`
+
+These are typically set via environment variables in Kubernetes.
+
+## Step 9: Deploy
 
 ```bash
-make build    # Build images or use the github actions to build and push the images to the registry. See `.github/workflows/benchmarking.yml` for more details.
+cd ../../benchmarks/MYBENCHMARK
+make build    # Build image or use GitHub Actions to build and push to registry
 make deploy   # Deploy to Kubernetes
-make load     # Load data
-make calculate # Run evaluation
-make get      # Get results
+make run-job  # Run benchmark job (loads data and evaluates)
+make logs     # Monitor logs
 ```
 
 ## Files to Customize
@@ -69,16 +97,15 @@ make get      # Get results
 | File | What to Change |
 |------|----------------|
 | `Makefile` | Benchmark name, kustomize dir, result files |
+| `config.py` | Update with your benchmark name, dataset, and configuration values |
 | `benchmark_dataset.py` | Implement benchmark dataset logic |
-| `main.py` | Update collection name, result file names |
-| `load_data.py` | Implement data loading logic (if needed) |
-| `Dockerfile.benchmark` | Usually no changes needed |
-| `Dockerfile.data_loader` | Usually no changes needed |
+| `run_benchmark.py` | Import your classes, implement `load_data()` and `run_evaluation()` functions |
+| `Dockerfile.job` | Usually no changes needed |
 | `requirements.txt` | Add your dependencies |
+| `kubernetes/env.yaml` | Update environment variables |
 
 ## Need Help?
 
 - See `README.md` for detailed instructions
 - Check `../INQUIRE/` for a complete example (same directory level)
 - Review `../README.md` for framework overview
-

@@ -2,8 +2,11 @@
 # Add your benchmark-specific dependencies here
 
 # Core benchmarking framework
-# Install with weaviate extras to get WeaviateAdapter and TritonModelProvider
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
+# TODO: Install the module you need
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
+
+# S3 upload support (MinIO)
+minio>=7.2.0
 
 # Add other dependencies as needed
 # Example:

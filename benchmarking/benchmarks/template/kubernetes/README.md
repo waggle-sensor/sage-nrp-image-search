@@ -18,9 +18,9 @@ This directory contains Kubernetes/kustomize templates for benchmark deployments
    find . -type f -exec sed -i '' 's/mybenchmark/mybenchmark/g' {} +
    ```
 
-3. Update the image names in `kustomization.yaml`
+3. Update the image name in `kustomization.yaml`
 
-4. Customize environment variables in `env.yaml` and `data-loader-env.yaml`
+4. Customize environment variables in `env.yaml`
 
 ## Files Overview
 
@@ -28,49 +28,26 @@ This directory contains Kubernetes/kustomize templates for benchmark deployments
 Main kustomize configuration that:
 - Sets the name prefix and labels
 - References the base deployment
-- Applies patches for environment variables and GPU config
-- Defines image replacements
+- Applies patches for environment variables
+- Defines image replacement
 
 **Required changes:**
 - Replace `MYBENCHMARK` with your benchmark name
-- Update image names in the `images` section
+- Update image name in the `images` section
 
 ### `env.yaml`
-Environment variables for the benchmark evaluator.
+Environment variables for the benchmark job.
 
 **Required changes:**
 - Replace `MYBENCHMARK` with your benchmark name
 - Update environment variable names and values
 - Add/remove variables as needed
 
-### `data-loader-env.yaml`
-Environment variables for the data loader.
-
-**Required changes:**
-- Replace `MYBENCHMARK` with your benchmark name
-- Update environment variable names and values
-- Add/remove variables as needed
-
-### `results-pvc.yaml`
-PersistentVolumeClaim for storing benchmark results.
-
-**Required changes:**
-- Replace `MYBENCHMARK` with your benchmark name
-- Adjust storage size if needed
-
-### `results-pvc-patch.yaml`
-Patch to mount the results PVC in the evaluator deployment.
-
-**Required changes:**
-- Replace `MYBENCHMARK` with your benchmark name
-
-### `gpus.yaml` (Optional)
-GPU configuration for the data loader.
-
-**Required changes:**
-- Replace `MYBENCHMARK` with your benchmark name
-- Adjust GPU requirements if needed
-- Remove this file if GPUs are not required
+### `nrp-prod/` (Optional)
+Production environment overlay that:
+- Extends the base overlay
+- Patches service names for prod environment
+- Can override S3 prefix for prod
 
 ## Step-by-Step Setup
 
@@ -95,52 +72,47 @@ Also replace in `kustomization.yaml`:
 - `namePrefix: MYBENCHMARK-` → `namePrefix: mybenchmark-`
 - `benchmark: MYBENCHMARK` → `benchmark: mybenchmark`
 
-### 3. Update Image Names
+### 3. Update Image Name
 
-Edit `kustomization.yaml` and update the image names:
+Edit `kustomization.yaml` and update the image name:
 
 ```yaml
 images:
-  - name: PLACEHOLDER_BENCHMARK_EVALUATOR_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-MYBENCHMARK-evaluator
-    newTag: latest
-  - name: PLACEHOLDER_BENCHMARK_DATA_LOADER_IMAGE
-    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-MYBENCHMARK-data-loader
+  - name: PLACEHOLDER_BENCHMARK_JOB_IMAGE
+    newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-MYBENCHMARK-job
     newTag: latest
 ```
 
 ### 4. Customize Environment Variables
 
-#### Evaluator (`env.yaml`)
+#### Job (`env.yaml`)
 
-Update environment variables that your evaluator needs:
+Update environment variables that your benchmark needs:
 
 ```yaml
 env:
+  # Vector DB configuration (Weaviate)
+  - name: WEAVIATE_HOST
+    value: "dev-weaviate.sage.svc.cluster.local"
+  - name: WEAVIATE_PORT
+    value: "8080"
+  - name: WEAVIATE_GRPC_PORT
+    value: "50051"
+  # Inference server configuration (Triton)
+  - name: TRITON_HOST
+    value: "dev-triton.sage.svc.cluster.local"
+  - name: TRITON_PORT
+    value: "8001"
+  # Benchmark-specific configuration
   - name: MYBENCHMARK_DATASET
     value: "your-dataset/name"
   - name: COLLECTION_NAME
     value: "MYBENCHMARK"
-  - name: RESULTS_FILE
-    value: "results.csv"
-  - name: METRICS_FILE
-    value: "metrics.csv"
-```
-
-#### Data Loader (`data-loader-env.yaml`)
-
-Update environment variables that your data loader needs:
-
-```yaml
-env:
-  - name: MYBENCHMARK_DATASET
-    value: "your-dataset/name"
-  - name: COLLECTION_NAME
-    value: "MYBENCHMARK"
-  - name: BATCH_SIZE
-    value: "25"
-  - name: WORKERS
-    value: "5"
+  - name: QUERY_METHOD
+    value: "clip_hybrid_query"
+  # S3 upload configuration (override base defaults if needed)
+  - name: S3_PREFIX
+    value: "dev-metrics/MYBENCHMARK"
 ```
 
 ### 5. Update Makefile
@@ -148,7 +120,7 @@ env:
 Ensure your benchmark's Makefile points to the correct kustomize directory:
 
 ```makefile
-KUSTOMIZE_DIR := ../kubernetes/MYBENCHMARK
+KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
 ```
 
 ## Testing
@@ -173,22 +145,9 @@ Update `kustomization.yaml`:
 namespace: your-namespace
 ```
 
-### Different Storage Class
-
-Update `results-pvc.yaml`:
-
-```yaml
-storageClassName: your-storage-class
-```
-
-### No GPU Support
-
-1. Delete `gpus.yaml`
-2. Remove the GPU patch from `kustomization.yaml`
-
 ### Additional Environment Variables
 
-Add to `env.yaml` or `data-loader-env.yaml`:
+Add to `env.yaml`:
 
 ```yaml
 env:
@@ -196,24 +155,39 @@ env:
     value: "value"
 ```
 
+### S3 Configuration
+
+S3 endpoint, bucket, and credentials are configured in the base. To override:
+
+```yaml
+env:
+  - name: S3_PREFIX
+    value: "custom-prefix/benchmark-name"
+  - name: UPLOAD_TO_S3
+    value: "true"  # Enable S3 upload
+```
+
 ## Integration with Makefile
 
 The Makefile should reference this directory:
 
 ```makefile
-KUSTOMIZE_DIR := ../kubernetes/MYBENCHMARK
+KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
 ```
 
 Then use:
 
 ```bash
+make build     # Build Docker image
 make deploy    # Deploys using kustomize
+make run-job   # Run benchmark job
+make logs      # View logs
 make down      # Removes deployment
 ```
 
 ## Environment Switching (Dev/Prod)
 
-Benchmarks can be deployed to use either **dev** or **prod** environment resources. Each benchmark can have a `nrp-prod/` overlay that patch service names and PVC references to match the prod environment.
+Benchmarks can be deployed to use either **dev** or **prod** environment resources. Each benchmark can have a `nrp-prod/` overlay that patches service names to match the prod environment.
 >NOTE: By default, the benchmark will use the dev environment resources.
 
 ### Using Environment Overlays
@@ -232,6 +206,22 @@ The `ENV` variable controls which kustomize overlay is used:
 - `ENV=prod` → Uses `kubernetes/MYBENCHMARK/nrp-prod/`
 - No `ENV` → Uses `kubernetes/MYBENCHMARK/` (base overlay using dev environment resources)
 
+### Creating Production Overlay
+
+1. Copy `env.yaml` to `nrp-prod/env.yaml`
+2. Update service names to prod:
+   ```yaml
+   - name: WEAVIATE_HOST
+     value: "prod-weaviate.sage.svc.cluster.local"
+   - name: TRITON_HOST
+     value: "prod-triton.sage.svc.cluster.local"
+   ```
+3. Update S3 prefix if needed:
+   ```yaml
+   - name: S3_PREFIX
+     value: "prod-metrics/MYBENCHMARK"
+   ```
+
 ## Troubleshooting
 
 ### Error: "no matches for kind"
@@ -244,15 +234,17 @@ resources:
 
 ### Error: "image not found"
 
-Check that image names in `kustomization.yaml` match your registry and image names.
+Check that image name in `kustomization.yaml` matches your registry and image name.
 
-### PVC not mounting
+### Job not starting
 
-Verify PVC is created before the deployment
+Check logs:
+```bash
+make logs
+```
 
 ## See Also
 
 - `../../kubernetes/README.md` - Kubernetes overview
 - `../../kubernetes/base/` - Base deployment definitions
 - `../../../benchmarks/INQUIRE/` - Complete example
-
