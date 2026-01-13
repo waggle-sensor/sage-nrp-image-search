@@ -43,8 +43,8 @@ spec:
                 name: s3-secret
           resources:
             limits:
-              cpu: 8
-              memory: 16Gi
+              cpu: 6  # maximum allowed ratio of 1.2x of requests (5 * 1.2 = 6)
+              memory: 14Gi  # maximum allowed ratio of 1.2x of requests (12Gi * 1.2 = 14.4Gi)
             requests:
               cpu: 5
               memory: 12Gi
