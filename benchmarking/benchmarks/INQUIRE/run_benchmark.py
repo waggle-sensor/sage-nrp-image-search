@@ -28,27 +28,27 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, hf_dat
         # Process and insert data
         logging.info("Processing and inserting data...")
         
-        if config.workers == -1:
+        if config._workers == -1:
             # Sequential processing
             logging.info("Processing sequentially...")
             all_processed = []
-            for batch in BatchedIterator(hf_dataset, config.image_batch_size):
+            for batch in BatchedIterator(hf_dataset, config._image_batch_size):
                 processed_batch = data_loader.process_batch(batch)
                 all_processed.extend(processed_batch)
             
             # Insert all at once
-            inserted = vector_db.insert_data(config.collection_name, all_processed, batch_size=config.image_batch_size)
+            inserted = vector_db.insert_data(config._collection_name, all_processed, batch_size=config._image_batch_size)
             logging.info(f"Inserted {inserted} items.")
         else:
             # Parallel processing
-            num_workers = config.workers if config.workers > 0 else os.cpu_count()
+            num_workers = config._workers if config._workers > 0 else os.cpu_count()
             logging.info(f"Processing with {num_workers} parallel workers...")
             
             all_processed = []
             with ThreadPoolExecutor(max_workers=num_workers) as executor:
                 futures = {
                     executor.submit(data_loader.process_batch, batch): batch
-                    for batch in BatchedIterator(hf_dataset, config.image_batch_size)
+                    for batch in BatchedIterator(hf_dataset, config._image_batch_size)
                 }
                 
                 for future in as_completed(futures):
@@ -56,10 +56,10 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, hf_dat
                     all_processed.extend(processed_batch)
             
             # Insert all at once
-            inserted = vector_db.insert_data(config.collection_name, all_processed, batch_size=config.image_batch_size)
+            inserted = vector_db.insert_data(config._collection_name, all_processed, batch_size=config._image_batch_size)
             logging.info(f"Inserted {inserted} items.")
         
-        logging.info(f"Successfully loaded {config.inquire_dataset} into Weaviate collection '{config.collection_name}'")
+        logging.info(f"Successfully loaded {config.inquire_dataset} into Weaviate collection '{config._collection_name}'")
         
     except Exception as e:
         logging.error(f"Error loading data: {e}")
@@ -85,24 +85,24 @@ def upload_to_s3(local_file_path: str, s3_key: str):
         from minio import Minio
         from minio.error import S3Error
         
-        if not config.s3_endpoint:
+        if not config._s3_endpoint:
             raise ValueError("S3_ENDPOINT environment variable must be set")
         
         # Parse endpoint (remove http:// or https:// if present)
-        endpoint = config.s3_endpoint.replace("http://", "").replace("https://", "")
+        endpoint = config._s3_endpoint.replace("http://", "").replace("https://", "")
         
         # Create MinIO client
         client = Minio(
             endpoint,
-            access_key=config.s3_access_key,
-            secret_key=config.s3_secret_key,
-            secure=config.s3_secure
+            access_key=config._s3_access_key,
+            secret_key=config._s3_secret_key,
+            secure=config._s3_secure
         )
         
         # Upload file
-        logging.info(f"Uploading {local_file_path} to s3://{config.s3_bucket}/{s3_key}")
-        client.fput_object(config.s3_bucket, s3_key, local_file_path)
-        logging.info(f"Successfully uploaded to s3://{config.s3_bucket}/{s3_key}")
+        logging.info(f"Uploading {local_file_path} to s3://{config._s3_bucket}/{s3_key}")
+        client.fput_object(config._s3_bucket, s3_key, local_file_path)
+        logging.info(f"Successfully uploaded to s3://{config._s3_bucket}/{s3_key}")
         
     except ImportError:
         logging.error("minio is not installed. Install it with: pip install minio")
@@ -119,7 +119,7 @@ def main():
     
     # Configure logging
     logging.basicConfig(
-        level=getattr(logging, config.log_level, logging.INFO),
+        level=getattr(logging, config._log_level, logging.INFO),
         format="%(asctime)s %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
     )
@@ -130,13 +130,13 @@ def main():
     logging.info("=" * 80)
     logging.info("Initializing Weaviate client...")
     weaviate_client = WeaviateAdapter.init_client(
-        host=config.weaviate_host,
-        port=config.weaviate_port,
-        grpc_port=config.weaviate_grpc_port
+        host=config._weaviate_host,
+        port=config._weaviate_port,
+        grpc_port=config._weaviate_grpc_port
     )
     
     logging.info("Initializing Triton client...")
-    triton_client = TritonClient.InferenceServerClient(url=f"{config.triton_host}:{config.triton_port}")
+    triton_client = TritonClient.InferenceServerClient(url=f"{config._triton_host}:{config._triton_port}")
 
     # Create query method
     query_method = WeaviateQuery(
@@ -169,7 +169,7 @@ def main():
         vector_db=vector_db,
         model_provider=model_provider,
         dataset=benchmark_dataset,
-        collection_name=config.collection_name,
+        collection_name=config._collection_name,
         limit=config.response_limit,
         query_method=getattr(query_method, config.query_method),
         query_parameters=config.advanced_query_parameters,
@@ -208,8 +208,8 @@ def main():
     results_dir = Path("/app/results" if os.path.exists("/app/results") else ".")
     results_dir.mkdir(parents=True, exist_ok=True)
     
-    image_results_path = results_dir / config.image_results_file
-    query_evaluation_path = results_dir / config.query_eval_metrics_file
+    image_results_path = results_dir / config._image_results_file
+    query_evaluation_path = results_dir / config._query_eval_metrics_file
     
     image_results.to_csv(image_results_path, index=False)
     query_evaluation.to_csv(query_evaluation_path, index=False)
@@ -219,12 +219,12 @@ def main():
     logging.info(f"  - {query_evaluation_path}")
     
     # Step 4: Upload to S3 if enabled
-    if config.upload_to_s3:
-        if not config.s3_bucket:
+    if config._upload_to_s3:
+        if not config._s3_bucket:
             logging.warning("UPLOAD_TO_S3 is true but S3_BUCKET is not set. Skipping S3 upload.")
-        elif not config.s3_endpoint:
+        elif not config._s3_endpoint:
             logging.warning("UPLOAD_TO_S3 is true but S3_ENDPOINT is not set. Skipping S3 upload.")
-        elif not config.s3_access_key or not config.s3_secret_key:
+        elif not config._s3_access_key or not config._s3_secret_key:
             logging.warning("UPLOAD_TO_S3 is true but S3 credentials are not set. Skipping S3 upload.")
         else:
             logging.info("=" * 80)
@@ -233,8 +233,8 @@ def main():
             try:
                 # Generate S3 keys with timestamp
                 timestamp = time.strftime("%Y%m%d_%H%M%S")
-                s3_key_image = f"{config.s3_prefix}/{timestamp}/{config.image_results_file}"
-                s3_key_query = f"{config.s3_prefix}/{timestamp}/{config.query_eval_metrics_file}"
+                s3_key_image = f"{config._s3_prefix}/{timestamp}/{config._image_results_file}"
+                s3_key_query = f"{config._s3_prefix}/{timestamp}/{config._query_eval_metrics_file}"
                 
                 upload_to_s3(str(image_results_path), s3_key_image)
                 upload_to_s3(str(query_evaluation_path), s3_key_query)

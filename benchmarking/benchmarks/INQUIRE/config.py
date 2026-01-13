@@ -14,36 +14,36 @@ class INQUIREConfig(Config):
         """Initialize INQUIRE configuration."""
         # dataset parameters
         self.inquire_dataset = os.environ.get("INQUIRE_DATASET", "sagecontinuum/INQUIRE-Benchmark-small")
-        self.sample_size = int(os.environ.get("SAMPLE_SIZE", 50))
+        self.sample_size = int(os.environ.get("SAMPLE_SIZE", 50)) #TODO: set to 0 to use all samples
         self.seed = int(os.environ.get("SEED", 42))
 
         # Upload parameters
-        self.upload_to_s3 = os.environ.get("UPLOAD_TO_S3", "false").lower() == "true"
-        self.s3_bucket = os.environ.get("S3_BUCKET", "sage_imsearch")
-        self.s3_prefix = os.environ.get("S3_PREFIX", "dev-metrics")
-        self.s3_endpoint = os.environ.get("S3_ENDPOINT", "http://rook-ceph-rgw-nautiluss3.rook")
-        self.s3_access_key = os.environ.get("S3_ACCESS_KEY", "")
-        self.s3_secret_key = os.environ.get("S3_SECRET_KEY", "")
-        self.s3_secure = os.environ.get("S3_SECURE", "false").lower() == "true"    
-        self.image_results_file = os.environ.get("IMAGE_RESULTS_FILE", "image_search_results.csv")
-        self.query_eval_metrics_file = os.environ.get("QUERY_EVAL_METRICS_FILE", "query_eval_metrics.csv")
+        self._upload_to_s3 = os.environ.get("UPLOAD_TO_S3", "false").lower() == "true"
+        self._s3_bucket = os.environ.get("S3_BUCKET", "sage_imsearch")
+        self._s3_prefix = os.environ.get("S3_PREFIX", "dev-metrics")
+        self._s3_endpoint = os.environ.get("S3_ENDPOINT", "http://rook-ceph-rgw-nautiluss3.rook")
+        self._s3_access_key = os.environ.get("S3_ACCESS_KEY", "")
+        self._s3_secret_key = os.environ.get("S3_SECRET_KEY", "")
+        self._s3_secure = os.environ.get("S3_SECURE", "false").lower() == "true"    
+        self._image_results_file = os.environ.get("IMAGE_RESULTS_FILE", "image_search_results.csv")
+        self._query_eval_metrics_file = os.environ.get("QUERY_EVAL_METRICS_FILE", "query_eval_metrics.csv")
 
         # Weaviate parameters
-        self.weaviate_host = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
-        self.weaviate_port = os.environ.get("WEAVIATE_PORT", "8080")
-        self.weaviate_grpc_port = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
-        self.collection_name = os.environ.get("COLLECTION_NAME", "INQUIRE")
+        self._weaviate_host = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
+        self._weaviate_port = os.environ.get("WEAVIATE_PORT", "8080")
+        self._weaviate_grpc_port = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
+        self._collection_name = os.environ.get("COLLECTION_NAME", "INQUIRE")
 
         # Triton parameters
-        self.triton_host = os.environ.get("TRITON_HOST", "triton")
-        self.triton_port = os.environ.get("TRITON_PORT", "8001")
+        self._triton_host = os.environ.get("TRITON_HOST", "triton")
+        self._triton_port = os.environ.get("TRITON_PORT", "8001")
         
         # Workers parameters
-        self.workers = int(os.environ.get("WORKERS", 5))
-        self.image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 10))
+        self._workers = int(os.environ.get("WORKERS", 5))
+        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 10)) #TODO: set to 100
 
         # Logging parameters
-        self.log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+        self._log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
         
         # Weaviate HNSW hyperparameters
         self.hnsw_dist_metric = getattr(VectorDistances, os.environ.get("HNSW_DIST_METRIC", "COSINE").upper())
@@ -96,15 +96,3 @@ format:
 """
         self.qwen2_5_prompt = os.environ.get("QWEN2_5_PROMPT", default_prompt)
         self.gemma3_prompt = os.environ.get("GEMMA3_PROMPT", default_prompt)
-    
-    def get(self, key: str, default=None):
-        """Get a configuration value."""
-        return getattr(self, key, default)
-    
-    def get_all(self) -> dict:
-        """Get all configuration values."""
-        return {
-            k: v for k, v in self.__dict__.items()
-            if not k.startswith('_')
-        }
-
