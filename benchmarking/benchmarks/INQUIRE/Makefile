@@ -22,18 +22,6 @@ KUBECTL_CONTEXT ?= nautilus
 REGISTRY := gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search
 JOB_TAG ?= latest
 
-# ============================================================================
-# INQUIRE-Specific Environment Variables
-# ============================================================================
-# These are used by the Kubernetes deployments via environment variable patches
-INQUIRE_DATASET ?= sagecontinuum/INQUIRE-Benchmark-small
-IMAGE_BATCH_SIZE ?= 25
-QUERY_BATCH_SIZE ?= 5
-SAMPLE_SIZE ?= 0
-WORKERS ?= 5
-IMAGE_RESULTS_FILE ?= image_search_results.csv
-QUERY_EVAL_METRICS_FILE ?= query_eval_metrics.csv
-
 # Local run script
 RUN_SCRIPT := run_benchmark.py
 
