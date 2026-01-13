@@ -4,7 +4,7 @@ namespace: sage
 
 resources:
   - benchmark-job.yaml
-  - s3-secret.yaml
+  - ._s3-secret.yaml
 
 # Note: Vector DB and inference server configuration should be added
 # in benchmark-specific overlays via environment variable patches
