@@ -42,6 +42,7 @@ class INQUIREConfig(Config):
         # Workers parameters
         self._workers = int(os.environ.get("WORKERS", 5))
         self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 2)) #TODO: set to 100
+        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 2)) #TODO: set to 100
 
         # Logging parameters
         self._log_level = os.environ.get("LOG_LEVEL", "INFO").upper()

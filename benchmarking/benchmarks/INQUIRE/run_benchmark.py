@@ -71,7 +71,7 @@ def run_evaluation(evaluator: BenchmarkEvaluator, hf_dataset: Dataset):
     # Run evaluation
     logging.info("Starting evaluation...")
     try:
-        image_results, query_evaluation = evaluator.evaluate_queries(dataset=hf_dataset)
+        image_results, query_evaluation = evaluator.evaluate_queries(query_batch_size=config._query_batch_size, dataset=hf_dataset)
     except Exception as e:
         logging.error(f"Error running evaluation: {e}")
         evaluator.vector_db.close()
