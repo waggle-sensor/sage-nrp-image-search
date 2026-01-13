@@ -63,15 +63,19 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, hf_dat
         
     except Exception as e:
         logging.error(f"Error loading data: {e}")
-        raise
-    finally:
         vector_db.close()
+        raise
 
 def run_evaluation(evaluator: BenchmarkEvaluator, hf_dataset: Dataset):
     """Run the INQUIRE benchmark evaluation."""
     # Run evaluation
     logging.info("Starting evaluation...")
-    image_results, query_evaluation = evaluator.evaluate_queries(dataset=hf_dataset)
+    try:
+        image_results, query_evaluation = evaluator.evaluate_queries(dataset=hf_dataset)
+    except Exception as e:
+        logging.error(f"Error running evaluation: {e}")
+        evaluator.vector_db.close()
+        raise
     
     return image_results, query_evaluation
 
