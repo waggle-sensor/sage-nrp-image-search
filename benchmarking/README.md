@@ -214,8 +214,11 @@ See `benchmarks/DOCKER.md` for detailed documentation.
 
 Located in `kubernetes/base/`, these provide common Kubernetes resources:
 - `benchmark-job.yaml` - Combined job template (loads data and evaluates)
-- `s3-secret.yaml` - S3 credentials secret
+- `._s3-secret.yaml` - S3 credentials secret (use the template file as a guide)
 - `kustomization.yaml` - Base kustomization config
+
+> **Important:** 
+> All secret files you actually use must be named with leading `._` per `.gitignore` and not checked into version control! Only commit the `*.template.yaml` files.
 
 ### Benchmark-Specific Configs
 

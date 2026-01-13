@@ -9,7 +9,7 @@ benchmarking/kubernetes/
 ├── base/                    # Base kustomization (shared across all benchmarks)
 │   ├── kustomization.yaml
 │   ├── benchmark-job.yaml   # Combined job (loads data and evaluates)
-│   └── s3-secret.yaml       # S3 credentials secret
+│   └── ._s3-secret.yaml       # S3 credentials secret
 │
 └── INQUIRE/                 # INQUIRE benchmark overlay
     ├── nrp-dev/             # Dev environment overlay
@@ -25,7 +25,7 @@ benchmarking/kubernetes/
 The `base/` directory contains generic resources that can be reused by any benchmark:
 
 - **benchmark-job.yaml**: Job that runs the combined benchmark script (loads data and evaluates)
-- **s3-secret.yaml**: Secret for S3 credentials (access key and secret key)
+- **._s3-secret.yaml**: Secret for S3 credentials (access key and secret key)
 
 The job is **vector database and inference server agnostic**:
 - Includes health checks and resource limits
@@ -177,18 +177,9 @@ S3 credentials are loaded from the `s3-secret` secret:
 
 ### Setting Up S3 Secret
 
-Edit `kubernetes/base/s3-secret.yaml`:
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: s3-secret
-type: Opaque
-data:
-  # Base64 encoded values
-  S3_ACCESS_KEY: <base64-encoded-access-key>
-  S3_SECRET_KEY: <base64-encoded-secret-key>
+Create `kubernetes/base/._s3-secret.yaml` using the template file:
+```bash
+cp benchmarking/kubernetes/base/s3-secret.template.yaml benchmarking/kubernetes/base/._s3-secret.yaml
 ```
 
 To generate base64 values:
@@ -196,6 +187,9 @@ To generate base64 values:
 echo -n "your-access-key" | base64
 echo -n "your-secret-key" | base64
 ```
+
+> **Important:** 
+> All secret files you actually use must be named with leading `._` per `.gitignore` and not checked into version control! Only commit the `*.template.yaml` files.
 
 ### Overriding S3 Configuration
 
