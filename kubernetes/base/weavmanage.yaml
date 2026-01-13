@@ -14,7 +14,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: weavmanage
-          image: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/weavmanage:latest
+          image: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavmanage:latest
           env:
             - name: WEAVIATE_HOST
               value: "$(WEAVIATE_SERVICE)"
