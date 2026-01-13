@@ -173,7 +173,7 @@ def main():
         limit=config.response_limit,
         query_method=getattr(query_method, config.query_method),
         query_parameters=config.advanced_query_parameters,
-        score_columns=["rerank_score", "clip_score", "score", "distance"],
+        score_columns=["rerank_score", "clip_score"],
         target_vector=config.target_vector
     )
     
