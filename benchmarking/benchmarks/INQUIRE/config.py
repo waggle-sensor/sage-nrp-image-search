@@ -14,7 +14,7 @@ class INQUIREConfig(Config):
         """Initialize INQUIRE configuration."""
         # dataset parameters
         self.inquire_dataset = os.environ.get("INQUIRE_DATASET", "sagecontinuum/INQUIRE-Benchmark-small")
-        self.sample_size = int(os.environ.get("SAMPLE_SIZE", 10)) #TODO: set to 0 to use all samples
+        self.sample_size = int(os.environ.get("SAMPLE_SIZE", 0))
         self.seed = int(os.environ.get("SEED", 42))
 
         # Upload parameters
@@ -41,8 +41,8 @@ class INQUIREConfig(Config):
         
         # Workers parameters
         self._workers = int(os.environ.get("WORKERS", 5))
-        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 2)) #TODO: set to 100
-        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 2)) #TODO: set to 100
+        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 25))
+        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 5))
 
         # Logging parameters
         self._log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
