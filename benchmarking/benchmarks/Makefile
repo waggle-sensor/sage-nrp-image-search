@@ -120,8 +120,6 @@ logs: kubectl
 	fi; \
 	kubectl logs -n $(KUBECTL_NAMESPACE) -f $$pod
 
-
-
 # ============================================================================
 # Local Development Targets
 # ============================================================================
@@ -178,4 +176,3 @@ run-local: port-forward-start
 	 python $(RUN_SCRIPT) || (make port-forward-stop && exit 1)
 	@make port-forward-stop
 	@echo "Benchmark run completed. Results saved locally."
-
