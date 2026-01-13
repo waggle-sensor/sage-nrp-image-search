@@ -27,6 +27,7 @@ class INQUIREConfig(Config):
         self._s3_secure = os.environ.get("S3_SECURE", "false").lower() == "true"    
         self._image_results_file = os.environ.get("IMAGE_RESULTS_FILE", "image_search_results.csv")
         self._query_eval_metrics_file = os.environ.get("QUERY_EVAL_METRICS_FILE", "query_eval_metrics.csv")
+        self._config_values_file = os.environ.get("CONFIG_VALUES_FILE", "config_values.csv")
 
         # Weaviate parameters
         self._weaviate_host = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
