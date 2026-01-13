@@ -210,13 +210,19 @@ def main():
     
     image_results_path = results_dir / config._image_results_file
     query_evaluation_path = results_dir / config._query_eval_metrics_file
+    config_csv_path = results_dir / config._config_values_file
     
     image_results.to_csv(image_results_path, index=False)
     query_evaluation.to_csv(query_evaluation_path, index=False)
+
+    config_csv_str = config.to_csv()
+    with open(config_csv_path, "w") as f:
+        f.write(config_csv_str)
     
     logging.info(f"Results saved locally to:")
     logging.info(f"  - {image_results_path}")
     logging.info(f"  - {query_evaluation_path}")
+    logging.info(f"  - {config_csv_path}")
     
     # Step 4: Upload to S3 if enabled
     if config._upload_to_s3:
@@ -235,9 +241,10 @@ def main():
                 timestamp = time.strftime("%Y%m%d_%H%M%S")
                 s3_key_image = f"{config._s3_prefix}/{timestamp}/{config._image_results_file}"
                 s3_key_query = f"{config._s3_prefix}/{timestamp}/{config._query_eval_metrics_file}"
-                
+                s3_key_config = f"{config._s3_prefix}/{timestamp}/{config._config_values_file}"
                 upload_to_s3(str(image_results_path), s3_key_image)
                 upload_to_s3(str(query_evaluation_path), s3_key_query)
+                upload_to_s3(str(config_csv_path), s3_key_config)
                 
                 logging.info("S3 upload completed successfully.")
             except Exception as e:
