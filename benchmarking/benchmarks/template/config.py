@@ -10,37 +10,50 @@ class MyConfig(Config):
     def __init__(self):
         """Initialize MYBENCHMARK configuration."""
         # TODO: Update with your parameters for the benchmark
-        # Environment variables
-        self.MYBENCHMARK_DATASET = os.environ.get("MYBENCHMARK_DATASET", "your-dataset/name")
-        self.IMAGE_RESULTS_FILE = os.environ.get("IMAGE_RESULTS_FILE", "image_search_results.csv")
-        self.QUERY_EVAL_METRICS_FILE = os.environ.get("QUERY_EVAL_METRICS_FILE", "query_eval_metrics.csv")
-        self.WEAVIATE_HOST = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
-        self.WEAVIATE_PORT = os.environ.get("WEAVIATE_PORT", "8080")
-        self.WEAVIATE_GRPC_PORT = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
-        self.TRITON_HOST = os.environ.get("TRITON_HOST", "triton")
-        self.TRITON_PORT = os.environ.get("TRITON_PORT", "8001")
-        self.COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "MYBENCHMARK")
-        self.QUERY_METHOD = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
-        self.TARGET_VECTOR = os.environ.get("TARGET_VECTOR", "clip")
-        self.SAMPLE_SIZE = int(os.environ.get("SAMPLE_SIZE", 0))
-        self.WORKERS = int(os.environ.get("WORKERS", 5))
-        self.IMAGE_BATCH_SIZE = int(os.environ.get("IMAGE_BATCH_SIZE", 100))
-        self.UPLOAD_TO_S3 = os.environ.get("UPLOAD_TO_S3", "false").lower() == "true"
-        self.S3_BUCKET = os.environ.get("S3_BUCKET", "sage_imsearch")
-        self.S3_PREFIX = os.environ.get("S3_PREFIX", "dev-metrics")
-        self.S3_ENDPOINT = os.environ.get("S3_ENDPOINT", "http://rook-ceph-rgw-nautiluss3.rook")
-        self.S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY", "")
-        self.S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY", "")
-        self.S3_SECURE = os.environ.get("S3_SECURE", "false").lower() == "true"
-        self.LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
-    
-    def get(self, key: str, default=None):
-        """Get a configuration value."""
-        return getattr(self, key, default)
-    
-    def get_all(self) -> dict:
-        """Get all configuration values."""
-        return {
-            k: v for k, v in self.__dict__.items()
-            if not k.startswith('_')
+        # Dataset parameters
+        self.mybenchmark_dataset = os.environ.get("MYBENCHMARK_DATASET", "your-dataset/name")
+        self.sample_size = int(os.environ.get("SAMPLE_SIZE", 0))
+        self.seed = int(os.environ.get("SEED", 42))
+        
+        # Upload parameters
+        self._upload_to_s3 = os.environ.get("UPLOAD_TO_S3", "false").lower() == "true"
+        self._s3_bucket = os.environ.get("S3_BUCKET", "sage_imsearch")
+        self._s3_prefix = os.environ.get("S3_PREFIX", "dev-metrics")
+        self._s3_endpoint = os.environ.get("S3_ENDPOINT", "http://rook-ceph-rgw-nautiluss3.rook")
+        self._s3_access_key = os.environ.get("S3_ACCESS_KEY", "")
+        self._s3_secret_key = os.environ.get("S3_SECRET_KEY", "")
+        self._s3_secure = os.environ.get("S3_SECURE", "false").lower() == "true"
+        self._image_results_file = os.environ.get("IMAGE_RESULTS_FILE", "image_search_results.csv")
+        self._query_eval_metrics_file = os.environ.get("QUERY_EVAL_METRICS_FILE", "query_eval_metrics.csv")
+        self._config_values_file = os.environ.get("CONFIG_VALUES_FILE", "config_values.csv")
+        
+        # Weaviate parameters
+        self._weaviate_host = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
+        self._weaviate_port = os.environ.get("WEAVIATE_PORT", "8080")
+        self._weaviate_grpc_port = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
+        self._collection_name = os.environ.get("COLLECTION_NAME", "MYBENCHMARK")
+        
+        # Triton parameters
+        self._triton_host = os.environ.get("TRITON_HOST", "triton")
+        self._triton_port = os.environ.get("TRITON_PORT", "8001")
+        
+        # Workers parameters
+        self._workers = int(os.environ.get("WORKERS", 5))
+        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 25))
+        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 5))
+        
+        # Logging parameters
+        self._log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+        
+        # Query parameters
+        self.query_method = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
+        self.target_vector = os.environ.get("TARGET_VECTOR", "clip")
+        self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 50))
+        self.advanced_query_parameters = {
+            "alpha": float(os.environ.get("QUERY_ALPHA", 0.4)),
+            "query_properties": ["caption"],  # TODO: Update with your query properties
+            "autocut_jumps": int(os.environ.get("AUTOCUT_JUMPS", 0)),
+            "rerank_prop": os.environ.get("RERANK_PROP", "caption"),  # TODO: Update with your rerank property
+            "clip_alpha": float(os.environ.get("CLIP_ALPHA", 0.7)),
         }
+    

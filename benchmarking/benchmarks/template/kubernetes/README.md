@@ -24,30 +24,37 @@ This directory contains Kubernetes/kustomize templates for benchmark deployments
 
 ## Files Overview
 
-### `kustomization.yaml`
-Main kustomize configuration that:
-- Sets the name prefix and labels
+### `nrp-dev/` (Default)
+Development environment overlay that:
+- Sets the name prefix (`dev-MYBENCHMARK-`)
 - References the base deployment
 - Applies patches for environment variables
 - Defines image replacement
 
-**Required changes:**
-- Replace `MYBENCHMARK` with your benchmark name
-- Update image name in the `images` section
-
-### `env.yaml`
-Environment variables for the benchmark job.
+**Files:**
+- `kustomization.yaml` - Main kustomize configuration
+- `env.yaml` - Environment variables for dev environment
 
 **Required changes:**
-- Replace `MYBENCHMARK` with your benchmark name
-- Update environment variable names and values
-- Add/remove variables as needed
+- Replace `MYBENCHMARK` with your benchmark name in both files
+- Update image name in `kustomization.yaml`
+- Update S3_PREFIX in `env.yaml` if needed
 
 ### `nrp-prod/` (Optional)
 Production environment overlay that:
+- Sets the name prefix (`prod-MYBENCHMARK-`)
 - Extends the base overlay
 - Patches service names for prod environment
 - Can override S3 prefix for prod
+
+**Files:**
+- `kustomization.yaml` - Main kustomize configuration for prod
+- `env.yaml` - Environment variables for prod environment
+
+**Required changes:**
+- Replace `MYBENCHMARK` with your benchmark name in both files
+- Update image name and tag in `kustomization.yaml`
+- Update S3_PREFIX in `env.yaml` for prod path
 
 ## Step-by-Step Setup
 
@@ -68,59 +75,73 @@ Replace `MYBENCHMARK` with your benchmark name (lowercase) in all files:
 find . -type f -name "*.yaml" -exec sed -i '' 's/MYBENCHMARK/mybenchmark/g' {} +
 ```
 
-Also replace in `kustomization.yaml`:
-- `namePrefix: MYBENCHMARK-` → `namePrefix: mybenchmark-`
+Also replace in both `nrp-dev/kustomization.yaml` and `nrp-prod/kustomization.yaml`:
+- `namePrefix: dev-MYBENCHMARK-` → `namePrefix: dev-mybenchmark-`
+- `namePrefix: prod-MYBENCHMARK-` → `namePrefix: prod-mybenchmark-`
 - `benchmark: MYBENCHMARK` → `benchmark: mybenchmark`
 
 ### 3. Update Image Name
 
-Edit `kustomization.yaml` and update the image name:
+Edit both `nrp-dev/kustomization.yaml` and `nrp-prod/kustomization.yaml` and update the image name:
 
 ```yaml
 images:
   - name: PLACEHOLDER_BENCHMARK_JOB_IMAGE
     newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-MYBENCHMARK-job
-    newTag: latest
+    newTag: latest  # Use specific tag for prod (e.g., pr-1)
 ```
 
 ### 4. Customize Environment Variables
 
-#### Job (`env.yaml`)
+#### Dev Environment (`nrp-dev/env.yaml`)
 
-Update environment variables that your benchmark needs:
+Update environment variables for dev environment:
 
 ```yaml
 env:
   # Vector DB configuration (Weaviate)
   - name: WEAVIATE_HOST
     value: "dev-weaviate.sage.svc.cluster.local"
-  - name: WEAVIATE_PORT
-    value: "8080"
-  - name: WEAVIATE_GRPC_PORT
-    value: "50051"
   # Inference server configuration (Triton)
   - name: TRITON_HOST
     value: "dev-triton.sage.svc.cluster.local"
-  - name: TRITON_PORT
-    value: "8001"
-  # Benchmark-specific configuration
-  - name: MYBENCHMARK_DATASET
-    value: "your-dataset/name"
-  - name: COLLECTION_NAME
-    value: "MYBENCHMARK"
-  - name: QUERY_METHOD
-    value: "clip_hybrid_query"
-  # S3 upload configuration (override base defaults if needed)
+  # S3 upload configuration (override base defaults for this benchmark)
   - name: S3_PREFIX
     value: "dev-metrics/MYBENCHMARK"
+  - name: LOG_LEVEL
+    value: "DEBUG"
+```
+
+#### Prod Environment (`nrp-prod/env.yaml`)
+
+Update environment variables for prod environment:
+
+```yaml
+env:
+  # Vector DB configuration (Weaviate) - prod environment
+  - name: WEAVIATE_HOST
+    value: "prod-weaviate.sage.svc.cluster.local"
+  # Inference server configuration (Triton) - prod environment
+  - name: TRITON_HOST
+    value: "prod-triton.sage.svc.cluster.local"
+  # S3 upload configuration (override base defaults for this benchmark)
+  - name: S3_PREFIX
+    value: "prod-metrics/MYBENCHMARK"
+  - name: LOG_LEVEL
+    value: "INFO"
 ```
 
 ### 5. Update Makefile
 
-Ensure your benchmark's Makefile points to the correct kustomize directory:
+Ensure your benchmark's Makefile uses conditional logic to select the correct kustomize directory:
 
 ```makefile
-KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
+ENV ?= dev
+ifeq ($(ENV),prod)
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-prod
+else
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-dev
+endif
 ```
 
 ## Testing
@@ -169,57 +190,48 @@ env:
 
 ## Integration with Makefile
 
-The Makefile should reference this directory:
+The Makefile should use conditional logic to select the correct kustomize directory:
 
 ```makefile
-KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
+ENV ?= dev
+ifeq ($(ENV),prod)
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-prod
+else
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-dev
+endif
 ```
 
 Then use:
 
 ```bash
 make build     # Build Docker image
-make run       # Deploy and run benchmark job
+make run       # Deploy and run benchmark job (dev environment by default)
+make run ENV=prod  # Deploy and run using prod environment resources
 make logs      # View logs
 make down      # Removes deployment
 ```
 
 ## Environment Switching (Dev/Prod)
 
-Benchmarks can be deployed to use either **dev** or **prod** environment resources. Each benchmark can have a `nrp-prod/` overlay that patches service names to match the prod environment.
->NOTE: By default, the benchmark will use the dev environment resources.
+Benchmarks can be deployed to use either **dev** or **prod** environment resources. The template includes both `nrp-dev/` and `nrp-prod/` overlays.
+
+>NOTE: By default, the benchmark will use the dev environment resources (`nrp-dev/`).
 
 ### Using Environment Overlays
 
 From the benchmark directory (e.g., `benchmarking/benchmarks/MYBENCHMARK/`):
 
 ```bash
-# Run using prod environment resources
-make run ENV=prod
-
 # Run using default (dev environment) resources
 make run
+
+# Run using prod environment resources
+make run ENV=prod
 ```
 
 The `ENV` variable controls which kustomize overlay is used:
 - `ENV=prod` → Uses `kubernetes/MYBENCHMARK/nrp-prod/`
-- No `ENV` → Uses `kubernetes/MYBENCHMARK/` (base overlay using dev environment resources)
-
-### Creating Production Overlay
-
-1. Copy `env.yaml` to `nrp-prod/env.yaml`
-2. Update service names to prod:
-   ```yaml
-   - name: WEAVIATE_HOST
-     value: "prod-weaviate.sage.svc.cluster.local"
-   - name: TRITON_HOST
-     value: "prod-triton.sage.svc.cluster.local"
-   ```
-3. Update S3 prefix if needed:
-   ```yaml
-   - name: S3_PREFIX
-     value: "prod-metrics/MYBENCHMARK"
-   ```
+- No `ENV` or `ENV=dev` → Uses `kubernetes/MYBENCHMARK/nrp-dev/`
 
 ## Troubleshooting
 

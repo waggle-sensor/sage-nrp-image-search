@@ -9,10 +9,11 @@ import tritonclient.grpc as TritonClient
 from datasets import Dataset
 
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter, BatchedIterator
-from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider
+from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider, WeaviateQuery
 from benchmark_dataset import MyBenchmarkDataset  # TODO: Import your BenchmarkDataset
 # from data_loader import MyDataLoader  # TODO: Import if you have a custom DataLoader
 from config import MyConfig  # TODO: Set a Config class for your benchmark
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 config = MyConfig()
 
@@ -73,7 +74,7 @@ def load_data(data_loader, vector_db: VectorDBAdapter, hf_dataset: Dataset):
         #     inserted = vector_db.insert_data(config.COLLECTION_NAME, all_processed, batch_size=config.IMAGE_BATCH_SIZE)
         #     logging.info(f"Inserted {inserted} items.")
         
-        logging.info(f"Successfully loaded {config.MYBENCHMARK_DATASET} into Weaviate collection '{config.COLLECTION_NAME}'")
+        logging.info(f"Successfully loaded {config.mybenchmark_dataset} into Weaviate collection '{config._collection_name}'")
         
     except Exception as e:
         logging.error(f"Error loading data: {e}")
@@ -93,7 +94,10 @@ def run_evaluation(evaluator: BenchmarkEvaluator, hf_dataset: Dataset):
     # Run evaluation
     logging.info("Starting evaluation...")
     try:
-        image_results, query_evaluation = evaluator.evaluate_queries(dataset=hf_dataset)
+        image_results, query_evaluation = evaluator.evaluate_queries(
+            dataset=hf_dataset,
+            query_batch_size=config._query_batch_size
+        )
     except Exception as e:
         logging.error(f"Error running evaluation: {e}")
         evaluator.vector_db.close()
@@ -111,20 +115,20 @@ def upload_to_s3(local_file_path: str, s3_key: str):
             raise ValueError("S3_ENDPOINT environment variable must be set")
         
         # Parse endpoint (remove http:// or https:// if present)
-        endpoint = config.S3_ENDPOINT.replace("http://", "").replace("https://", "")
+        endpoint = config._s3_endpoint.replace("http://", "").replace("https://", "")
         
         # Create MinIO client
         client = Minio(
             endpoint,
-            access_key=config.S3_ACCESS_KEY,
-            secret_key=config.S3_SECRET_KEY,
-            secure=config.S3_SECURE
+            access_key=config._s3_access_key,
+            secret_key=config._s3_secret_key,
+            secure=config._s3_secure
         )
         
         # Upload file
-        logging.info(f"Uploading {local_file_path} to s3://{config.S3_BUCKET}/{s3_key}")
-        client.fput_object(config.S3_BUCKET, s3_key, local_file_path)
-        logging.info(f"Successfully uploaded to s3://{config.S3_BUCKET}/{s3_key}")
+        logging.info(f"Uploading {local_file_path} to s3://{config._s3_bucket}/{s3_key}")
+        client.fput_object(config._s3_bucket, s3_key, local_file_path)
+        logging.info(f"Successfully uploaded to s3://{config._s3_bucket}/{s3_key}")
         
     except ImportError:
         logging.error("minio is not installed. Install it with: pip install minio")
@@ -141,7 +145,7 @@ def main():
     
     # Configure logging
     logging.basicConfig(
-        level=getattr(logging, config.LOG_LEVEL, logging.INFO),
+        level=getattr(logging, config._log_level, logging.INFO),
         format="%(asctime)s %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
     )
@@ -152,19 +156,26 @@ def main():
     logging.info("=" * 80)
     logging.info("Initializing Weaviate client...")
     weaviate_client = WeaviateAdapter.init_client(  # TODO: Update with your vector database client
-        host=config.WEAVIATE_HOST,
-        port=config.WEAVIATE_PORT,
-        grpc_port=config.WEAVIATE_GRPC_PORT
+        host=config._weaviate_host,
+        port=config._weaviate_port,
+        grpc_port=config._weaviate_grpc_port
     )
     
     logging.info("Initializing Triton client...")
-    triton_client = TritonClient.InferenceServerClient(url=f"{config.TRITON_HOST}:{config.TRITON_PORT}")  # TODO: Update with your model provider client
+    triton_client = TritonClient.InferenceServerClient(url=f"{config._triton_host}:{config._triton_port}")  # TODO: Update with your model provider client
+
+    # Create query method
+    query_method = WeaviateQuery(
+        weaviate_client=weaviate_client,
+        triton_client=triton_client
+    )
 
     # Create adapters
     logging.info("Creating adapters...")
     vector_db = WeaviateAdapter(  # TODO: Update with your vector database adapter
         weaviate_client=weaviate_client,
-        triton_client=triton_client
+        triton_client=triton_client,
+        query_method=query_method
     )
 
     model_provider = TritonModelProvider(triton_client=triton_client)  # TODO: Update with your model provider
@@ -172,9 +183,7 @@ def main():
     # Create benchmark dataset
     logging.info("Creating benchmark dataset class...")
     benchmark_dataset = MyBenchmarkDataset()  # TODO: Use your BenchmarkDataset
-    # TODO: Load dataset with your parameters
-    # dataset = benchmark_dataset.load(split="test", sample_size=config.SAMPLE_SIZE, seed=config.SEED)
-    hf_dataset = benchmark_dataset.load_as_dataset(split="test")  # TODO: Add sample_size and seed if your dataset supports it
+    hf_dataset = benchmark_dataset.load_as_dataset(split="test", sample_size=config.sample_size, seed=config.seed)  # TODO: Update parameters as needed
 
     # Create data loader
     logging.info("Creating data loader...")
@@ -188,10 +197,12 @@ def main():
         vector_db=vector_db,
         model_provider=model_provider,
         dataset=benchmark_dataset,
-        collection_name=config.COLLECTION_NAME,
-        query_method=config.QUERY_METHOD,
-        score_columns=["rerank_score", "clip_score", "score", "distance"],  # TODO: Adjust as needed
-        target_vector=config.TARGET_VECTOR
+        collection_name=config._collection_name,
+        limit=config.response_limit,
+        query_method=getattr(query_method, config.query_method),
+        query_parameters=config.advanced_query_parameters,
+        score_columns=["rerank_score", "clip_score"],  # TODO: Adjust as needed
+        target_vector=config.target_vector
     )
     
     # Step 1: Load data
@@ -225,23 +236,29 @@ def main():
     results_dir = Path("/app/results" if os.path.exists("/app/results") else ".")
     results_dir.mkdir(parents=True, exist_ok=True)
     
-    image_results_path = results_dir / config.IMAGE_RESULTS_FILE
-    query_evaluation_path = results_dir / config.QUERY_EVAL_METRICS_FILE
+    image_results_path = results_dir / config._image_results_file
+    query_evaluation_path = results_dir / config._query_eval_metrics_file
+    config_csv_path = results_dir / config._config_values_file
     
     image_results.to_csv(image_results_path, index=False)
     query_evaluation.to_csv(query_evaluation_path, index=False)
     
+    config_csv_str = config.to_csv()
+    with open(config_csv_path, "w") as f:
+        f.write(config_csv_str)
+    
     logging.info(f"Results saved locally to:")
     logging.info(f"  - {image_results_path}")
     logging.info(f"  - {query_evaluation_path}")
+    logging.info(f"  - {config_csv_path}")
     
     # Step 4: Upload to S3 if enabled
-    if config.UPLOAD_TO_S3:
-        if not config.S3_BUCKET:
+    if config._upload_to_s3:
+        if not config._s3_bucket:
             logging.warning("UPLOAD_TO_S3 is true but S3_BUCKET is not set. Skipping S3 upload.")
-        elif not config.S3_ENDPOINT:
+        elif not config._s3_endpoint:
             logging.warning("UPLOAD_TO_S3 is true but S3_ENDPOINT is not set. Skipping S3 upload.")
-        elif not config.S3_ACCESS_KEY or not config.S3_SECRET_KEY:
+        elif not config._s3_access_key or not config._s3_secret_key:
             logging.warning("UPLOAD_TO_S3 is true but S3 credentials are not set. Skipping S3 upload.")
         else:
             logging.info("=" * 80)
@@ -250,11 +267,13 @@ def main():
             try:
                 # Generate S3 keys with timestamp
                 timestamp = time.strftime("%Y%m%d_%H%M%S")
-                s3_key_image = f"{config.S3_PREFIX}/{timestamp}/{config.IMAGE_RESULTS_FILE}"
-                s3_key_query = f"{config.S3_PREFIX}/{timestamp}/{config.QUERY_EVAL_METRICS_FILE}"
+                s3_key_image = f"{config._s3_prefix}/{timestamp}/{config._image_results_file}"
+                s3_key_query = f"{config._s3_prefix}/{timestamp}/{config._query_eval_metrics_file}"
+                s3_key_config = f"{config._s3_prefix}/{timestamp}/{config._config_values_file}"
                 
                 upload_to_s3(str(image_results_path), s3_key_image)
                 upload_to_s3(str(query_evaluation_path), s3_key_query)
+                upload_to_s3(str(config_csv_path), s3_key_config)
                 
                 logging.info("S3 upload completed successfully.")
             except Exception as e:

@@ -3,14 +3,16 @@ kind: Kustomization
 namespace: sage
 
 # TODO: Replace MYBENCHMARK with your benchmark name (lowercase)
-namePrefix: MYBENCHMARK-
+namePrefix: dev-MYBENCHMARK-
 commonLabels:
   benchmark: MYBENCHMARK
 
+# This overlay references the base and applies MYBENCHMARK-specific patches
 resources:
   - ../../base
 
 patches:
+  # Patch job environment variables (MYBENCHMARK-specific + dev services)
   - path: env.yaml
     target:
       kind: Job
@@ -21,3 +23,4 @@ images:
   - name: PLACEHOLDER_BENCHMARK_JOB_IMAGE
     newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-MYBENCHMARK-job
     newTag: latest
+

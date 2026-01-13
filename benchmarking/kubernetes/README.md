@@ -12,9 +12,12 @@ benchmarking/kubernetes/
 │   └── s3-secret.yaml       # S3 credentials secret
 │
 └── INQUIRE/                 # INQUIRE benchmark overlay
-    ├── kustomization.yaml   # Extends base with INQUIRE-specific config
-    ├── env.yaml             # Environment variables for job
+    ├── nrp-dev/             # Dev environment overlay
+    │   ├── kustomization.yaml
+    │   └── env.yaml
     └── nrp-prod/            # Prod environment overlay
+        ├── kustomization.yaml
+        └── env.yaml
 ```
 
 ## Base Components
@@ -65,7 +68,7 @@ images:
     newTag: latest
 ```
 
-3. **Create env.yaml**:
+3. **Update nrp-dev/env.yaml**:
 ```yaml
 apiVersion: batch/v1
 kind: Job
@@ -80,31 +83,25 @@ spec:
             # Vector DB configuration (Weaviate)
             - name: WEAVIATE_HOST
               value: "dev-weaviate.sage.svc.cluster.local"
-            - name: WEAVIATE_PORT
-              value: "8080"
-            - name: WEAVIATE_GRPC_PORT
-              value: "50051"
             # Inference server configuration (Triton)
             - name: TRITON_HOST
               value: "dev-triton.sage.svc.cluster.local"
-            - name: TRITON_PORT
-              value: "8001"
-            # Benchmark-specific configuration
-            - name: MYBENCHMARK_DATASET
-              value: "your-dataset/name"
-            - name: COLLECTION_NAME
-              value: "MYBENCHMARK"
-            - name: QUERY_METHOD
-              value: "clip_hybrid_query"
-            # S3 upload configuration (override base defaults if needed)
+            # S3 upload configuration (override base defaults for this benchmark)
             - name: S3_PREFIX
-              value: "benchmark-results/MYBENCHMARK"
+              value: "dev-metrics/mybenchmark"
+            - name: LOG_LEVEL
+              value: "DEBUG"
 ```
+
+4. **Update nrp-prod/** similarly with prod service names and S3 prefix.
 
 ## Environment Switching (Dev/Prod)
 
-Benchmarks can be deployed to use either **dev** or **prod** environment resources. Each benchmark can have a `nrp-prod/` overlay that patches service names to match the prod environment.
->NOTE: By default, the benchmark will use the dev environment resources.
+Benchmarks use separate overlays for dev and prod environments:
+- **nrp-dev/**: Default development environment overlay
+- **nrp-prod/**: Production environment overlay
+
+>NOTE: By default, the benchmark will use the dev environment resources (`nrp-dev/`).
 
 ### Using Environment Overlays
 
@@ -120,7 +117,7 @@ make run
 
 The `ENV` variable controls which kustomize overlay is used:
 - `ENV=prod` → Uses `kubernetes/INQUIRE/nrp-prod/`
-- No `ENV` → Uses `kubernetes/INQUIRE/` (base overlay using dev environment resources)
+- No `ENV` or `ENV=dev` → Uses `kubernetes/INQUIRE/nrp-dev/`
 
 ## Usage
 

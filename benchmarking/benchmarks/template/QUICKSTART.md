@@ -17,8 +17,13 @@ Edit `Makefile` and replace `mybenchmark` with your benchmark name:
 ```makefile
 BENCHMARK_NAME := mybenchmark  # Change this!
 DOCKERFILE_JOB := Dockerfile.job
-KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK  # Change this!
 RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
+ENV ?= dev
+ifeq ($(ENV),prod)
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-prod
+else
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-dev
+endif
 ```
 
 ## Step 3: Rename Template Files
@@ -69,8 +74,8 @@ cp -r ../benchmarks/template/kubernetes MYBENCHMARK
 cd MYBENCHMARK
 # Replace MYBENCHMARK with your benchmark name
 find . -type f -name "*.yaml" -exec sed -i '' 's/MYBENCHMARK/mybenchmark/g' {} +
-# Update image name in kustomization.yaml
-# Update environment variables in env.yaml
+# Update image name in nrp-dev/kustomization.yaml and nrp-prod/kustomization.yaml
+# Update environment variables in nrp-dev/env.yaml and nrp-prod/env.yaml
 ```
 
 ## Step 8: Update config.py (if needed)
@@ -101,7 +106,8 @@ make logs     # Monitor logs
 | `run_benchmark.py` | Import your classes, implement `load_data()` and `run_evaluation()` functions |
 | `Dockerfile.job` | Usually no changes needed |
 | `requirements.txt` | Add your dependencies |
-| `kubernetes/env.yaml` | Update environment variables |
+| `kubernetes/nrp-dev/env.yaml` | Update environment variables for dev |
+| `kubernetes/nrp-prod/env.yaml` | Update environment variables for prod |
 
 ## Need Help?
 

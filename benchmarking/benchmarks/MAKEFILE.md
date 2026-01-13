@@ -54,7 +54,7 @@ ENV ?= dev
 ifeq ($(ENV),prod)
   KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-prod
 else
-  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-dev
 endif
 
 # ============================================================================
@@ -100,7 +100,7 @@ ENV ?= dev
 ifeq ($(ENV),prod)
   KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-prod
 else
-  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-dev
 endif
 ```
 
@@ -122,7 +122,7 @@ ENV ?= dev
 ifeq ($(ENV),prod)
   KUSTOMIZE_DIR := ../../kubernetes/INQUIRE/nrp-prod
 else
-  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE
+  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE/nrp-dev
 endif
 
 KUBECTL_NAMESPACE := sage

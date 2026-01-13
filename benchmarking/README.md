@@ -219,10 +219,13 @@ Located in `kubernetes/base/`, these provide common Kubernetes resources:
 
 ### Benchmark-Specific Configs
 
-Each benchmark has its own directory under `kubernetes/` (e.g., `kubernetes/INQUIRE/`) with:
-- `kustomization.yaml` - Extends base, sets images, patches
-- `env.yaml` - Environment variables for the job
+Each benchmark has its own directory under `kubernetes/` (e.g., `kubernetes/INQUIRE/`) with `nrp-dev/` and `nrp-prod/` overlays:
+- `nrp-dev/` - Development environment overlay (default)
+  - `kustomization.yaml` - Extends base, sets images, patches
+  - `env.yaml` - Environment variables for dev environment
 - `nrp-prod/` - Production environment overlay (optional)
+  - `kustomization.yaml` - Extends base, sets images, patches
+  - `env.yaml` - Environment variables for prod environment
 
 ### Deployment Workflow
 

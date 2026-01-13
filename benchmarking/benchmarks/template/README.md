@@ -47,7 +47,12 @@ Edit `Makefile` and set the required variables:
 BENCHMARK_NAME := mybenchmark
 DOCKERFILE_JOB := Dockerfile.job
 RESULTS_FILES := image_search_results.csv query_eval_metrics.csv
-KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK
+ENV ?= dev
+ifeq ($(ENV),prod)
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-prod
+else
+  KUSTOMIZE_DIR := ../../kubernetes/MYBENCHMARK/nrp-dev
+endif
 ```
 
 ### 3. Update Dockerfile
@@ -242,9 +247,9 @@ Results can be automatically uploaded to S3-compatible storage (MinIO). Configur
 
 - **Base Kubernetes config**: S3 endpoint, bucket, and secure flag are set in `benchmarking/kubernetes/base/benchmark-job.yaml`
 - **S3 Secret**: Access key and secret key are stored in `benchmarking/kubernetes/base/s3-secret.yaml`
-- **Benchmark-specific**: Override `S3_PREFIX` in your benchmark's `env.yaml` if needed
+- **Benchmark-specific**: Override `S3_PREFIX` in your benchmark's `nrp-dev/env.yaml` or `nrp-prod/env.yaml` if needed
 
-To enable S3 upload, set `UPLOAD_TO_S3=true` in your benchmark's `env.yaml` or config.
+To enable S3 upload, set `UPLOAD_TO_S3=true` in the base config (already enabled by default).
 
 ## Framework Structure
 
