@@ -8,7 +8,7 @@ commonLabels:
 
 # This overlay references the base and applies INQUIRE-specific patches
 resources:
-  - ../base
+  - ../../base
 
 patches:
   # Patch job environment variables (INQUIRE-specific + dev services)

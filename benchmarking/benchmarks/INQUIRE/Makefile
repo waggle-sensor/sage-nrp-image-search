@@ -11,7 +11,7 @@ ENV ?= dev
 ifeq ($(ENV),prod)
   KUSTOMIZE_DIR := ../../kubernetes/INQUIRE/nrp-prod
 else
-  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE
+  KUSTOMIZE_DIR := ../../kubernetes/INQUIRE/nrp-dev
 endif
 
 # ============================================================================
