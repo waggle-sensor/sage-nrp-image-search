@@ -14,7 +14,7 @@ class INQUIREConfig(Config):
         """Initialize INQUIRE configuration."""
         # dataset parameters
         self.inquire_dataset = os.environ.get("INQUIRE_DATASET", "sagecontinuum/INQUIRE-Benchmark-small")
-        self.sample_size = int(os.environ.get("SAMPLE_SIZE", 50)) #TODO: set to 0 to use all samples
+        self.sample_size = int(os.environ.get("SAMPLE_SIZE", 10)) #TODO: set to 0 to use all samples
         self.seed = int(os.environ.get("SEED", 42))
 
         # Upload parameters
@@ -41,7 +41,7 @@ class INQUIREConfig(Config):
         
         # Workers parameters
         self._workers = int(os.environ.get("WORKERS", 5))
-        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 10)) #TODO: set to 100
+        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 2)) #TODO: set to 100
 
         # Logging parameters
         self._log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -95,5 +95,4 @@ format:
   caption: <your_scientific_caption_here>
   keywords: <keyword1>, <keyword2>, ...
 """
-        self.qwen2_5_prompt = os.environ.get("QWEN2_5_PROMPT", default_prompt)
         self.gemma3_prompt = os.environ.get("GEMMA3_PROMPT", default_prompt)
