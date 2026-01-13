@@ -183,12 +183,11 @@ Each benchmark has its own `Makefile` that:
 
 All benchmarks support:
 - `make build` - Build Docker job image
-- `make deploy` - Deploy to Kubernetes
-- `make run` - Run benchmark job (loads data and evaluates)
+- `make run` - Deploy and run benchmark job (loads data and evaluates)
 - `make run-local` - Run benchmark locally with port-forwarding
 - `make status` - Show deployment status
 - `make logs` - View job logs
-- `make clean` - Remove deployments
+- `make down` - Remove deployments
 
 See `benchmarks/MAKEFILE.md` for detailed documentation.
 
@@ -228,8 +227,7 @@ Each benchmark has its own directory under `kubernetes/` (e.g., `kubernetes/INQU
 ### Deployment Workflow
 
 1. **Build image**: `make build` (in benchmark directory)
-2. **Deploy**: `make deploy`
-3. **Run job**: `make run` (loads data and evaluates)
+2. **Run benchmark**: `make run` (deploys and runs the benchmark job)
 4. **Monitor**: `make logs`
 5. **Status**: `make status`
 

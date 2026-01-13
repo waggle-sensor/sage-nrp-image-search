@@ -131,8 +131,8 @@ After setting up, test the configuration:
 # Preview the generated manifests
 kubectl kustomize . | less
 
-# Deploy (from benchmark directory)
-make deploy
+# Run benchmark (from benchmark directory)
+make run
 ```
 
 ## Common Customizations
@@ -179,8 +179,7 @@ Then use:
 
 ```bash
 make build     # Build Docker image
-make deploy    # Deploys using kustomize
-make run   # Run benchmark job
+make run       # Deploy and run benchmark job
 make logs      # View logs
 make down      # Removes deployment
 ```
@@ -195,11 +194,11 @@ Benchmarks can be deployed to use either **dev** or **prod** environment resourc
 From the benchmark directory (e.g., `benchmarking/benchmarks/MYBENCHMARK/`):
 
 ```bash
-# Deploy to prod environment  
-make deploy ENV=prod
+# Run using prod environment resources
+make run ENV=prod
 
-# Deploy to default (dev environment)
-make deploy
+# Run using default (dev environment) resources
+make run
 ```
 
 The `ENV` variable controls which kustomize overlay is used:

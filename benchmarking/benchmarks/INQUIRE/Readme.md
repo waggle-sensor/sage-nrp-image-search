@@ -35,14 +35,8 @@ To run this example, you'll need:
      ```
 >NOTE: You can also use the GitHub Actions to build and push the images to the registry. See `.github/workflows/benchmarking.yml` for more details.
 
-3. **Deploy INQUIRE Benchmark**:
-   - Deploy to Kubernetes:
-     ```bash
-     make deploy  # defaults to dev environment
-     ```
-
-4. **Run Benchmark Job**:
-   - Run the complete benchmark (loads data and evaluates):
+3. **Run INQUIRE Benchmark**:
+   - Deploy and run the complete benchmark (loads data and evaluates):
      ```bash
      make run  # defaults to dev environment
      ```
@@ -179,8 +173,7 @@ The script uses a `config` object (instance of `INQUIREConfig`) to access all co
 ```bash
 cd benchmarking/benchmarks/INQUIRE
 make build      # Build Docker image
-make deploy     # Deploy to Kubernetes
-make run    # Run benchmark job
+make run        # Deploy and run benchmark job
 make logs       # Monitor logs
 ```
 

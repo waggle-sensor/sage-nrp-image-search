@@ -2,7 +2,7 @@
 # This file contains generic benchmark commands that can be reused by any benchmark instance.
 # Each benchmark should define its specific variables and include this file.
 
-.PHONY: down build deploy run kubectl port-forward-start port-forward-stop run-local status logs
+.PHONY: down build run kubectl port-forward-start port-forward-stop run-local status logs
 
 # ============================================================================
 # Required Variables (must be set by benchmark-specific Makefile)
@@ -61,23 +61,8 @@ build:
 	@echo "  docker push $(JOB_IMAGE):$(JOB_TAG)"
 
 # ============================================================================
-# Deployment Targets
+# Cleanup Targets
 # ============================================================================
-
-# Deploy to Kubernetes using kustomize
-deploy: kubectl
-	@if [ -z "$(BENCHMARK_NAME)" ]; then \
-		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
-	fi
-	@if [ -z "$(KUSTOMIZE_DIR)" ]; then \
-		echo "Error: KUSTOMIZE_DIR must be set"; exit 1; \
-	fi
-	@echo "Deploying $(BENCHMARK_NAME) benchmark to Kubernetes..."
-	@kubectl apply -k $(KUSTOMIZE_DIR)
-	@echo "Deployment complete. Check status with:"
-	@echo "  kubectl get pods -n $(KUBECTL_NAMESPACE) -l benchmark=$(BENCHMARK_NAME)"
-
-# Clean up deployments
 down: kubectl
 	@if [ -z "$(BENCHMARK_NAME)" ]; then \
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
@@ -93,7 +78,7 @@ down: kubectl
 # Execution Targets
 # ============================================================================
 
-# Run benchmark job (loads data and evaluates)
+# Run benchmark job (deploys and runs the benchmark)
 run: kubectl
 	@if [ -z "$(BENCHMARK_NAME)" ]; then \
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
@@ -110,14 +95,6 @@ run: kubectl
 # ============================================================================
 # Utility Targets
 # ============================================================================
-
-clean: kubectl
-	@if [ -z "$(BENCHMARK_NAME)" ]; then \
-		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
-	fi
-	@echo "Cleaning up $(BENCHMARK_NAME) benchmark deployments..."
-	@kubectl delete -k $(KUSTOMIZE_DIR) --ignore-not-found=true || true
-	@echo "Cleanup complete."
 
 # Show status
 status: kubectl

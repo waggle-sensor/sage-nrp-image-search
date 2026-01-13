@@ -16,17 +16,11 @@ This overlay extends `../base/` with INQUIRE-specific configuration:
 - Images built and pushed to registry
 - `kubectl` configured with appropriate context
 
-### Deploy
+### Run Benchmark
 
 ```bash
 cd benchmarking/benchmarks/INQUIRE
-make deploy
-```
-
-### Run Benchmark Job
-
-```bash
-make run
+make run  # Deploys and runs the benchmark job
 ```
 
 Monitor with:
@@ -44,7 +38,6 @@ make status
 
 ```bash
 make down      # Remove deployments
-make clean     # Remove all resources
 ```
 
 ## Environment Variables

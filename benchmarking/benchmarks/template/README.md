@@ -220,15 +220,10 @@ pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsea
 
 Once everything is set up:
 
-1. **Build and deploy to Kubernetes**:
+1. **Build and run benchmark**:
    ```bash
-   make build
-   make deploy
-   ```
-
-2. **Run benchmark job**:
-   ```bash
-   make run
+   make build    # Build Docker image
+   make run      # Deploy and run benchmark job
    ```
 
 3. **Monitor logs**:

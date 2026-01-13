@@ -111,11 +111,11 @@ Benchmarks can be deployed to use either **dev** or **prod** environment resourc
 From the benchmark directory (e.g., `benchmarking/benchmarks/INQUIRE/`):
 
 ```bash
-# Deploy to prod environment  
-make deploy ENV=prod
+# Run using prod environment resources
+make run ENV=prod
 
-# Deploy to default (dev environment)
-make deploy
+# Run using default (dev environment) resources
+make run
 ```
 
 The `ENV` variable controls which kustomize overlay is used:
@@ -131,19 +131,12 @@ The `ENV` variable controls which kustomize overlay is used:
 - Images built and pushed to registry
 - S3 secret configured with credentials (if using S3 upload)
 
-### Deploy
+### Run Benchmark
 
 ```bash
 cd benchmarking/benchmarks/INQUIRE
-make deploy              # Default deployment (dev environment)
-make deploy ENV=prod     # Deploy to prod environment
-```
-
-### Run Benchmark Job
-
-```bash
-make run             # Default deployment (dev environment)
-make run ENV=prod    # Run using prod resources
+make run              # Deploy and run using dev environment (default)
+make run ENV=prod     # Deploy and run using prod environment resources
 ```
 
 ### Monitor
@@ -156,9 +149,8 @@ make logs
 ### Cleanup
 
 ```bash
-make down                # Default deployment (dev environment)
-make down ENV=prod       # Clean up prod deployment
-make clean               # Remove all resources
+make down                # Remove deployments (dev environment)
+make down ENV=prod       # Remove prod deployments
 ```
 
 ## Environment Variables

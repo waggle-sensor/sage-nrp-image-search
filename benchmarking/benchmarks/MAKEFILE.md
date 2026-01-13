@@ -25,13 +25,12 @@ benchmarks/
 The base `benchmarks/Makefile` contains all generic commands that work for any benchmark:
 
 - **Build**: `make build` - Build Docker job image
-- **Deploy**: `make deploy` - Deploy to Kubernetes
-- **Run Job**: `make run` - Run benchmark job (loads data and evaluates)
+- **Run**: `make run` - Deploy and run benchmark job (loads data and evaluates)
 - **Run Local**: `make run-local` - Run benchmark locally with port-forwarding
 - **Status**: `make status` - Show deployment status
 - **Logs**: `make logs` - View job logs
 - **Port Forward**: `make port-forward-start` / `make port-forward-stop` - Manage port-forwarding
-- **Clean**: `make clean` - Remove deployments
+- **Down**: `make down` - Remove deployments
 
 ## Creating a New Benchmark Makefile
 
@@ -107,8 +106,8 @@ endif
 
 Then use:
 ```bash
-make deploy ENV=prod    # Deploy to prod
-make deploy            # Deploy to dev (default)
+make run ENV=prod    # Run using prod resources
+make run            # Run using dev resources (default)
 ```
 
 ## Example: INQUIRE Makefile
@@ -146,10 +145,7 @@ cd benchmarking/MYBENCHMARK
 # Build image
 make build
 
-# Deploy to Kubernetes
-make deploy
-
-# Run benchmark job (loads data and evaluates)
+# Run benchmark (deploys and runs the job)
 make run
 
 # Monitor logs
@@ -162,7 +158,7 @@ make status
 make run-local
 
 # Clean up
-make clean
+make down
 ```
 
 ## Local Development
