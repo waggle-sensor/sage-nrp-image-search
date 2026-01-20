@@ -33,46 +33,12 @@ def load_data(data_loader, vector_db: VectorDBAdapter, hf_dataset: Dataset):
         # logging.info("Creating collection schema...")
         # schema_config = data_loader.get_schema_config()
         # vector_db.create_collection(schema_config)
-        
+
         # TODO: Process and insert data
         # logging.info("Processing and inserting data...")
-        # 
-        # # Convert DataFrame to HuggingFace Dataset (PyArrow-backed) to preserve PIL.Image objects
-        # # This preserves complex objects like PIL.Image that pandas serializes
-        # from datasets import Dataset
-        # hf_dataset = Dataset.from_pandas(dataset)
-        # 
-        # if config.WORKERS == -1:
-        #     # Sequential processing
-        #     logging.info("Processing sequentially...")
-        #     all_processed = []
-        #     for batch in BatchedIterator(hf_dataset, config.IMAGE_BATCH_SIZE):
-        #         processed_batch = data_loader.process_batch(batch)
-        #         all_processed.extend(processed_batch)
-        #     
-        #     # Insert all at once
-        #     inserted = vector_db.insert_data(config.COLLECTION_NAME, all_processed, batch_size=config.IMAGE_BATCH_SIZE)
-        #     logging.info(f"Inserted {inserted} items.")
-        # else:
-        #     # Parallel processing
-        #     from concurrent.futures import ThreadPoolExecutor, as_completed
-        #     num_workers = config.WORKERS if config.WORKERS > 0 else os.cpu_count()
-        #     logging.info(f"Processing with {num_workers} parallel workers...")
-        #     
-        #     all_processed = []
-        #     with ThreadPoolExecutor(max_workers=num_workers) as executor:
-        #         futures = {
-        #             executor.submit(data_loader.process_batch, batch): batch
-        #             for batch in BatchedIterator(hf_dataset, config.IMAGE_BATCH_SIZE)
-        #         }
-        #         
-        #         for future in as_completed(futures):
-        #             processed_batch = future.result()
-        #             all_processed.extend(processed_batch)
-        #     
-        #     # Insert all at once
-        #     inserted = vector_db.insert_data(config.COLLECTION_NAME, all_processed, batch_size=config.IMAGE_BATCH_SIZE)
-        #     logging.info(f"Inserted {inserted} items.")
+        # results = data_loader.process_batch(batch_size=config._image_batch_size, dataset=hf_dataset, workers=config._workers)
+        # inserted = vector_db.insert_data(config._collection_name, results, batch_size=config._image_batch_size)
+        # logging.info(f"Inserted {inserted} items.")
         
         logging.info(f"Successfully loaded {config.mybenchmark_dataset} into Weaviate collection '{config._collection_name}'")
         
@@ -95,8 +61,9 @@ def run_evaluation(evaluator: BenchmarkEvaluator, hf_dataset: Dataset):
     logging.info("Starting evaluation...")
     try:
         image_results, query_evaluation = evaluator.evaluate_queries(
+            query_batch_size=config._query_batch_size,
             dataset=hf_dataset,
-            query_batch_size=config._query_batch_size
+            workers=config._workers
         )
     except Exception as e:
         logging.error(f"Error running evaluation: {e}")
@@ -111,7 +78,7 @@ def upload_to_s3(local_file_path: str, s3_key: str):
         from minio import Minio
         from minio.error import S3Error
         
-        if not config.S3_ENDPOINT:
+        if not config._s3_endpoint:
             raise ValueError("S3_ENDPOINT environment variable must be set")
         
         # Parse endpoint (remove http:// or https:// if present)
@@ -188,7 +155,11 @@ def main():
     # Create data loader
     logging.info("Creating data loader...")
     # TODO: Create your data loader if you have one
-    # data_loader = MyDataLoader(config=config, model_provider=model_provider)
+    # data_loader = MyDataLoader(
+    #     config=config,
+    #     model_provider=model_provider,
+    #     dataset=benchmark_dataset,
+    # )
     data_loader = None  # TODO: Replace with your data loader or None if not using one
 
     # Create evaluator

@@ -7,12 +7,11 @@ import sys
 from pathlib import Path
 import tritonclient.grpc as TritonClient
 from datasets import Dataset
-from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter, BatchedIterator
+from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter
 from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider, WeaviateQuery
 from benchmark_dataset import INQUIRE
 from config import INQUIREConfig
 from data_loader import INQUIREDataLoader
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 config = INQUIREConfig()
 
@@ -27,40 +26,10 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, hf_dat
 
         # Process and insert data
         logging.info("Processing and inserting data...")
-        
-        if config._workers == -1:
-            # Sequential processing
-            logging.info("Processing sequentially...")
-            all_processed = []
-            for batch in BatchedIterator(hf_dataset, config._image_batch_size):
-                processed_batch = data_loader.process_batch(batch)
-                all_processed.extend(processed_batch)
-            
-            # Insert all at once
-            inserted = vector_db.insert_data(config._collection_name, all_processed, batch_size=config._image_batch_size)
-            logging.info(f"Inserted {inserted} items.")
-        else:
-            # Parallel processing
-            num_workers = config._workers if config._workers > 0 else os.cpu_count()
-            logging.info(f"Processing with {num_workers} parallel workers...")
-            
-            all_processed = []
-            with ThreadPoolExecutor(max_workers=num_workers) as executor:
-                futures = {
-                    executor.submit(data_loader.process_batch, batch): batch
-                    for batch in BatchedIterator(hf_dataset, config._image_batch_size)
-                }
-                
-                for future in as_completed(futures):
-                    processed_batch = future.result()
-                    all_processed.extend(processed_batch)
-            
-            # Insert all at once
-            inserted = vector_db.insert_data(config._collection_name, all_processed, batch_size=config._image_batch_size)
-            logging.info(f"Inserted {inserted} items.")
-        
+        results = data_loader.process_batch(batch_size=config._image_batch_size, dataset=hf_dataset, workers=config._workers)
+        inserted = vector_db.insert_data(config._collection_name, results, batch_size=config._image_batch_size)
+        logging.info(f"Inserted {inserted} items.")        
         logging.info(f"Successfully loaded {config.inquire_dataset} into Weaviate collection '{config._collection_name}'")
-        
     except Exception as e:
         logging.error(f"Error loading data: {e}")
         vector_db.close()
@@ -71,7 +40,7 @@ def run_evaluation(evaluator: BenchmarkEvaluator, hf_dataset: Dataset):
     # Run evaluation
     logging.info("Starting evaluation...")
     try:
-        image_results, query_evaluation = evaluator.evaluate_queries(query_batch_size=config._query_batch_size, dataset=hf_dataset)
+        image_results, query_evaluation = evaluator.evaluate_queries(query_batch_size=config._query_batch_size, dataset=hf_dataset, workers=config._workers)
     except Exception as e:
         logging.error(f"Error running evaluation: {e}")
         evaluator.vector_db.close()
@@ -161,7 +130,11 @@ def main():
 
     # Create data loader
     logging.info("Creating data loader...")
-    data_loader = INQUIREDataLoader(config=config, model_provider=model_provider)
+    data_loader = INQUIREDataLoader(
+        config=config, 
+        model_provider=model_provider,
+        dataset=benchmark_dataset,
+    )
 
     # Create evaluator
     logging.info("Creating benchmark evaluator...")
