@@ -113,12 +113,17 @@ logs: kubectl
 	@if [ -z "$(BENCHMARK_NAME)" ]; then \
 		echo "Error: BENCHMARK_NAME must be set"; exit 1; \
 	fi
-	@pod=$$(kubectl get pods -n $(KUBECTL_NAMESPACE) -l app=benchmark-job,benchmark=$(BENCHMARK_NAME) --field-selector=status.phase=Running -o jsonpath="{.items[0].metadata.name}"); \
+	@pod=$$(kubectl get pods -n $(KUBECTL_NAMESPACE) -l app=benchmark-job,benchmark=$(BENCHMARK_NAME) --field-selector=status.phase!=Failed,status.phase!=Pending --sort-by=.metadata.creationTimestamp -o jsonpath="{.items[-1].metadata.name}"); \
 	if [ -z "$$pod" ]; then \
-		echo "No running pods found for $(BENCHMARK_NAME) benchmark."; \
+		echo "No Running or Completed pods found for $(BENCHMARK_NAME) benchmark."; \
 		exit 1; \
 	fi; \
-	kubectl logs -n $(KUBECTL_NAMESPACE) -f $$pod
+	phase=$$(kubectl get pod -n $(KUBECTL_NAMESPACE) $$pod -o jsonpath="{.status.phase}"); \
+	if [ "$$phase" = "Running" ]; then \
+		kubectl logs -n $(KUBECTL_NAMESPACE) -f $$pod; \
+	else \
+		kubectl logs -n $(KUBECTL_NAMESPACE) $$pod; \
+	fi
 
 # ============================================================================
 # Local Development Targets
