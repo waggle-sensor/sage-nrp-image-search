@@ -5,9 +5,6 @@ imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git
 imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git
 imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git
 
-# Dataset dependencies
-datasets>=4.4.1
-
 # Image processing
 Pillow>=10.0.0
 
