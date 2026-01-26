@@ -113,7 +113,7 @@ def main():
     # Configure logging
     logging.basicConfig(
         level=getattr(logging, config._log_level, logging.INFO),
-        format="%(asctime)s %(message)s",
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
     )
 
