@@ -215,6 +215,17 @@ def main():
                 s3_key_image = f"{config._s3_prefix}/{timestamp}/{config._image_results_file}"
                 s3_key_query = f"{config._s3_prefix}/{timestamp}/{config._query_eval_metrics_file}"
                 s3_key_config = f"{config._s3_prefix}/{timestamp}/{config._config_values_file}"
+
+                #debug
+                logging.info("S3_BUCKET:", repr(config._s3_bucket))
+                logging.info("S3_ENDPOINT:", repr(config._s3_endpoint))
+                endpoint = config._s3_endpoint.replace("http://", "").replace("https://", "")
+                logging.info("endpoint:", repr(endpoint))
+                logging.info("S3_PREFIX:", repr(config._s3_prefix))
+                logging.info("IMAGE_RESULTS_FILE:", repr(config._image_results_file))
+                logging.info("timestamp:", repr(timestamp))
+                logging.info("s3_key_image:", repr(s3_key_image))
+
                 upload_to_s3(str(image_results_path), s3_key_image)
                 upload_to_s3(str(query_evaluation_path), s3_key_query)
                 upload_to_s3(str(config_csv_path), s3_key_config)
