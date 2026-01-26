@@ -150,7 +150,7 @@ def main():
     # Create benchmark dataset
     logging.info("Creating benchmark dataset class...")
     benchmark_dataset = MyBenchmarkDataset()  # TODO: Use your BenchmarkDataset
-    hf_dataset = benchmark_dataset.load_as_dataset(split="test", sample_size=config.sample_size, seed=config.seed)  # TODO: Update parameters as needed
+    hf_dataset = benchmark_dataset.load_as_dataset(split="test", sample_size=config.sample_size, seed=config.seed, token=config._hf_token)  # TODO: Update parameters as needed
 
     # Create data loader
     logging.info("Creating data loader...")

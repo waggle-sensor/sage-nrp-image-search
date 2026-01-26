@@ -126,7 +126,7 @@ def main():
     # Create benchmark dataset
     logging.info("Creating benchmark dataset class...")
     benchmark_dataset = INQUIRE(dataset_name=config.inquire_dataset)
-    hf_dataset = benchmark_dataset.load_as_dataset(split="test", sample_size=config.sample_size, seed=config.seed)
+    hf_dataset = benchmark_dataset.load_as_dataset(split="test", sample_size=config.sample_size, seed=config.seed, token=config._hf_token)
 
     # Create data loader
     logging.info("Creating data loader...")

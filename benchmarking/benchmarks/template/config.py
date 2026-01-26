@@ -14,7 +14,8 @@ class MyConfig(Config):
         self.mybenchmark_dataset = os.environ.get("MYBENCHMARK_DATASET", "your-dataset/name")
         self.sample_size = int(os.environ.get("SAMPLE_SIZE", 0))
         self.seed = int(os.environ.get("SEED", 42))
-        
+        self._hf_token = os.environ.get("HF_TOKEN", "")
+
         # Upload parameters
         self._upload_to_s3 = os.environ.get("UPLOAD_TO_S3", "false").lower() == "true"
         self._s3_bucket = os.environ.get("S3_BUCKET", "sage_imsearch")
