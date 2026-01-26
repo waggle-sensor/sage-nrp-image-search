@@ -4,3 +4,4 @@ __pycache__/
 **/flagged/
 .env
 settings.json
+._*

@@ -1,0 +1,17 @@
+# Python dependencies for benchmark
+# Add your benchmark-specific dependencies here
+
+# Core benchmarking framework
+# TODO: Install the module you need
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
+
+# S3 upload support (MinIO)
+minio>=7.2.0
+
+# Add other dependencies as needed
+# Example:
+# datasets>=2.14.0
+# huggingface-hub>=0.16.0
+# Pillow>=10.0.0
+# python-dateutil>=2.8.0
+

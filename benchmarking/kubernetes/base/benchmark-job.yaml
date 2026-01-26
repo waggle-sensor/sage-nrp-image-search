@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: benchmark-job
+  labels:
+    app: benchmark-job
+spec:
+  # Don't automatically delete completed jobs (for debugging)
+  ttlSecondsAfterFinished: 86400  # 24 hours
+  # Allow only one job to run at a time
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: benchmark-job
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: benchmark-job
+          image: PLACEHOLDER_BENCHMARK_JOB_IMAGE:latest
+          # Note: Vector DB and inference server environment variables should be
+          # added via patches in benchmark-specific overlays (e.g., env.yaml)
+          imagePullPolicy: Always #TODO: remove this after testing
+          command: ["python", "run_benchmark.py"]
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: PYTHONPATH
+              value: "/app"
+            # S3 upload configuration (base defaults)
+            - name: S3_ENDPOINT
+              value: "http://rook-ceph-rgw-nautiluss3.rook" #inside cluster endpoint of the s3 bucket
+            - name: S3_BUCKET
+              value: "sage_imsearch"
+            - name: S3_SECURE
+              value: "false" # inside cluster endpoint doesn't use SSL
+            - name: S3_PREFIX
+              value: "dev-metrics" # Override in benchmark-specific overlays
+            - name: UPLOAD_TO_S3
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: s3-secret
+            - secretRef:
+                name: huggingface-secret
+          resources:
+            limits:
+              cpu: 6  # maximum allowed ratio of 1.2x of requests (5 * 1.2 = 6)
+              memory: 14Gi  # maximum allowed ratio of 1.2x of requests (12Gi * 1.2 = 14.4Gi)
+            requests:
+              cpu: 5
+              memory: 12Gi
+          volumeMounts:
+            - name: huggingface-cache
+              mountPath: /root/.cache/huggingface
+            - name: results
+              mountPath: /app/results
+      volumes:
+        - name: huggingface-cache
+          emptyDir: {}
+        - name: results
+          emptyDir: {}
+

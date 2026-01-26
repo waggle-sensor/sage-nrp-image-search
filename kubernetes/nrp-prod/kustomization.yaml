@@ -34,11 +34,11 @@ images:
     newTag: cross-encoder-ms-marco-MiniLM-L-6-v2-latest
   - name: semitechnologies/weaviate
     newTag: 1.32.0
-  - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/triton
+  - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/triton
     newTag: latest
-  - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/gradio-ui
+  - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/gradio-ui
     newTag: latest
-  - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/weavmanage
+  - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavmanage
     newTag: latest
-  - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/weavloader
+  - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavloader
     newTag: latest

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: gradio-ui
-          image: gitlab-registry.nrp-nautilus.io/ndp/sage/hybrid-search/gradio-ui:latest
+          image: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/gradio-ui:latest
           env:
             - name: PYTHONUNBUFFERED
               value: "1"
