@@ -211,7 +211,7 @@ def main():
             logging.info("=" * 80)
             try:
                 # Generate S3 keys with timestamp
-                timestamp = time.strftime("%Y%m%d_%H%M%S")
+                timestamp = time.strftime("%Y%m%dT%H%M%S")
                 s3_key_image = f"{config._s3_prefix}/{timestamp}/{config._image_results_file}"
                 s3_key_query = f"{config._s3_prefix}/{timestamp}/{config._query_eval_metrics_file}"
                 s3_key_config = f"{config._s3_prefix}/{timestamp}/{config._config_values_file}"
