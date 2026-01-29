@@ -77,6 +77,7 @@ services:
     - CELERY_RESULT_BACKEND
     - ALLOWED_NODES
     - LOG_LEVEL
+    - MONITOR_DATA_STREAM_INTERVAL
     depends_on:
       - weaviate
       - triton
