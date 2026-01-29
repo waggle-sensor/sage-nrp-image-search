@@ -8,7 +8,7 @@ from transformers import (
     Gemma3ForConditionalGeneration,
 )
 import HyperParameters as hp
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
+
 MODEL_PATH = os.environ.get("GEMMA_MODEL_PATH")
 
 class TritonPythonModel:
@@ -21,14 +21,22 @@ class TritonPythonModel:
             clean_up_tokenization_spaces=True,
         )
 
-        gpu_card = 0
         # load the GEMMA3 model
-        self.model = Gemma3ForConditionalGeneration.from_pretrained(
-            MODEL_PATH,
-            local_files_only=True,
-            torch_dtype="auto",
-            device_map={"": gpu_card} # assigns layers to GPU
-        ).eval()
+        if torch.cuda.is_available():
+            gpu_card = 0
+            self.model = Gemma3ForConditionalGeneration.from_pretrained(
+                MODEL_PATH,
+                local_files_only=True,
+                torch_dtype="auto",
+                device_map={"": gpu_card} # assigns layers to GPU
+            ).eval()
+        else:
+            #CPU
+            self.model = Gemma3ForConditionalGeneration.from_pretrained(
+                MODEL_PATH,
+                local_files_only=True,
+                torch_dtype="auto",
+            ).eval()
 
         # choose device
         self.device = torch.device(f"cuda:{gpu_card}" if torch.cuda.is_available() else "cpu")

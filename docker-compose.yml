@@ -1,0 +1,98 @@
+version: '3.4'
+services:
+  weaviate:
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - '8080'
+      - --scheme
+      - http
+    image: semitechnologies/weaviate:1.32.0 #https://weaviate.io/developers/weaviate/release-notes#weaviate-core-and-client-releases
+    ports:
+      - 8080:8080
+      - 50051:50051
+    restart: on-failure
+    environment:
+    - BIND_INFERENCE_API
+    - RERANKER_INFERENCE_API
+    - QUERY_DEFAULTS_LIMIT
+    - AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED
+    - PERSISTENCE_DATA_PATH
+    - DEFAULT_VECTORIZER_MODULE
+    - ENABLE_MODULES
+    - BACKUP_FILESYSTEM_PATH
+    - CLUSTER_HOSTNAME
+    - ASYNC_INDEXING
+    - USE_BLOCKMAX_WAND
+    - USE_INVERTED_SEARCHABLE
+    - LIMIT_RESOURCES
+    # - LOG_LEVEL
+    # - PROMETHEUS_MONITORING_ENABLED
+    # - PROMETHEUS_MONITORING_PORT
+    volumes:
+    - weaviate:/var/lib/weaviate
+
+  multi2vec-bind:
+    image: semitechnologies/multi2vec-bind:imagebind
+      
+  reranker-transformers:
+    image: semitechnologies/reranker-transformers:cross-encoder-ms-marco-MiniLM-L-6-v2
+
+  triton:
+    build:
+      context: ./triton
+    platform: "linux/amd64"
+    ports:
+      - 8000:8000
+      - 8001:8001 
+      - 8002:8002
+    shm_size: '500MB'  #shared memory size
+    restart: on-failure
+    environment:
+    - MODEL_REPOSITORY
+    - CLIP_MODEL_PATH
+    - CLIP_MODEL_VERSION
+    - GEMMA_MODEL_PATH
+    - GEMMA_MODEL_VERSION
+    - HF_TOKEN
+    volumes:
+    - triton:/models
+
+  weavloader:
+    build:
+      context: ./weavloader
+    ports:
+      - 8081:8080
+      - 5555:5555
+    restart: on-failure
+    environment:
+    - TRITON_HOST
+    - TRITON_PORT
+    - WEAVIATE_HOST
+    - WEAVIATE_PORT
+    - SAGE_USER
+    - SAGE_PASS
+    - CELERY_BROKER_URL
+    - CELERY_RESULT_BACKEND
+    - ALLOWED_NODES
+    - LOG_LEVEL
+    depends_on:
+      - weaviate
+      - triton
+
+  gradio-ui:
+    build:
+      context: ./app
+    ports:
+      - 7860:7860
+    restart: on-failure
+    environment:
+    - WEAVIATE_HOST
+    - WEAVIATE_PORT
+    - WEAVIATE_GRPC_PORT
+    - CLUSTER_FLAG
+
+volumes:
+  triton:
+  weaviate:

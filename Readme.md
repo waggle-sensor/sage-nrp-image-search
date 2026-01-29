@@ -34,6 +34,51 @@ This repository includes a GitHub Action that builds and pushes Docker images fo
 
 ---
 
+## Docker compose
+envs:
+```
+cp .env.example .env
+```
+Make sure to fill in the secrets (top three env vars)
+
+Run:
+```
+docker compose up -d --build
+```
+
+Clean up:
+```
+docker compose down
+```
+
+All together:
+```
+docker compose down && docker compose up -d --build
+``
+
+Clean up (volumes):
+```
+docker compose down --volumes
+```
+
+Notes:
+- Triton migh not be able load either one of the models (CLIP and gemma3) or for some reason OSErrors loading the model weights so this is a workaround to download the models to local directory and then move them to the container:
+   ```
+   source .env #assumes that HF_TOKEN is set
+   cd triton
+   python3 -m venv env
+   source env/bin/activate
+   pip install requirements.txt
+   huggingface-cli download --local-dir DFN5B-CLIP-ViT-H-14-378  --revision "$CLIP_MODEL_VERSION" apple/DFN5B-CLIP-ViT-H-14-378
+
+   huggingface-cli download --local-dir gemma-3-4b-it --revision "$GEMMA_MODEL_VERSION" google/gemma-3-4b-it
+
+   docker cp DFN5B-CLIP-ViT-H-14-378 sage-nrp-image-search-triton-1:/models/
+   docker cp gemma-3-4b-it sage-nrp-image-search-triton-1:/models/
+   ```
+
+---
+
 ## Kubernetes
 Developed and test with these versions for k8s and kustomize:
 ```

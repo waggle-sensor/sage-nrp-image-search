@@ -18,8 +18,8 @@ import sage_data_client
 # Get environment variables
 USER = os.environ.get("SAGE_USER")
 PASS = os.environ.get("SAGE_PASS")
-UNALLOWED_NODES = os.environ.get("UNALLOWED_NODES", "")
-UNALLOWED_NODES = parse_deny_list(UNALLOWED_NODES)
+ALLOWED_NODES = os.environ.get("ALLOWED_NODES", "")
+ALLOWED_NODES = parse_deny_list(ALLOWED_NODES)
 TRITON_HOST = os.environ.get("TRITON_HOST", "triton")
 TRITON_PORT = os.environ.get("TRITON_PORT", "8001")
 WEAVIATE_HOST = os.environ.get("WEAVIATE_HOST", "weaviate")
@@ -243,7 +243,7 @@ def monitor_data_stream():
         
         # Filter out nodes not allowed to be processed
         if len(df) > 0:
-            df = df[~df['meta.vsn'].apply(lambda x: x.strip().lower() in UNALLOWED_NODES)]
+            df = df[~df['meta.vsn'].apply(lambda x: x.strip().lower() in ALLOWED_NODES)]
         
         # If no new images found, update last processed timestamp to try again later and return
         if len(df) == 0:
