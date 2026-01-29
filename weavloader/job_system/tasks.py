@@ -219,6 +219,7 @@ def monitor_data_stream():
         
         # Get last processed timestamp from Redis, or use last 5 minutes if not set
         last_timestamp_str = r.get(LAST_TIMESTAMP_KEY)
+        celery_logger.info(f"[MODERATOR] weavloader last processed timestamp: {pd.Timestamp(last_timestamp_str)}")
         if last_timestamp_str:
             try:
                 start = pd.Timestamp(last_timestamp_str)
@@ -230,9 +231,11 @@ def monitor_data_stream():
             # First run - query from last 5 minutes (only new data going forward)
             start = pd.Timestamp.utcnow() - pd.Timedelta(minutes=5)
             celery_logger.info("[MODERATOR] First run, querying from last 5 minutes")
+            celery_logger.info(f"[MODERATOR] Start time: {start}")
         
         # Query SAGE data since last timestamp, add 1 second to the last timestamp to avoid duplicates
         query_start = start + pd.Timedelta(seconds=1)
+        celery_logger.info(f"[MODERATOR] Query start time: {query_start}")
         df = sage_data_client.query(
             start=query_start,
             filter=filter_config
