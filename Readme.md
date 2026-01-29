@@ -54,7 +54,7 @@ docker compose down
 All together:
 ```
 docker compose down && docker compose up -d --build
-``
+```
 
 Clean up (volumes):
 ```
