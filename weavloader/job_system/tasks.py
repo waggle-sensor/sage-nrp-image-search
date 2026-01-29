@@ -241,9 +241,9 @@ def monitor_data_stream():
         # Update component health
         metrics.update_component_health('sage', True)
         
-        # Filter out nodes not allowed to be processed
+        # Filter out nodes allowed to be processed
         if len(df) > 0:
-            df = df[~df['meta.vsn'].apply(lambda x: x.strip().lower() in ALLOWED_NODES)]
+            df = df[df['meta.vsn'].apply(lambda x: x.strip().lower() in ALLOWED_NODES)]
         
         # If no new images found, update last processed timestamp to try again later and return
         if len(df) == 0:
