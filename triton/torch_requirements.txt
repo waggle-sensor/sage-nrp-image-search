@@ -15,8 +15,9 @@
 # H100
 #-----------------------------
 # Qwen 2.5 & Gemma3 model
---index-url https://download.pytorch.org/whl/cu126
-torch==2.6.0+cu126
+# --index-url https://download.pytorch.org/whl/cu126
+# torch==2.6.0+cu126
+torch==2.6.0
 torchvision==0.21.0
 numpy<2 # <--- numpy 2.0 is not compatible with transformers
 

@@ -3,7 +3,6 @@ import numpy as np
 import triton_python_backend_utils as pb_utils
 import torch
 from transformers import CLIPProcessor, CLIPModel
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
 
 MODEL_PATH = os.environ.get("CLIP_MODEL_PATH")
 
