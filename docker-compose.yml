@@ -65,6 +65,16 @@ services:
     volumes:
     - triton:/models
 
+  weavmanage:
+    build:
+      context: ./weavmanage
+    environment:
+    - WEAVIATE_HOST
+    - WEAVIATE_PORT
+    - WEAVIATE_GRPC_PORT
+    depends_on:
+      - weaviate
+
   weavloader:
     build:
       context: ./weavloader
@@ -86,6 +96,7 @@ services:
     - MONITOR_DATA_STREAM_INTERVAL
     depends_on:
       - weaviate
+      - weavmanage
       - triton
 
   gradio-ui:
