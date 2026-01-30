@@ -187,7 +187,7 @@ def process_image_task(self, image_data, **meta):
         if dlq_attempt > 0:
             metrics.record_dlq_reprocess("failure")
         
-        celery_logger.error(f"[PROCESSOR] Error processing image {image_data.get('url', 'unknown')}: {str(exc)}")
+        celery_logger.error(f"[PROCESSOR] Error processing image {image_data.get('url', 'unknown')} : {str(exc)}")
         celery_logger.error(f"[PROCESSOR] Traceback: {traceback.format_exc()}")
         
         # Retry with exponential backoff
