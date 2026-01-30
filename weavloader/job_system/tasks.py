@@ -17,7 +17,11 @@ import sage_data_client
 
 # Get environment variables
 USER = os.environ.get("SAGE_USER")
+if USER is None:
+    raise ValueError(f'Environment variable SAGE_USER not set.')
 PASS = os.environ.get("SAGE_PASS")
+if PASS is None:
+    raise ValueError(f'Environment variable SAGE_PASS not set.')
 ALLOWED_NODES = os.environ.get("ALLOWED_NODES", "")
 ALLOWED_NODES = parse_deny_list(ALLOWED_NODES)
 TRITON_HOST = os.environ.get("TRITON_HOST", "triton")
