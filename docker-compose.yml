@@ -30,6 +30,12 @@ services:
     # - LOG_LEVEL
     # - PROMETHEUS_MONITORING_ENABLED
     # - PROMETHEUS_MONITORING_PORT
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
     - weaviate:/var/lib/weaviate
 
