@@ -1,9 +1,0 @@
-weaviate_client==4.14.* #https://weaviate.io/developers/weaviate/release-notes#weaviate-core-and-client-releases
-imageio==2.33.1
-sage_data_client==0.7.1
-matplotlib==3.8.2
-Pillow==10.4.*
-tritonclient[grpc]==2.53.*
-numpy==1.24.*
-datasets==3.2.*
-Requests

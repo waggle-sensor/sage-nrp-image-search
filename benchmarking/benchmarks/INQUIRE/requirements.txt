@@ -1,0 +1,15 @@
+# INQUIRE Benchmark Requirements
+# Core benchmarking framework
+# TODO: Pin to a specific version once you have the eval working
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git 
+imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git
+imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git
+
+# Image processing
+Pillow>=10.0.0
+
+# Date parsing
+python-dateutil>=2.8.0
+
+# S3 upload support (MinIO)
+minio>=7.2.0

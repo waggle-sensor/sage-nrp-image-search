@@ -518,3 +518,11 @@ Flower metrics are automatically integrated into the unified Prometheus endpoint
 - **Metric Prefix**: All Flower metrics are prefixed with `weavloader_`
 - **Unified Endpoint**: Available at `/metrics` alongside custom metrics
 - **Real-time Updates**: Metrics update in real-time with task execution
+
+## **References**
+- [Celery Documentation](https://docs.celeryq.dev/en/stable/)
+- [Flower Documentation](https://flower.readthedocs.io/en/latest/)
+   - [Prometheus Integration](https://flower.readthedocs.io/en/latest/prometheus-integration.html)
+- [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)
+   - [Multiprocess Mode](https://prometheus.github.io/client_python/multiprocess/)
+- [Sage Documentation](https://sagecontinuum.org/docs/about/overview)

@@ -1,0 +1,30 @@
+# MYBENCHMARK Benchmark Job Dockerfile
+# Combined Dockerfile for running both data loading and evaluation
+#
+# Instructions:
+# 1. Replace MYBENCHMARK with your benchmark name in the comment
+# 2. Verify the CMD line runs your run_benchmark.py script
+# 3. Ensure requirements.txt includes imsearch-eval and minio packages
+
+ARG PYTHON_VERSION=3.11-slim
+FROM python:${PYTHON_VERSION}
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Run combined benchmark script
+CMD ["python", "run_benchmark.py"]
+

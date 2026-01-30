@@ -5,8 +5,8 @@ namespace: sage
 resources:
   - reranker-transformers.yaml
   - weaviate.yaml
-  - huggingface-secret.yaml
-  - sage-user-secret.yaml
+  - ._huggingface-secret.yaml
+  - ._sage-user-secret.yaml
   - triton.yaml
   - gradio-ui.yaml
   - weavmanage.yaml
