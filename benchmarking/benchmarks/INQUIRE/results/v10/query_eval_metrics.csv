@@ -1,161 +1,161 @@
-query_id,query,total_images,correctly_returned,incorrectly_returned,relevant_images,non_relevant_images,accuracy,precision,recall,rerank_score_NDCG,clip_score_NDCG,category,supercategory,iconic_group
-11,A mongoose standing upright alert,50,50,0,21.0,29.0,1.0,0.42,0.8076923076923077,0.8821280836041002,0.9437140519871646,Defensive and Survival Behaviors,Behavior,Mammals
-189,puffins carrying food,50,49,1,7.0,43.0,0.98,0.14,0.875,0.8182051948411254,0.6008670971202126,Feeding and Hydration,Behavior,Birds
-6,A female pheasant,50,50,0,34.0,16.0,1.0,0.68,0.8292682926829268,0.9779575477442151,0.8970592229259252,Sex identification,Appearance,Birds
-32,Dead hog-nosed skunk,50,47,3,15.0,35.0,0.94,0.3,0.5,0.6220705816860616,0.8445183333302531,Health and Disease,Appearance,Mammals
-66,Mushrooms growing in a fairy ring formation,50,50,0,5.0,45.0,1.0,0.1,0.625,0.459124833888341,0.6894438125800559,Miscellaneous Context,Context,Fungi
-83,Tagged swan,50,50,0,19.0,31.0,1.0,0.38,0.6333333333333333,0.9676905707102809,0.9994557194787812,Tracking and Identification,Appearance,Birds
-142,cross orbweaver,50,39,11,2.0,48.0,0.78,0.04,0.2222222222222222,0.32576955779886874,0.47720240616763804,Species ID,Species,Arachnids
-98,a hermit crab using plastic waste as a shell,50,46,4,3.0,47.0,0.92,0.06,1.0,0.7022658720216396,0.6996914519138084,Human Impact,Context,Animalia
-192,sick cassava plant,50,50,0,27.0,23.0,1.0,0.54,0.5869565217391305,0.8749433363243968,0.934634329263629,Health and Disease,Appearance,Plants
-41,Fishing net on a reef,50,43,7,14.0,36.0,0.86,0.28,0.5833333333333334,0.8768457159964044,0.7443747742995444,Human Impact,Context,
-123,bridal veil stinkhorn mushroom,50,49,1,37.0,13.0,0.98,0.74,0.7872340425531915,0.9843360129501554,0.8939394433961915,Species ID,Species,Fungi
-46,Green Shore Crab,50,50,0,15.0,35.0,1.0,0.3,0.45454545454545453,0.6643105433209228,0.6107994761436328,Species ID,Species,Animalia
-111,an oxpecker on a zebra,50,50,0,27.0,23.0,1.0,0.54,0.9642857142857143,0.9174735113906813,0.9509251189831738,Parasitism and Symbiosis,Context,Combo
-104,a possum on a power line,50,48,2,26.0,24.0,0.96,0.52,0.6842105263157895,0.7558300530843782,0.9792025980882071,Human Impact,Context,Mammals
-4,A close-up of an ant carrying a leaf,50,50,0,29.0,21.0,1.0,0.58,0.6041666666666666,0.8523987668152745,0.9213059413915085,Cooperative and Social Behaviors,Behavior,Insects
-82,Swallowtail butterfly caterpillar camouflaged as bird droppings,50,31,19,24.0,26.0,0.62,0.48,0.4897959183673469,0.6772333078500763,0.6231503020470849,Life Cycle and Development,Appearance,Insects
-99,a lion with a collar around its neck,50,24,26,3.0,47.0,0.48,0.06,0.75,0.72049989077869,0.9871889556251642,Tracking and Identification,Appearance,Mammals
-28,Cheetah with radio collar,50,40,10,9.0,41.0,0.8,0.18,0.6923076923076923,0.7473114533297642,0.948051246574417,Tracking and Identification,Appearance,Mammals
-74,Rhino with ear notches,50,47,3,16.0,34.0,0.94,0.32,0.37209302325581395,0.6783162232624735,0.600142826972334,Tracking and Identification,Appearance,Mammals
-108,an image showing a humpback whale fluke with clearly identifiable markings,50,50,0,21.0,29.0,1.0,0.42,0.65625,0.7722558599237697,0.9309436627175419,Tracking and Identification,Appearance,Mammals
-136,cheetah with cubs,50,39,11,13.0,37.0,0.78,0.26,0.6842105263157895,0.8659512996122141,0.9563222703080145,Cooperative and Social Behaviors,Behavior,Mammals
-44,Gazelle being vigilant/looking around,50,40,10,21.0,29.0,0.8,0.42,0.7777777777777778,0.8455252714183187,0.7494257704526631,Defensive and Survival Behaviors,Behavior,Mammals
-148,elephant near a fence,50,33,17,19.0,31.0,0.66,0.38,0.76,0.9015617837898964,0.7674069029367191,Human Impact,Context,Mammals
-161,grebe with babies on its back,50,42,8,15.0,35.0,0.84,0.3,0.7894736842105263,0.871767238211959,0.8521439749941933,Cooperative and Social Behaviors,Behavior,Birds
-119,black-winged kite carrying prey in its talons,50,48,2,3.0,47.0,0.96,0.06,0.5,0.37129547261954643,0.4951178042854961,Feeding and Hydration,Behavior,Birds
-183,parrotfish feeding,50,49,1,8.0,42.0,0.98,0.16,0.42105263157894735,0.6999851722996004,0.5929640273895733,Feeding and Hydration,Behavior,Fish
-9,A male and female cardinal sharing food,50,46,4,1.0,49.0,0.92,0.02,1.0,0.3333333333333335,0.3154648767857289,Feeding and Hydration,Behavior,Birds
-78,Sea turtle with algae on its shell,50,50,0,18.0,32.0,1.0,0.36,0.72,0.8544656348585931,0.7306682454040837,Parasitism and Symbiosis,Context,Reptiles
-91,Zebra and wildebeest grazing together,50,47,3,26.0,24.0,0.94,0.52,0.8387096774193549,0.9659864807187863,0.9599274369697863,Parasitism and Symbiosis,Context,Mammals
-79,Sharks with remoras attached,50,49,1,6.0,44.0,0.98,0.12,0.75,0.8003403357756574,0.46661600820592697,Parasitism and Symbiosis,Context,Fish
-100,a microscopy slide showing the cellular structure of a plant,50,48,2,16.0,34.0,0.96,0.32,0.6956521739130435,0.731364021048831,0.8799436949897579,Miscellaneous Context,Context,Plants
-164,hyenas eating a kill,50,40,10,12.0,38.0,0.8,0.24,0.8571428571428571,0.9005631488875647,0.7521515216283557,Feeding and Hydration,Behavior,Mammals
-12,A peacock male displaying its feathers,50,50,0,20.0,30.0,1.0,0.4,0.6060606060606061,0.7202816094811397,0.8860224801355403,"Mating, Courtship, Reproduction",Behavior,Birds
-35,Elk bugling during the rut,50,41,9,6.0,44.0,0.82,0.12,1.0,0.8492617869404262,0.8104393923077473,"Mating, Courtship, Reproduction",Behavior,Mammals
-33,Dolphins performing acrobatics,50,49,1,31.0,19.0,0.98,0.62,0.6595744680851063,0.9189917868750028,0.8855390447886895,Miscellaneous Behavior,Behavior,Mammals
-179,monkey slug caterpillar,50,44,6,0.0,50.0,0.88,0.0,0.0,0.0,0.0,Life Cycle and Development,Appearance,Insects
-117,bird dead in front of a window,50,48,2,17.0,33.0,0.96,0.34,0.8095238095238095,0.8894348878037819,0.9853118100121915,Human Impact,Context,Birds
-36,Emergence of large colony of mexican free-tailed bats,50,49,1,27.0,23.0,0.98,0.54,0.6,0.9685758768362924,0.8431289645887466,Cooperative and Social Behaviors,Behavior,Mammals
-157,fruit bat eating fruit upside down,50,49,1,5.0,45.0,0.98,0.1,0.7142857142857143,0.5852792168785028,0.7065113420469363,Feeding and Hydration,Behavior,Mammals
-97,a herd of more than 10 impalas,50,43,7,19.0,31.0,0.86,0.38,0.59375,0.7604200199881677,0.7528496850061552,Cooperative and Social Behaviors,Behavior,Mammals
-132,canada geese flying in v-formation,50,50,0,4.0,46.0,1.0,0.08,0.8,0.48464955522171504,0.33308173530576435,Cooperative and Social Behaviors,Behavior,Birds
-181,mountain goat climbing rocky outcrops with its young,50,50,0,6.0,44.0,1.0,0.12,0.46153846153846156,0.45754691295673194,0.8157164127310123,Cooperative and Social Behaviors,Behavior,Mammals
-168,laysan albatross mostly in dark mottled brown plumage,50,49,1,4.0,46.0,0.98,0.08,0.8,0.5111469085263242,0.8771604916820146,Life Cycle and Development,Appearance,Birds
-114,bananaquit pollinating flower,50,5,45,0.0,50.0,0.1,0.0,0.0,0.0,0.0,Parasitism and Symbiosis,Context,Birds
-170,lorikeet pollinating flower,50,47,3,23.0,27.0,0.94,0.46,0.46,0.7540128402506661,0.8077489912184463,Parasitism and Symbiosis,Context,Birds
-147,elephant covered in mud or dirt,50,41,9,31.0,19.0,0.82,0.62,0.6458333333333334,0.9331651407931625,0.9907852182874651,Miscellaneous Behavior,Behavior,Mammals
-165,jungle babblers allopreening,50,49,1,5.0,45.0,0.98,0.1,0.7142857142857143,0.4493407518714539,0.9609247825245573,Cooperative and Social Behaviors,Behavior,Birds
-52,Inflated pufferfish,50,49,1,25.0,25.0,0.98,0.5,0.5319148936170213,0.882060548578545,0.9139281120190925,Defensive and Survival Behaviors,Behavior,Fish
-102,a nest with eggs displaying brood parasitism by a cowbird,50,20,30,4.0,46.0,0.4,0.08,0.5714285714285714,0.3283116735749402,0.3687253294386119,Parasitism and Symbiosis,Context,Birds
-59,Male crimsonband wrasse,50,35,15,3.0,47.0,0.7,0.06,0.3,0.45995859731223904,0.4399144161382587,Sex identification,Appearance,Fish
-177,male velvet ant,50,48,2,1.0,49.0,0.96,0.02,0.2,1.0,0.22265427683753947,Sex identification,Appearance,Insects
-57,Male Xanthagrion erythroneurum,50,32,18,6.0,44.0,0.64,0.12,0.375,0.5219830248639457,0.5451175482879882,Sex identification,Appearance,Insects
-116,bird caught in a net,50,48,2,38.0,12.0,0.96,0.76,0.76,0.92049648524401,0.9894247081365857,Human Impact,Context,Birds
-115,beached orca,50,47,3,2.0,48.0,0.94,0.04,1.0,0.4790677053288159,0.49635441025505367,Health and Disease,Appearance,Mammals
-188,potter wasp nest,50,48,2,2.0,48.0,0.96,0.04,0.6666666666666666,0.2634191174632318,0.27849015997516724,Animal Structures and Habitats,Context,Insects
-62,Melanistic leopard,50,22,28,5.0,45.0,0.44,0.1,1.0,0.5644125907977166,0.6071925728215618,Unique appearances or morphs,Appearance,Mammals
-61,Melanistic jaguar,50,34,16,1.0,49.0,0.68,0.02,1.0,0.7513814776448543,0.7232910184410695,Unique appearances or morphs,Appearance,Mammals
-107,albino american robin,50,20,30,1.0,49.0,0.4,0.02,1.0,0.6721451976597316,0.4487233346638074,Unique appearances or morphs,Appearance,Birds
-178,measuring the body dimensions of a bee,50,49,1,18.0,32.0,0.98,0.36,0.782608695652174,0.846270552325424,0.8323020716705434,Collected Specimens,Context,Insects
-145,dorsal side of mourning cloak butterfly,50,28,22,13.0,37.0,0.56,0.26,0.4482758620689655,0.8488508738128828,0.73806610512356,Miscellaneous Context,Context,Insects
-195,ventral side of mourning cloak butterfly,50,23,27,8.0,42.0,0.46,0.16,0.20512820512820512,0.7485090959142161,0.7314988705321562,Miscellaneous Context,Context,Insects
-160,great golden digger wasp carrying an orthopteron,50,41,9,3.0,47.0,0.82,0.06,1.0,0.30515763365458387,0.41001502016078023,Feeding and Hydration,Behavior,Insects
-175,male ruby-throated hummingbird in flight,50,50,0,9.0,41.0,1.0,0.18,0.5,0.42338157568685425,0.8226192442102246,Sex identification,Appearance,Birds
-182,pair of great crested grebes potentially performing the weed dance,50,43,7,11.0,39.0,0.86,0.22,1.0,0.666605644490064,0.9247492555412251,"Mating, Courtship, Reproduction",Behavior,Birds
-176,male smooth newt with developed crest,50,43,7,5.0,45.0,0.86,0.1,0.45454545454545453,0.6556699316854859,0.38098388325889115,"Mating, Courtship, Reproduction",Behavior,Amphibians
-112,antelopes head-butting,50,45,5,20.0,30.0,0.9,0.4,0.9523809523809523,0.7381983998926828,0.9369194990053438,Defensive and Survival Behaviors,Behavior,Mammals
-156,flamingo standing on one leg,50,50,0,28.0,22.0,1.0,0.56,0.6363636363636364,0.9310572112940733,0.8685852124519085,Miscellaneous Behavior,Behavior,Birds
-191,red-tailed hawk perched on a utility pole,50,50,0,9.0,41.0,1.0,0.18,0.5625,0.6233650704324498,0.6888502707597298,Feeding and Hydration,Behavior,Birds
-105,a sandhill crane couple with their chicks,50,50,0,8.0,42.0,1.0,0.16,0.8888888888888888,0.5642222305993473,0.8793612121427726,Cooperative and Social Behaviors,Behavior,Birds
-120,blue jay eating whole peanuts,50,50,0,4.0,46.0,1.0,0.08,1.0,0.47292603991144777,0.6060872419406662,Feeding and Hydration,Behavior,Birds
-19,Black Skimmer with a leg band,50,49,1,3.0,47.0,0.98,0.06,1.0,0.8512926237572953,0.6784305472650802,Tracking and Identification,Appearance,Birds
-140,common murre beached carcass,50,50,0,25.0,25.0,1.0,0.5,0.5813953488372093,0.8045575155579895,0.8718307707208505,Health and Disease,Appearance,Birds
-154,fire salamander with a barred color pattern,50,45,5,8.0,42.0,0.9,0.16,0.6153846153846154,0.7074471455568561,0.47529643384251735,Unique appearances or morphs,Appearance,Amphibians
-194,southern aligator lizard with cut tail,50,32,18,3.0,47.0,0.64,0.06,0.75,0.4075193151409784,0.7171759599382767,Health and Disease,Appearance,Reptiles
-180,moose with hair loss,50,47,3,24.0,26.0,0.94,0.48,0.7058823529411765,0.8154887429590976,0.9407608763848065,Health and Disease,Appearance,Mammals
-150,elk with hair loss,50,20,30,8.0,42.0,0.4,0.16,0.16326530612244897,0.7134611785285833,0.8256406138626565,Health and Disease,Appearance,Mammals
-141,couple of black-bellied whistling ducks with their youngs sharing parenting duties,50,50,0,12.0,38.0,1.0,0.24,0.7058823529411765,0.5170505027985363,0.6939192236253359,Cooperative and Social Behaviors,Behavior,Birds
-124,brown bear near vehicle,50,49,1,11.0,39.0,0.98,0.22,0.9166666666666666,0.7968130696029381,0.6348778545205828,Human Impact,Context,Mammals
-167,killdeer feigning injury,50,48,2,2.0,48.0,0.96,0.04,0.25,0.25060113385140076,1.0,Defensive and Survival Behaviors,Behavior,Birds
-127,camera trap photo of a bobcat captured in the nightime,50,36,14,22.0,28.0,0.72,0.44,0.88,0.6891842935832332,0.8558814242993189,Collected Specimens,Context,Mammals
-130,camera trap photo of a stag red deer,50,32,18,8.0,42.0,0.64,0.16,0.8,0.6387027252820604,0.8677404047004038,Collected Specimens,Context,Mammals
-131,camera trap photo of chital with its head down,50,44,6,15.0,35.0,0.88,0.3,0.8823529411764706,0.8320797872818829,0.8785106599375672,Collected Specimens,Context,Mammals
-129,camera trap photo of a springbok drinking water,50,42,8,4.0,46.0,0.84,0.08,0.6666666666666666,0.7353324721895967,0.7822668325870054,Collected Specimens,Context,Mammals
-151,female beautiful demoiselle,50,39,11,14.0,36.0,0.78,0.28,0.4117647058823529,0.6808579368190428,0.549280449594334,Sex identification,Appearance,Insects
-163,human handling a bat with bare hands,50,50,0,3.0,47.0,1.0,0.06,0.2,0.4068903044826987,0.791510094789422,Human Impact,Context,Mammals
-153,fire pink with dark-colored anthers,50,40,10,7.0,43.0,0.8,0.14,0.875,0.6054552543513572,0.5174983399977434,Health and Disease,Appearance,Plants
-197,water snake feeding on fish,50,48,2,5.0,45.0,0.96,0.1,0.625,0.35970168223384946,0.6080053375526224,Feeding and Hydration,Behavior,Reptiles
-63,Mexican grass-carrying wasp visiting a purple flower,50,40,10,3.0,47.0,0.8,0.06,0.75,0.43711684734154915,0.305330774145397,Parasitism and Symbiosis,Context,Insects
-158,giant resin bee feeding on sunflower,50,49,1,1.0,49.0,0.98,0.02,1.0,0.5,0.6309297535714573,Parasitism and Symbiosis,Context,Insects
-146,eastern gray squirrel displaying melanistic pelage,50,48,2,15.0,35.0,0.96,0.3,0.7894736842105263,0.5940811936309417,0.7680982656069989,Unique appearances or morphs,Appearance,Mammals
-198,white-tailed deer flagging its tail,50,48,2,4.0,46.0,0.96,0.08,0.8,0.5128159699859847,0.46872189639132583,Defensive and Survival Behaviors,Behavior,Mammals
-54,Lilac Bonnet with edges turnt up revealing its gills,50,49,1,7.0,43.0,0.98,0.14,0.7777777777777778,0.3984889669637039,0.7260743122163883,Life Cycle and Development,Appearance,Fungi
-42,Fly Agaric in yellow form,50,50,0,20.0,30.0,1.0,0.4,0.6060606060606061,0.6662484587842897,0.7581363177172862,Unique appearances or morphs,Appearance,Fungi
-76,Scarlet Waxy Cap with visible gills,50,50,0,24.0,26.0,1.0,0.48,0.5454545454545454,0.837570015814227,0.7597645429077665,Miscellaneous Context,Context,Fungi
-20,Blackening Waxcap mushroom turned fully black,50,44,6,15.0,35.0,0.88,0.3,0.6818181818181818,0.5915630557970323,0.6170030460776181,Life Cycle and Development,Appearance,Fungi
-95,a bighorn sheep with a tracking collar around its neck,50,45,5,11.0,39.0,0.9,0.22,1.0,0.9603009179274478,0.9787963883212216,Tracking and Identification,Appearance,Mammals
-48,Hamerkop collecting nesting material,50,27,23,5.0,45.0,0.54,0.1,0.625,0.5510155185622494,0.7830880739946843,Animal Structures and Habitats,Context,Birds
-138,close-up of sweet cherry tree bark,50,48,2,10.0,40.0,0.96,0.2,0.6666666666666666,0.6622136974587209,0.5480382550459183,Species ID,Species,Plants
-137,close-up of sugar maple leaf,50,48,2,24.0,26.0,0.96,0.48,0.6153846153846154,0.8854709558982282,0.9129884809633474,Species ID,Species,Plants
-90,Yellow-faced Honeyeater in birdbath,50,49,1,12.0,38.0,0.98,0.24,0.7058823529411765,0.6720479233803728,0.9375486337402388,Feeding and Hydration,Behavior,Birds
-34,Eastern Red Bat in flight,50,48,2,21.0,29.0,0.96,0.42,0.7241379310344828,0.7514904316791381,0.9416562547280246,Miscellaneous Behavior,Behavior,Mammals
-75,Sage Thrasher vocalizing,50,47,3,10.0,40.0,0.94,0.2,0.8333333333333334,0.6565926250947574,0.9055833052374964,Cooperative and Social Behaviors,Behavior,Birds
-172,male Red-winged Blackbird vocalizing,50,50,0,24.0,26.0,1.0,0.48,0.8,0.8496861558156774,0.9124298168638054,Cooperative and Social Behaviors,Behavior,Birds
-68,Northern Mockingbird carrying out its food,50,42,8,4.0,46.0,0.84,0.08,0.5714285714285714,0.3499203788427972,0.707878148770185,Feeding and Hydration,Behavior,Birds
-187,picture showing more than fifty Velvety Tree Ants,50,22,28,3.0,47.0,0.44,0.06,0.6,0.5152745535154257,0.5028055208334469,Cooperative and Social Behaviors,Behavior,Insects
-186,picture showing more than fifty Mediterranean Acrobat Ants,50,29,21,1.0,49.0,0.58,0.02,0.3333333333333333,0.4782126295695825,0.6141704178821134,Cooperative and Social Behaviors,Behavior,Insects
-53,Leafhopper Assassin Bug predating lady beetle,50,30,20,2.0,48.0,0.6,0.04,0.6666666666666666,0.47585327001382227,0.7700800428452592,Feeding and Hydration,Behavior,Insects
-64,Milkweed Assassin Bug predating a bee or wasp,50,29,21,2.0,48.0,0.58,0.04,1.0,0.3469830860258379,1.0,Feeding and Hydration,Behavior,Insects
-27,Channeled Applesnail covered by green algae,50,4,46,0.0,50.0,0.08,0.0,0.0,0.5359718500098364,0.5663911596054605,Parasitism and Symbiosis,Context,Mollusks
-29,Chinese Mystery Snail covered by green algae,50,27,23,12.0,38.0,0.54,0.24,0.32432432432432434,0.6527987069478969,0.6179289387645406,Parasitism and Symbiosis,Context,Mollusks
-166,kahili ginger plant with open fruit capsules showing seeds,50,48,2,1.0,49.0,0.96,0.02,0.16666666666666666,0.25049065201714843,0.22199162632526706,Species ID,Species,Plants
-81,Surgeonfish grazing on algae,50,37,13,7.0,43.0,0.74,0.14,0.6363636363636364,0.5538251031028016,0.6155884244195292,Feeding and Hydration,Behavior,Fish
-21,Butterflyfish feeding on brain coral,50,50,0,25.0,25.0,1.0,0.5,0.8333333333333334,0.8833701156251106,0.9750045384401447,Feeding and Hydration,Behavior,Fish
-30,Cooper's Hawk in adult plumage,50,48,2,21.0,29.0,0.96,0.42,0.5121951219512195,0.8519324978169835,0.6677581880238249,Life Cycle and Development,Appearance,Birds
-121,breeding adult Black-bellied Plover,50,34,16,15.0,35.0,0.68,0.3,0.38461538461538464,0.6658077515594556,0.5671978003125507,Life Cycle and Development,Appearance,Birds
-51,Hübner's Wasp Moth mating,50,48,2,19.0,31.0,0.96,0.38,0.76,0.6906630267933517,0.7945249932642883,"Mating, Courtship, Reproduction",Behavior,Insects
-24,Cart-Rut Shell snail egg mass,50,39,11,0.0,50.0,0.78,0.0,0.0,0.4251109476617991,0.24727984457053898,Life Cycle and Development,Appearance,Mollusks
-60,Maple tree with signs of tapping,50,40,10,1.0,49.0,0.8,0.02,1.0,0.6558817590401232,0.3626035670110073,Human Impact,Context,Plants
-73,Redwood tree with fire scars,50,50,0,27.0,23.0,1.0,0.54,0.84375,0.938789143994236,0.9052649361759861,Health and Disease,Appearance,Plants
-106,adult male Misumena vatia,50,50,0,1.0,49.0,1.0,0.02,0.5,0.2242438242175755,0.201849086582099,Sex identification,Appearance,Arachnids
-89,Wolf spider with limb loss,50,22,28,2.0,48.0,0.44,0.04,0.4,0.5003151468126028,0.8903449483917099,Health and Disease,Appearance,Arachnids
-77,Scorpion with young on its back,50,49,1,25.0,25.0,0.98,0.5,0.8928571428571429,0.9657699786921331,0.9174356260529607,Cooperative and Social Behaviors,Behavior,Arachnids
-65,Moorish Gecko with regenerated tail,50,48,2,0.0,50.0,0.96,0.0,0.0,0.0,0.0,Health and Disease,Appearance,Reptiles
-86,Two giraffes,50,50,0,25.0,25.0,1.0,0.5,0.8620689655172413,0.8787578201246449,0.9590204897172872,Cooperative and Social Behaviors,Behavior,Mammals
-17,Alligator lizards mating,50,30,20,15.0,35.0,0.6,0.3,0.75,0.6811092759729166,0.938661837450251,"Mating, Courtship, Reproduction",Behavior,Reptiles
-5,A coyote resting on human-build structures,50,45,5,3.0,47.0,0.9,0.06,0.5,0.47713214070561605,0.3523572229322511,Human Impact,Context,Mammals
-134,caterpillar of Gulf Fritillary butterfly,50,37,13,19.0,31.0,0.74,0.38,0.6785714285714286,0.7710408781030473,0.9389824836886972,Life Cycle and Development,Appearance,Insects
-133,caterpillar of Common Buckeye butterfly,50,27,23,4.0,46.0,0.54,0.08,0.3333333333333333,0.47181370409148893,0.7858255820805876,Life Cycle and Development,Appearance,Insects
-135,caterpillar of polyphemus moth,50,42,8,13.0,37.0,0.84,0.26,0.65,0.5358117858321053,0.5751335282586667,Life Cycle and Development,Appearance,Insects
-58,Male chorus frog with inflated vocal sacs,50,47,3,17.0,33.0,0.94,0.34,0.7727272727272727,0.7695519345904803,0.8600955701904133,"Mating, Courtship, Reproduction",Behavior,Amphibians
-94,a beaver dam across a stream,50,50,0,28.0,22.0,1.0,0.56,0.9032258064516129,0.9025951813098128,0.8936953946851314,Animal Structures and Habitats,Context,Mammals
-196,vervet monkey with visible bright blue scrotal areas,50,50,0,17.0,33.0,1.0,0.34,0.68,0.9705198270586184,0.8790613716719466,"Mating, Courtship, Reproduction",Behavior,Mammals
-143,dark-colored Dusky Leaf-monkey with orange-colored young,50,28,22,13.0,37.0,0.56,0.26,0.7647058823529411,0.846577560134503,0.8580052515994412,Unique appearances or morphs,Appearance,Mammals
-193,sloth hugging a human-made structure,50,49,1,19.0,31.0,0.98,0.38,0.6551724137931034,0.896941535279975,0.7141926219489734,Human Impact,Context,Mammals
-185,photo with two or more adult male lions,50,38,12,9.0,41.0,0.76,0.18,0.6428571428571429,0.8505899921424954,0.8314618567756579,Cooperative and Social Behaviors,Behavior,Mammals
-87,Water Frogs in amplexus position,50,50,0,5.0,45.0,1.0,0.1,0.8333333333333334,0.7052388719320553,0.5538023100314982,"Mating, Courtship, Reproduction",Behavior,Amphibians
-69,Nursery Web Spider carrying egg sac,50,41,9,22.0,28.0,0.82,0.44,0.7333333333333333,0.6558144487914145,0.9521465267676601,"Mating, Courtship, Reproduction",Behavior,Arachnids
-50,House finch with yellow pigmentation,50,35,15,3.0,47.0,0.7,0.06,0.5,0.29236186929307606,0.588980308257185,Unique appearances or morphs,Appearance,Birds
-72,Red-capped Plover performing broken wing distraction,50,32,18,0.0,50.0,0.64,0.0,0.0,0.8503449055347547,0.2837163760350166,Defensive and Survival Behaviors,Behavior,Birds
-56,Male Blue-black Grassquit in patchy blue-black and brown plumage,50,48,2,6.0,44.0,0.96,0.12,0.5454545454545454,0.3495466469330877,0.6313515065344343,Life Cycle and Development,Appearance,Birds
-55,Luna Moth missing long twisted tails on the hindwings,50,50,0,0.0,50.0,1.0,0.0,0.0,0.0,0.0,Life Cycle and Development,Appearance,Mammals
-85,Tropical Orb Weaver with multiple white spots in the abdominal dorsum,50,40,10,2.0,48.0,0.8,0.04,1.0,0.3770791530123216,0.4215976519089241,Unique appearances or morphs,Appearance,Arachnids
-67,North Island robin or South Island robin with leg bands,50,48,2,12.0,38.0,0.96,0.24,0.6666666666666666,0.69632005200172,0.9034224837421141,Tracking and Identification,Appearance,Birds
-40,Exactly three zebras standing together in a field,50,43,7,23.0,27.0,0.86,0.46,0.575,0.8029880199679168,0.7235117772443799,Miscellaneous Context,Context,Mammals
-38,Exactly five penguins,50,50,0,8.0,42.0,1.0,0.16,0.7272727272727273,0.6772764320648726,0.7430047581693382,Miscellaneous Context,Context,Birds
-80,Splendid fairywren without blue body coloration,50,50,0,15.0,35.0,1.0,0.3,0.39473684210526316,0.5343603057875744,0.5508878225436232,Sex identification,Appearance,Birds
-71,Octopus out of the water,50,50,0,26.0,24.0,1.0,0.52,0.5909090909090909,0.8582083292757872,0.8576419294572959,Miscellaneous Context,Context,Mollusks
-15,Adult female black widow spider not in a web,50,50,0,1.0,49.0,1.0,0.02,0.3333333333333333,0.4306765580733929,0.19663738418288831,Miscellaneous Context,Context,Arachnids
-110,an oak gall produced by a spongy oak apple gall wasp,50,33,17,12.0,38.0,0.66,0.24,0.3,0.7127662092320214,0.6521132464769319,Animal Structures and Habitats,Context,Insects
-96,a gall produced by an Acorn Plum Gall Wasp,50,29,21,0.0,50.0,0.58,0.0,0.0,0.35295516058757276,0.7199373265236021,Animal Structures and Habitats,Context,Insects
-92,a bag-shelter moth's silken bag nest on a tree,50,45,5,2.0,48.0,0.9,0.04,1.0,0.5252506320813242,0.7558709441409434,Life Cycle and Development,Appearance,Insects
-1,A Eurasian Red Squirrel gathering material for its nest,50,50,0,6.0,44.0,1.0,0.12,0.75,0.6732513207228198,0.8091522656799708,Animal Structures and Habitats,Context,Mammals
-3,A close-up of a Star-nosed Mole's nose showing all appendages of its Eimer's organs,50,50,0,8.0,42.0,1.0,0.16,1.0,0.6513477388792482,0.5516232135207884,Miscellaneous Context,Context,Mammals
-162,hognose snake playing dead,50,37,13,4.0,46.0,0.74,0.08,0.6666666666666666,0.38813888908691485,0.7468712201167791,Defensive and Survival Behaviors,Behavior,Reptiles
-101,a mud dauber wasp in the process of forming its nest out of mud,50,15,35,5.0,45.0,0.3,0.1,0.625,0.6278754384875972,0.6191504572895986,Miscellaneous Behavior,Behavior,Insects
-152,feral cat with prey,50,45,5,14.0,36.0,0.9,0.28,1.0,0.5395693738507057,0.8559135894815478,Feeding and Hydration,Behavior,Mammals
-43,Fur seal mother with pup,50,50,0,17.0,33.0,1.0,0.34,0.5862068965517241,0.7156709922788684,0.9059636417435266,Cooperative and Social Behaviors,Behavior,Mammals
-47,Haliaeetus eagles in aerial cartwheeling flight with locked talons,50,40,10,1.0,49.0,0.8,0.02,1.0,0.18428883314870603,0.1892003595168692,"Mating, Courtship, Reproduction",Behavior,Birds
-0,A By-the-Wind Sailor washed up on a beach,50,28,22,0.0,50.0,0.56,0.0,0.0,0.4356812129130139,0.5523886198723456,Health and Disease,Appearance,Animalia
-126,bullhead shark egg case,50,33,17,4.0,46.0,0.66,0.08,0.36363636363636365,0.5245638771740623,0.4431115166848715,Life Cycle and Development,Appearance,Fish
+query_id,query,total_images,correctly_returned,incorrectly_returned,relevant_images,non_relevant_images,accuracy,precision,recall,hit,rerank_score_NDCG,clip_score_NDCG,rerank_score_reciprocal_rank,clip_score_reciprocal_rank,category,supercategory,iconic_group
+11,A mongoose standing upright alert,50,50,0,20.0,30.0,1.0,0.4,0.7692307692307693,1,0.8704365513613572,0.9469139908146369,0.5,1.0,Defensive and Survival Behaviors,Behavior,Mammals
+189,puffins carrying food,50,47,3,3.0,47.0,0.94,0.06,0.375,1,0.3804839751341323,0.687333094675074,0.16666666666666666,0.5,Feeding and Hydration,Behavior,Birds
+6,A female pheasant,50,50,0,33.0,17.0,1.0,0.66,0.8048780487804879,1,0.9551679720099661,0.9292270198725776,1.0,1.0,Sex identification,Appearance,Birds
+32,Dead hog-nosed skunk,50,48,2,19.0,31.0,0.96,0.38,0.6333333333333333,1,0.7218996079515286,0.8603375303070124,0.5,1.0,Health and Disease,Appearance,Mammals
+66,Mushrooms growing in a fairy ring formation,50,49,1,6.0,44.0,0.98,0.12,0.75,1,0.5756269557555425,0.6708503602859528,0.3333333333333333,1.0,Miscellaneous Context,Context,Fungi
+83,Tagged swan,50,50,0,20.0,30.0,1.0,0.4,0.6666666666666666,1,0.9782005003796208,0.9921054989366922,1.0,1.0,Tracking and Identification,Appearance,Birds
+142,cross orbweaver,50,37,13,2.0,48.0,0.74,0.04,0.2222222222222222,1,0.7326857697439336,0.24653385423347965,1.0,0.04,Species ID,Species,Arachnids
+98,a hermit crab using plastic waste as a shell,50,47,3,3.0,47.0,0.94,0.06,1.0,1,0.5202639696334537,0.7340253626455256,0.3333333333333333,1.0,Human Impact,Context,Animalia
+192,sick cassava plant,50,50,0,28.0,22.0,1.0,0.56,0.6086956521739131,1,0.8570485293313944,0.9447035693714774,0.5,1.0,Health and Disease,Appearance,Plants
+41,Fishing net on a reef,50,44,6,16.0,34.0,0.88,0.32,0.6666666666666666,1,0.8092027271205372,0.7073584032959626,0.5,0.3333333333333333,Human Impact,Context,
+123,bridal veil stinkhorn mushroom,50,48,2,35.0,15.0,0.96,0.7,0.7446808510638298,1,0.971233073702204,0.8739941192855716,1.0,0.5,Species ID,Species,Fungi
+46,Green Shore Crab,50,49,1,16.0,34.0,0.98,0.32,0.48484848484848486,1,0.7426702951158451,0.6242296969874356,1.0,0.16666666666666666,Species ID,Species,Animalia
+111,an oxpecker on a zebra,50,50,0,27.0,23.0,1.0,0.54,0.9642857142857143,1,0.919847126572281,0.9492965354992765,1.0,1.0,Parasitism and Symbiosis,Context,Combo
+104,a possum on a power line,50,49,1,25.0,25.0,0.98,0.5,0.6578947368421053,1,0.8304754645638857,0.9817800626620286,1.0,1.0,Human Impact,Context,Mammals
+4,A close-up of an ant carrying a leaf,50,50,0,32.0,18.0,1.0,0.64,0.6666666666666666,1,0.9410457262913623,0.9363960721117113,1.0,1.0,Cooperative and Social Behaviors,Behavior,Insects
+82,Swallowtail butterfly caterpillar camouflaged as bird droppings,50,21,29,17.0,33.0,0.42,0.34,0.3469387755102041,1,0.8637520465409856,0.6791718639237728,1.0,0.5,Life Cycle and Development,Appearance,Insects
+99,a lion with a collar around its neck,50,28,22,3.0,47.0,0.56,0.06,0.75,1,0.8172116527002504,0.9665317778936588,1.0,1.0,Tracking and Identification,Appearance,Mammals
+28,Cheetah with radio collar,50,37,13,7.0,43.0,0.74,0.14,0.5384615384615384,1,0.8316333199918976,0.9314750412375652,1.0,1.0,Tracking and Identification,Appearance,Mammals
+74,Rhino with ear notches,50,49,1,24.0,26.0,0.98,0.48,0.5581395348837209,1,0.7297564852869792,0.7663181687781929,0.3333333333333333,1.0,Tracking and Identification,Appearance,Mammals
+108,an image showing a humpback whale fluke with clearly identifiable markings,50,49,1,20.0,30.0,0.98,0.4,0.625,1,0.7397529796129406,0.939815630548656,0.5,1.0,Tracking and Identification,Appearance,Mammals
+136,cheetah with cubs,50,35,15,14.0,36.0,0.7,0.28,0.7368421052631579,1,0.9340332199619804,0.9420975503935305,1.0,1.0,Cooperative and Social Behaviors,Behavior,Mammals
+44,Gazelle being vigilant/looking around,50,41,9,19.0,31.0,0.82,0.38,0.7037037037037037,1,0.895009334436217,0.7367554911166585,1.0,0.25,Defensive and Survival Behaviors,Behavior,Mammals
+148,elephant near a fence,50,31,19,18.0,32.0,0.62,0.36,0.72,1,0.9133430704105953,0.7406648750243479,1.0,0.3333333333333333,Human Impact,Context,Mammals
+161,grebe with babies on its back,50,43,7,15.0,35.0,0.86,0.3,0.7894736842105263,1,0.9092356799464852,0.8160780497714804,1.0,1.0,Cooperative and Social Behaviors,Behavior,Birds
+119,black-winged kite carrying prey in its talons,50,49,1,2.0,48.0,0.98,0.04,0.3333333333333333,1,0.37092774713032256,0.28474063217594753,0.2,0.09090909090909091,Feeding and Hydration,Behavior,Birds
+183,parrotfish feeding,50,47,3,10.0,40.0,0.94,0.2,0.5263157894736842,1,0.6175487771625355,0.8134822484149796,0.5,1.0,Feeding and Hydration,Behavior,Fish
+9,A male and female cardinal sharing food,50,46,4,1.0,49.0,0.92,0.02,1.0,1,1.0,0.35620718710802235,1.0,0.16666666666666666,Feeding and Hydration,Behavior,Birds
+78,Sea turtle with algae on its shell,50,49,1,16.0,34.0,0.98,0.32,0.64,1,0.6461094142019921,0.6840507174661224,0.25,0.3333333333333333,Parasitism and Symbiosis,Context,Reptiles
+91,Zebra and wildebeest grazing together,50,48,2,25.0,25.0,0.96,0.5,0.8064516129032258,1,0.9770671498903961,0.986794336364722,1.0,1.0,Parasitism and Symbiosis,Context,Mammals
+79,Sharks with remoras attached,50,50,0,4.0,46.0,1.0,0.08,0.5,1,0.5572503261679059,0.5137543475140504,0.5,0.5,Parasitism and Symbiosis,Context,Fish
+100,a microscopy slide showing the cellular structure of a plant,50,42,8,16.0,34.0,0.84,0.32,0.6956521739130435,1,0.705437309146363,0.6438232237628818,0.3333333333333333,0.2,Miscellaneous Context,Context,Plants
+164,hyenas eating a kill,50,33,17,10.0,40.0,0.66,0.2,0.7142857142857143,1,0.7168342462364737,0.6773287338738996,0.3333333333333333,1.0,Feeding and Hydration,Behavior,Mammals
+12,A peacock male displaying its feathers,50,50,0,21.0,29.0,1.0,0.42,0.6363636363636364,1,0.9044863204960619,0.8891673089317892,1.0,0.5,"Mating, Courtship, Reproduction",Behavior,Birds
+35,Elk bugling during the rut,50,38,12,6.0,44.0,0.76,0.12,1.0,1,0.6569723864972095,0.8426904859825417,0.5,1.0,"Mating, Courtship, Reproduction",Behavior,Mammals
+33,Dolphins performing acrobatics,50,50,0,33.0,17.0,1.0,0.66,0.7021276595744681,1,0.9634478360916591,0.9582446089393619,1.0,1.0,Miscellaneous Behavior,Behavior,Mammals
+179,monkey slug caterpillar,50,42,8,0.0,50.0,0.84,0.0,0.0,0,0.0,0.0,0.0,0.0,Life Cycle and Development,Appearance,Insects
+117,bird dead in front of a window,50,47,3,15.0,35.0,0.94,0.3,0.7142857142857143,1,0.9056685183777814,0.9671006110305908,1.0,1.0,Human Impact,Context,Birds
+36,Emergence of large colony of mexican free-tailed bats,50,48,2,28.0,22.0,0.96,0.56,0.6222222222222222,1,0.9610391137543828,0.857507765578076,1.0,1.0,Cooperative and Social Behaviors,Behavior,Mammals
+157,fruit bat eating fruit upside down,50,48,2,5.0,45.0,0.96,0.1,0.7142857142857143,1,0.3863316113447217,0.7241476629105601,0.2,0.5,Feeding and Hydration,Behavior,Mammals
+97,a herd of more than 10 impalas,50,46,4,20.0,30.0,0.92,0.4,0.625,1,0.8257914907914652,0.8008460032032902,1.0,0.5,Cooperative and Social Behaviors,Behavior,Mammals
+132,canada geese flying in v-formation,50,50,0,4.0,46.0,1.0,0.08,0.8,1,0.42133830353122376,0.4337430808083447,0.3333333333333333,0.3333333333333333,Cooperative and Social Behaviors,Behavior,Birds
+181,mountain goat climbing rocky outcrops with its young,50,50,0,4.0,46.0,1.0,0.08,0.3076923076923077,1,0.41186318343734324,0.7943847425775199,0.14285714285714285,1.0,Cooperative and Social Behaviors,Behavior,Mammals
+168,laysan albatross mostly in dark mottled brown plumage,50,49,1,4.0,46.0,0.98,0.08,0.8,1,0.4705162116449555,0.843127126998733,0.2,1.0,Life Cycle and Development,Appearance,Birds
+114,bananaquit pollinating flower,50,5,45,1.0,49.0,0.1,0.02,0.09090909090909091,1,0.2582189462891199,0.45002370992909224,0.029411764705882353,0.25,Parasitism and Symbiosis,Context,Birds
+170,lorikeet pollinating flower,50,44,6,19.0,31.0,0.88,0.38,0.38,1,0.7077230657772062,0.7866758078173963,0.3333333333333333,1.0,Parasitism and Symbiosis,Context,Birds
+147,elephant covered in mud or dirt,50,38,12,29.0,21.0,0.76,0.58,0.6041666666666666,1,0.9203785969143689,0.9836238602680479,1.0,1.0,Miscellaneous Behavior,Behavior,Mammals
+165,jungle babblers allopreening,50,45,5,5.0,45.0,0.9,0.1,0.7142857142857143,1,0.36784049213145914,0.9609247825245573,0.08333333333333333,1.0,Cooperative and Social Behaviors,Behavior,Birds
+52,Inflated pufferfish,50,50,0,24.0,26.0,1.0,0.48,0.5106382978723404,1,0.891329936571968,0.9331065659305351,1.0,1.0,Defensive and Survival Behaviors,Behavior,Fish
+102,a nest with eggs displaying brood parasitism by a cowbird,50,19,31,4.0,46.0,0.38,0.08,0.5714285714285714,1,0.3413721207925826,0.3612670686284649,0.0625,0.09090909090909091,Parasitism and Symbiosis,Context,Birds
+59,Male crimsonband wrasse,50,43,7,4.0,46.0,0.86,0.08,0.4,1,0.5040146467128953,0.4519935031049814,0.16666666666666666,0.25,Sex identification,Appearance,Fish
+177,male velvet ant,50,50,0,3.0,47.0,1.0,0.06,0.6,1,0.6694096205735113,0.33589228329485177,1.0,0.125,Sex identification,Appearance,Insects
+57,Male Xanthagrion erythroneurum,50,24,26,5.0,45.0,0.48,0.1,0.3125,1,0.5568739938861702,0.618315231407656,0.2,0.5,Sex identification,Appearance,Insects
+116,bird caught in a net,50,48,2,38.0,12.0,0.96,0.76,0.76,1,0.9459791335476074,0.9903109025434609,1.0,1.0,Human Impact,Context,Birds
+115,beached orca,50,50,0,2.0,48.0,1.0,0.04,1.0,1,0.26757927957261946,0.5000000000000001,0.045454545454545456,0.3333333333333333,Health and Disease,Appearance,Mammals
+188,potter wasp nest,50,49,1,3.0,47.0,0.98,0.06,1.0,1,0.27014897776343244,0.38793642653737126,0.03571428571428571,0.2,Animal Structures and Habitats,Context,Insects
+62,Melanistic leopard,50,23,27,5.0,45.0,0.46,0.1,1.0,1,0.7640941464076609,0.5222810394701688,1.0,0.16666666666666666,Unique appearances or morphs,Appearance,Mammals
+61,Melanistic jaguar,50,36,14,1.0,49.0,0.72,0.02,1.0,1,0.7890101791206434,0.7108448474691756,1.0,0.5,Unique appearances or morphs,Appearance,Mammals
+107,albino american robin,50,19,31,1.0,49.0,0.38,0.02,1.0,1,0.6570353840007909,0.487221608838839,1.0,0.16666666666666666,Unique appearances or morphs,Appearance,Birds
+178,measuring the body dimensions of a bee,50,50,0,18.0,32.0,1.0,0.36,0.782608695652174,1,0.8957479370437778,0.838244906707306,1.0,1.0,Collected Specimens,Context,Insects
+145,dorsal side of mourning cloak butterfly,50,24,26,10.0,40.0,0.48,0.2,0.3448275862068966,1,0.8047634962380054,0.7625620617385195,1.0,1.0,Miscellaneous Context,Context,Insects
+195,ventral side of mourning cloak butterfly,50,25,25,11.0,39.0,0.5,0.22,0.28205128205128205,1,0.8833782997221633,0.7617375673722613,1.0,1.0,Miscellaneous Context,Context,Insects
+160,great golden digger wasp carrying an orthopteron,50,42,8,3.0,47.0,0.84,0.06,1.0,1,0.33657974018915127,0.46261193463597994,0.07692307692307693,0.2,Feeding and Hydration,Behavior,Insects
+175,male ruby-throated hummingbird in flight,50,50,0,12.0,38.0,1.0,0.24,0.6666666666666666,1,0.5398627758639509,0.8069595173471396,0.2,1.0,Sex identification,Appearance,Birds
+182,pair of great crested grebes potentially performing the weed dance,50,41,9,11.0,39.0,0.82,0.22,1.0,1,0.7908645754584075,0.9049972088180159,1.0,1.0,"Mating, Courtship, Reproduction",Behavior,Birds
+176,male smooth newt with developed crest,50,43,7,7.0,43.0,0.86,0.14,0.6363636363636364,1,0.6710593021823987,0.4704347091534368,0.5,0.1111111111111111,"Mating, Courtship, Reproduction",Behavior,Amphibians
+112,antelopes head-butting,50,44,6,19.0,31.0,0.88,0.38,0.9047619047619048,1,0.7736484798255046,0.9283031322037099,1.0,1.0,Defensive and Survival Behaviors,Behavior,Mammals
+156,flamingo standing on one leg,50,50,0,25.0,25.0,1.0,0.5,0.5681818181818182,1,0.9229319793631493,0.7932662149309436,1.0,0.5,Miscellaneous Behavior,Behavior,Birds
+191,red-tailed hawk perched on a utility pole,50,50,0,9.0,41.0,1.0,0.18,0.5625,1,0.5344023635759141,0.672706936392877,0.3333333333333333,0.5,Feeding and Hydration,Behavior,Birds
+105,a sandhill crane couple with their chicks,50,50,0,7.0,43.0,1.0,0.14,0.7777777777777778,1,0.5091782190009588,0.8919248823094557,0.25,1.0,Cooperative and Social Behaviors,Behavior,Birds
+120,blue jay eating whole peanuts,50,50,0,4.0,46.0,1.0,0.08,1.0,1,0.4875825982382881,0.6070633383745583,0.25,0.5,Feeding and Hydration,Behavior,Birds
+19,Black Skimmer with a leg band,50,50,0,2.0,48.0,1.0,0.04,0.6666666666666666,1,0.6934264036172708,0.2553809861963427,0.5,0.05,Tracking and Identification,Appearance,Birds
+140,common murre beached carcass,50,48,2,23.0,27.0,0.96,0.46,0.5348837209302325,1,0.6822682513652435,0.8730969873622293,0.25,1.0,Health and Disease,Appearance,Birds
+154,fire salamander with a barred color pattern,50,44,6,7.0,43.0,0.88,0.14,0.5384615384615384,1,0.76366485909083,0.5272159494932129,1.0,0.5,Unique appearances or morphs,Appearance,Amphibians
+194,southern aligator lizard with cut tail,50,39,11,1.0,49.0,0.78,0.02,0.25,1,0.32417107064431827,0.35044149810445996,0.1111111111111111,0.16666666666666666,Health and Disease,Appearance,Reptiles
+180,moose with hair loss,50,43,7,21.0,29.0,0.86,0.42,0.6176470588235294,1,0.8266729361247798,0.8503153153127039,0.5,1.0,Health and Disease,Appearance,Mammals
+150,elk with hair loss,50,28,22,13.0,37.0,0.56,0.26,0.2653061224489796,1,0.7074396171011316,0.7851607537663257,0.5,1.0,Health and Disease,Appearance,Mammals
+141,couple of black-bellied whistling ducks with their youngs sharing parenting duties,50,46,4,13.0,37.0,0.92,0.26,0.7647058823529411,1,0.6033310437730572,0.6616762218014806,0.5,0.3333333333333333,Cooperative and Social Behaviors,Behavior,Birds
+124,brown bear near vehicle,50,50,0,9.0,41.0,1.0,0.18,0.75,1,0.8738577201992863,0.7398422080447546,1.0,1.0,Human Impact,Context,Mammals
+167,killdeer feigning injury,50,50,0,1.0,49.0,1.0,0.02,0.125,1,0.23981246656813138,1.0,0.058823529411764705,1.0,Defensive and Survival Behaviors,Behavior,Birds
+127,camera trap photo of a bobcat captured in the nightime,50,35,15,22.0,28.0,0.7,0.44,0.88,1,0.7535751138082687,0.7732416698901529,0.3333333333333333,0.3333333333333333,Collected Specimens,Context,Mammals
+130,camera trap photo of a stag red deer,50,27,23,7.0,43.0,0.54,0.14,0.7,1,0.6238334545116159,0.7933196374188506,0.5,1.0,Collected Specimens,Context,Mammals
+131,camera trap photo of chital with its head down,50,45,5,14.0,36.0,0.9,0.28,0.8235294117647058,1,0.7101938749577787,0.8754533791892322,1.0,1.0,Collected Specimens,Context,Mammals
+129,camera trap photo of a springbok drinking water,50,46,4,6.0,44.0,0.92,0.12,1.0,1,0.6700798729790904,0.7589115593925013,1.0,1.0,Collected Specimens,Context,Mammals
+151,female beautiful demoiselle,50,40,10,9.0,41.0,0.8,0.18,0.2647058823529412,1,0.48363309279703076,0.430063308495785,0.16666666666666666,0.058823529411764705,Sex identification,Appearance,Insects
+163,human handling a bat with bare hands,50,49,1,9.0,41.0,0.98,0.18,0.6,1,0.7168053208970447,0.7401226261508821,0.5,1.0,Human Impact,Context,Mammals
+153,fire pink with dark-colored anthers,50,42,8,6.0,44.0,0.84,0.12,0.75,1,0.6495576301226368,0.46348178125690526,1.0,0.125,Health and Disease,Appearance,Plants
+197,water snake feeding on fish,50,50,0,4.0,46.0,1.0,0.08,0.5,1,0.4192446195373114,0.58590015969008,0.25,0.5,Feeding and Hydration,Behavior,Reptiles
+63,Mexican grass-carrying wasp visiting a purple flower,50,47,3,4.0,46.0,0.94,0.08,1.0,1,0.32727650079797016,0.3136667232220662,0.05555555555555555,0.045454545454545456,Parasitism and Symbiosis,Context,Insects
+158,giant resin bee feeding on sunflower,50,48,2,0.0,50.0,0.96,0.0,0.0,0,0.0,0.0,0.0,0.0,Parasitism and Symbiosis,Context,Insects
+146,eastern gray squirrel displaying melanistic pelage,50,47,3,14.0,36.0,0.94,0.28,0.7368421052631579,1,0.778984579438104,0.7766123783494745,1.0,0.5,Unique appearances or morphs,Appearance,Mammals
+198,white-tailed deer flagging its tail,50,48,2,4.0,46.0,0.96,0.08,0.8,1,0.5454140195552286,0.4856766373906253,0.5,0.3333333333333333,Defensive and Survival Behaviors,Behavior,Mammals
+54,Lilac Bonnet with edges turnt up revealing its gills,50,50,0,5.0,45.0,1.0,0.1,0.5555555555555556,1,0.3545014140743888,0.44950308933362754,0.08333333333333333,0.25,Life Cycle and Development,Appearance,Fungi
+42,Fly Agaric in yellow form,50,50,0,21.0,29.0,1.0,0.42,0.6363636363636364,1,0.6947285014379138,0.7490309583513558,0.25,0.3333333333333333,Unique appearances or morphs,Appearance,Fungi
+76,Scarlet Waxy Cap with visible gills,50,50,0,23.0,27.0,1.0,0.46,0.5227272727272727,1,0.7412358375574516,0.7963312991188587,0.5,1.0,Miscellaneous Context,Context,Fungi
+20,Blackening Waxcap mushroom turned fully black,50,43,7,14.0,36.0,0.86,0.28,0.6363636363636364,1,0.573489116262607,0.7321572708748606,0.3333333333333333,1.0,Life Cycle and Development,Appearance,Fungi
+95,a bighorn sheep with a tracking collar around its neck,50,48,2,11.0,39.0,0.96,0.22,1.0,1,0.9939966427500778,0.9772496117824351,1.0,1.0,Tracking and Identification,Appearance,Mammals
+48,Hamerkop collecting nesting material,50,31,19,4.0,46.0,0.62,0.08,0.5,1,0.6577826276915013,0.8082865221768677,1.0,1.0,Animal Structures and Habitats,Context,Birds
+138,close-up of sweet cherry tree bark,50,49,1,10.0,40.0,0.98,0.2,0.6666666666666666,1,0.5929580131290375,0.5734278244932184,0.5,0.3333333333333333,Species ID,Species,Plants
+137,close-up of sugar maple leaf,50,50,0,26.0,24.0,1.0,0.52,0.6666666666666666,1,0.8800597762548139,0.905564184855432,1.0,1.0,Species ID,Species,Plants
+90,Yellow-faced Honeyeater in birdbath,50,48,2,11.0,39.0,0.96,0.22,0.6470588235294118,1,0.706484034643542,0.9050832889884263,1.0,1.0,Feeding and Hydration,Behavior,Birds
+34,Eastern Red Bat in flight,50,49,1,21.0,29.0,0.98,0.42,0.7241379310344828,1,0.6487319629803368,0.9353049453839875,0.25,1.0,Miscellaneous Behavior,Behavior,Mammals
+75,Sage Thrasher vocalizing,50,44,6,10.0,40.0,0.88,0.2,0.8333333333333334,1,0.5560398590632454,0.9050978351750044,0.5,1.0,Cooperative and Social Behaviors,Behavior,Birds
+172,male Red-winged Blackbird vocalizing,50,50,0,25.0,25.0,1.0,0.5,0.8333333333333334,1,0.8372309805193622,0.8953324450675031,0.5,1.0,Cooperative and Social Behaviors,Behavior,Birds
+68,Northern Mockingbird carrying out its food,50,45,5,5.0,45.0,0.9,0.1,0.7142857142857143,1,0.38101969668193986,0.5456541782193706,0.07142857142857142,0.5,Feeding and Hydration,Behavior,Birds
+187,picture showing more than fifty Velvety Tree Ants,50,23,27,3.0,47.0,0.46,0.06,0.6,1,0.4807285635724913,0.41549897309855477,0.14285714285714285,0.09090909090909091,Cooperative and Social Behaviors,Behavior,Insects
+186,picture showing more than fifty Mediterranean Acrobat Ants,50,30,20,0.0,50.0,0.6,0.0,0.0,0,0.5404822654681982,0.4087363159573814,0.25,0.058823529411764705,Cooperative and Social Behaviors,Behavior,Insects
+53,Leafhopper Assassin Bug predating lady beetle,50,30,20,1.0,49.0,0.6,0.02,0.3333333333333333,1,0.36923177405559193,0.9197207891481877,0.2,1.0,Feeding and Hydration,Behavior,Insects
+64,Milkweed Assassin Bug predating a bee or wasp,50,30,20,1.0,49.0,0.6,0.02,0.5,1,0.4306765580733929,1.0,0.25,1.0,Feeding and Hydration,Behavior,Insects
+27,Channeled Applesnail covered by green algae,50,13,37,2.0,48.0,0.26,0.04,0.2222222222222222,1,0.5440188648950903,0.5853091990379433,0.2,0.2,Parasitism and Symbiosis,Context,Mollusks
+29,Chinese Mystery Snail covered by green algae,50,30,20,13.0,37.0,0.6,0.26,0.35135135135135137,1,0.6302639562120819,0.6269496141149685,0.3333333333333333,0.25,Parasitism and Symbiosis,Context,Mollusks
+166,kahili ginger plant with open fruit capsules showing seeds,50,50,0,3.0,47.0,1.0,0.06,0.5,1,0.26168776815675854,0.2785286449501283,0.02857142857142857,0.038461538461538464,Species ID,Species,Plants
+81,Surgeonfish grazing on algae,50,40,10,6.0,44.0,0.8,0.12,0.5454545454545454,1,0.45175629953968943,0.6195275706534749,0.2,0.5,Feeding and Hydration,Behavior,Fish
+21,Butterflyfish feeding on brain coral,50,50,0,21.0,29.0,1.0,0.42,0.7,1,0.9141234502406306,0.9619891690572024,1.0,1.0,Feeding and Hydration,Behavior,Fish
+30,Cooper's Hawk in adult plumage,50,50,0,23.0,27.0,1.0,0.46,0.5609756097560976,1,0.742300255427965,0.6995280500378035,0.5,0.2,Life Cycle and Development,Appearance,Birds
+121,breeding adult Black-bellied Plover,50,32,18,18.0,32.0,0.64,0.36,0.46153846153846156,1,0.6973774585811557,0.6038874639531552,0.5,0.2,Life Cycle and Development,Appearance,Birds
+51,Hübner's Wasp Moth mating,50,47,3,14.0,36.0,0.94,0.28,0.56,1,0.5716954494117504,0.7644467930148496,0.16666666666666666,1.0,"Mating, Courtship, Reproduction",Behavior,Insects
+24,Cart-Rut Shell snail egg mass,50,39,11,0.0,50.0,0.78,0.0,0.0,0,0.4503916988778103,0.2654227951901159,0.3333333333333333,0.038461538461538464,Life Cycle and Development,Appearance,Mollusks
+60,Maple tree with signs of tapping,50,15,35,1.0,49.0,0.3,0.02,1.0,1,0.813572517707325,0.5476331779130066,1.0,0.25,Human Impact,Context,Plants
+73,Redwood tree with fire scars,50,50,0,26.0,24.0,1.0,0.52,0.8125,1,0.933026636120288,0.9041436594431557,1.0,1.0,Health and Disease,Appearance,Plants
+106,adult male Misumena vatia,50,50,0,1.0,49.0,1.0,0.02,0.5,1,0.28906482631788766,0.203795047090507,0.1,0.034482758620689655,Sex identification,Appearance,Arachnids
+89,Wolf spider with limb loss,50,33,17,2.0,48.0,0.66,0.04,0.4,1,0.4191792824150105,0.8348468044219515,0.058823529411764705,1.0,Health and Disease,Appearance,Arachnids
+77,Scorpion with young on its back,50,49,1,24.0,26.0,0.98,0.48,0.8571428571428571,1,0.8297264760799885,0.9031555983955813,0.3333333333333333,1.0,Cooperative and Social Behaviors,Behavior,Arachnids
+65,Moorish Gecko with regenerated tail,50,49,1,0.0,50.0,0.98,0.0,0.0,0,0.0,0.0,0.0,0.0,Health and Disease,Appearance,Reptiles
+86,Two giraffes,50,50,0,25.0,25.0,1.0,0.5,0.8620689655172413,1,0.9468720955440516,0.9504773641570718,1.0,1.0,Cooperative and Social Behaviors,Behavior,Mammals
+17,Alligator lizards mating,50,33,17,16.0,34.0,0.66,0.32,0.8,1,0.7641779212503241,0.9411674629635777,1.0,1.0,"Mating, Courtship, Reproduction",Behavior,Reptiles
+5,A coyote resting on human-build structures,50,43,7,4.0,46.0,0.86,0.08,0.6666666666666666,1,0.8240031029950434,0.46403195050974116,1.0,0.25,Human Impact,Context,Mammals
+134,caterpillar of Gulf Fritillary butterfly,50,33,17,12.0,38.0,0.66,0.24,0.42857142857142855,1,0.7114598391175871,0.827274556972373,0.5,1.0,Life Cycle and Development,Appearance,Insects
+133,caterpillar of Common Buckeye butterfly,50,26,24,5.0,45.0,0.52,0.1,0.4166666666666667,1,0.47537516036053873,0.5675844093428088,0.08333333333333333,0.3333333333333333,Life Cycle and Development,Appearance,Insects
+135,caterpillar of polyphemus moth,50,37,13,11.0,39.0,0.74,0.22,0.55,1,0.6754892526684453,0.5225999969123074,1.0,0.14285714285714285,Life Cycle and Development,Appearance,Insects
+58,Male chorus frog with inflated vocal sacs,50,47,3,17.0,33.0,0.94,0.34,0.7727272727272727,1,0.7853442302566981,0.8634368161507116,0.5,1.0,"Mating, Courtship, Reproduction",Behavior,Amphibians
+94,a beaver dam across a stream,50,50,0,27.0,23.0,1.0,0.54,0.8709677419354839,1,0.873932919325907,0.8680742077861813,1.0,1.0,Animal Structures and Habitats,Context,Mammals
+196,vervet monkey with visible bright blue scrotal areas,50,50,0,16.0,34.0,1.0,0.32,0.64,1,0.9510877146757798,0.9044934359972,1.0,1.0,"Mating, Courtship, Reproduction",Behavior,Mammals
+143,dark-colored Dusky Leaf-monkey with orange-colored young,50,39,11,14.0,36.0,0.78,0.28,0.8235294117647058,1,0.7272863800476186,0.9184527878949686,0.3333333333333333,1.0,Unique appearances or morphs,Appearance,Mammals
+193,sloth hugging a human-made structure,50,49,1,20.0,30.0,0.98,0.4,0.6896551724137931,1,0.9223975689575347,0.7701226216868996,1.0,1.0,Human Impact,Context,Mammals
+185,photo with two or more adult male lions,50,40,10,9.0,41.0,0.8,0.18,0.6428571428571429,1,0.8709810215607514,0.8577980331219339,1.0,1.0,Cooperative and Social Behaviors,Behavior,Mammals
+87,Water Frogs in amplexus position,50,50,0,4.0,46.0,1.0,0.08,0.6666666666666666,1,0.6906864131706493,0.5439550927618265,1.0,0.5,"Mating, Courtship, Reproduction",Behavior,Amphibians
+69,Nursery Web Spider carrying egg sac,50,39,11,20.0,30.0,0.78,0.4,0.6666666666666666,1,0.7843760410367261,0.964790567602668,1.0,1.0,"Mating, Courtship, Reproduction",Behavior,Arachnids
+50,House finch with yellow pigmentation,50,36,14,4.0,46.0,0.72,0.08,0.6666666666666666,1,0.4617856233925422,0.9403887906792026,0.25,1.0,Unique appearances or morphs,Appearance,Birds
+72,Red-capped Plover performing broken wing distraction,50,39,11,1.0,49.0,0.78,0.02,0.5,1,0.23137821315975948,0.6309297535714573,0.05263157894736842,0.5,Defensive and Survival Behaviors,Behavior,Birds
+56,Male Blue-black Grassquit in patchy blue-black and brown plumage,50,38,12,5.0,45.0,0.76,0.1,0.45454545454545453,1,0.4862657891067216,0.6693055761406803,0.2,1.0,Life Cycle and Development,Appearance,Birds
+55,Luna Moth missing long twisted tails on the hindwings,50,50,0,0.0,50.0,1.0,0.0,0.0,0,0.0,0.0,0.0,0.0,Life Cycle and Development,Appearance,Mammals
+85,Tropical Orb Weaver with multiple white spots in the abdominal dorsum,50,35,15,2.0,48.0,0.7,0.04,1.0,1,0.29913882546308407,0.6188906763630467,0.05555555555555555,0.5,Unique appearances or morphs,Appearance,Arachnids
+67,North Island robin or South Island robin with leg bands,50,50,0,14.0,36.0,1.0,0.28,0.7777777777777778,1,0.57420748668641,0.8863779163851518,0.1111111111111111,1.0,Tracking and Identification,Appearance,Birds
+40,Exactly three zebras standing together in a field,50,45,5,25.0,25.0,0.9,0.5,0.625,1,0.7922394895276925,0.9005949906210694,0.5,1.0,Miscellaneous Context,Context,Mammals
+38,Exactly five penguins,50,50,0,10.0,40.0,1.0,0.2,0.9090909090909091,1,0.732805793516068,0.7512953610360749,1.0,1.0,Miscellaneous Context,Context,Birds
+80,Splendid fairywren without blue body coloration,50,49,1,16.0,34.0,0.98,0.32,0.42105263157894735,1,0.5243619019500556,0.6831264344325014,0.058823529411764705,1.0,Sex identification,Appearance,Birds
+71,Octopus out of the water,50,50,0,22.0,28.0,1.0,0.44,0.5,1,0.8463447504896601,0.8854899775383647,1.0,1.0,Miscellaneous Context,Context,Mollusks
+15,Adult female black widow spider not in a web,50,50,0,0.0,50.0,1.0,0.0,0.0,0,0.0,0.0,0.0,0.0,Miscellaneous Context,Context,Arachnids
+110,an oak gall produced by a spongy oak apple gall wasp,50,30,20,12.0,38.0,0.6,0.24,0.3,1,0.622893292968239,0.716590804045494,0.5,0.5,Animal Structures and Habitats,Context,Insects
+96,a gall produced by an Acorn Plum Gall Wasp,50,27,23,0.0,50.0,0.54,0.0,0.0,0,0.5019428015361,0.8000928179063846,0.3333333333333333,1.0,Animal Structures and Habitats,Context,Insects
+92,a bag-shelter moth's silken bag nest on a tree,50,48,2,2.0,48.0,0.96,0.04,1.0,1,0.5311931216172626,0.8772153153380493,0.5,1.0,Life Cycle and Development,Appearance,Insects
+1,A Eurasian Red Squirrel gathering material for its nest,50,48,2,4.0,46.0,0.96,0.08,0.5,1,0.3915133246215325,0.7386513012763118,0.25,1.0,Animal Structures and Habitats,Context,Mammals
+3,A close-up of a Star-nosed Mole's nose showing all appendages of its Eimer's organs,50,50,0,6.0,44.0,1.0,0.12,0.75,1,0.7538053950976075,0.517574755217985,1.0,0.3333333333333333,Miscellaneous Context,Context,Mammals
+162,hognose snake playing dead,50,36,14,4.0,46.0,0.72,0.08,0.6666666666666666,1,0.5028252725998419,0.7562499009730579,0.5,1.0,Defensive and Survival Behaviors,Behavior,Reptiles
+101,a mud dauber wasp in the process of forming its nest out of mud,50,18,32,3.0,47.0,0.36,0.06,0.375,1,0.5210460469895042,0.5424488978359472,0.5,0.3333333333333333,Miscellaneous Behavior,Behavior,Insects
+152,feral cat with prey,50,45,5,14.0,36.0,0.9,0.28,1.0,1,0.6264895670538518,0.8422386456162205,1.0,1.0,Feeding and Hydration,Behavior,Mammals
+43,Fur seal mother with pup,50,50,0,16.0,34.0,1.0,0.32,0.5517241379310345,1,0.8396943182886033,0.8991189727467124,1.0,1.0,Cooperative and Social Behaviors,Behavior,Mammals
+47,Haliaeetus eagles in aerial cartwheeling flight with locked talons,50,45,5,1.0,49.0,0.9,0.02,1.0,1,0.18208790046993784,0.1892003595168692,0.022727272727272728,0.02631578947368421,"Mating, Courtship, Reproduction",Behavior,Birds
+0,A By-the-Wind Sailor washed up on a beach,50,31,19,0.0,50.0,0.62,0.0,0.0,0,0.4686945409680194,0.5225474627276908,0.25,0.16666666666666666,Health and Disease,Appearance,Animalia
+126,bullhead shark egg case,50,32,18,5.0,45.0,0.64,0.1,0.45454545454545453,1,0.6422671171965125,0.5027243269110819,0.3333333333333333,0.14285714285714285,Life Cycle and Development,Appearance,Fish
