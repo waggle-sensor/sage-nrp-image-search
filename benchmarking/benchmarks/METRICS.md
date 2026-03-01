@@ -2,10 +2,10 @@
 
 ### 1️⃣ Keep K Fixed
 
-* Always evaluate at **K = 25**, since the system returns the top 25 results.
+* Always evaluate at **K = response_limit**, since the system returns the top `response_limit` results.
+>NOTE: at this moment, the response limit is 25. This may change in the future. - 03/01/2026
 * Do **not** change K per query based on how many relevant items exist.
 * Fixed K ensures:
-
   * Fair comparison across queries
   * Fair comparison across model versions
   * Reproducibility
