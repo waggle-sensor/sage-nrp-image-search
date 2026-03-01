@@ -95,7 +95,7 @@ def plot_single_bar_metric(
     plt.show()
 
 
-def plot_ndcg_comparison(
+def plot_rank_comparison(
     df,
     x_column,
     title=None,
@@ -104,16 +104,36 @@ def plot_ndcg_comparison(
     figsize=(8, 4),
     bar_width=0.35,
     rotate_xticks=45,
-    dataset_clip_model="CLIP DFN5B-CLIP-ViT-H-14-378"
+    dataset_clip_model="CLIP DFN5B-CLIP-ViT-H-14-378",
+    metric="NDCG"
 ):
-    """Plot NDCG vs clip_NDCG as grouped bars (one label per x_column)."""
+    """
+    Plot rank metrics as grouped bars (one label per x_column). Available rank metrics are NDCG and MRR.
+
+    :param df: DataFrame with rank metrics, and the categorical column (e.g. category_metrics)
+    :param x_column: column for the x-axis (one bar per value, e.g. 'category')
+    :param title: plot title
+    :param xlabel: x-axis label
+    :param ylim: y-axis limits
+    :param figsize: figure size
+    :param bar_width: bar width
+    :param rotate_xticks: rotation for x-tick labels
+    :param dataset_clip_model: legend label for rank metric series
+    :param metric: rank metric to plot (e.g. "NDCG" or "MRR")
+    """
     fig, ax = plt.subplots(figsize=figsize)
     x = np.arange(len(df))
-    bars1 = ax.bar(x - bar_width / 2, df["NDCG"], width=bar_width, label="Hybrid Search", color="blue", alpha=0.7)
-    bars2 = ax.bar(x + bar_width / 2, df["clip_NDCG"], width=bar_width, label=dataset_clip_model, color="green", alpha=0.7)
-    ax.set_ylabel("NDCG")
+    metric_up = metric.upper()
+    metric_low = metric.lower()
+
+    if metric_low not in ["ndcg", "mrr"]:
+        raise ValueError(f"Metric {metric} not supported")
+
+    bars1 = ax.bar(x - bar_width / 2, df[metric_up], width=bar_width, label="Hybrid Search", color="blue", alpha=0.7)
+    bars2 = ax.bar(x + bar_width / 2, df[f"clip_{metric_up}"], width=bar_width, label=dataset_clip_model, color="green", alpha=0.7)
+    ax.set_ylabel(metric_up)
     ax.set_xlabel(xlabel if xlabel else x_column.replace("_", " ").title())
-    ax.set_title(title if title else f"NDCG by {x_column.replace('_', ' ').title()}")
+    ax.set_title(title if title else f"{metric_up} by {x_column.replace('_', ' ').title()}")
     ax.set_ylim(*ylim)
     ax.set_xticks(x)
     ax.set_xticklabels(df[x_column], rotation=rotate_xticks)
@@ -121,7 +141,7 @@ def plot_ndcg_comparison(
     plt.show()
 
 
-def plot_multi_ndcg_comparison(
+def plot_multi_rank_comparison(
     df,
     x_column,
     group_column,
@@ -136,14 +156,15 @@ def plot_multi_ndcg_comparison(
     divider_linestyle=":",
     group_label_y=1.0,
     group_label_x_offset=0.3,
+    metric="NDCG"
 ):
     """
-    Plot NDCG vs clip_NDCG as grouped bars with a second column used for visual grouping.
+    Plot rank metrics as grouped bars with a second column used for visual grouping. Available rank metrics are NDCG and MRR.
 
     Draws dotted vertical lines between groups and places group labels above each group
     (e.g. category on x-axis, supercategory as groups with dividers and labels).
 
-    :param df: DataFrame with NDCG, clip_NDCG, and the two categorical columns (e.g. category_metrics)
+    :param df: DataFrame with rank metrics, and the two categorical columns (e.g. category_metrics)
     :param x_column: column for the x-axis (one bar pair per value, e.g. 'category')
     :param group_column: column used for grouping (dividers and labels, e.g. 'supercategory')
     :param title: plot title
@@ -153,28 +174,32 @@ def plot_multi_ndcg_comparison(
     :param bar_width: bar width
     :param rotate_xticks: rotation for x-tick labels
     :param bar_label_fmt: format for bar labels (e.g. "%.2f")
-    :param dataset_clip_model: legend label for clip_NDCG series
+    :param dataset_clip_model: legend label for rank metric series
     :param divider_linestyle: linestyle for vertical dividers (e.g. ':')
     :param group_label_y: y position for group labels above the bars
     :param group_label_x_offset: horizontal offset for group label position (e.g. 0.3)
+    :param metric: rank metric to plot (e.g. "NDCG" or "MRR")
     """
     fig, ax = plt.subplots(figsize=figsize)
     x = np.arange(len(df))
-
+    metric_up = metric.upper()
+    metric_low = metric.lower()
+    if metric_low not in ["ndcg", "mrr"]:
+        raise ValueError(f"Metric {metric} not supported")
     bars1 = ax.bar(
-        x - bar_width / 2, df["NDCG"], width=bar_width,
+        x - bar_width / 2, df[metric_up], width=bar_width,
         label="Hybrid Search", color="blue", alpha=0.7
     )
     bars2 = ax.bar(
-        x + bar_width / 2, df["clip_NDCG"], width=bar_width,
+        x + bar_width / 2, df[f"clip_{metric_up}"], width=bar_width,
         label=dataset_clip_model, color="green", alpha=0.7
     )
     ax.bar_label(bars1, fmt=bar_label_fmt, padding=5)
     ax.bar_label(bars2, fmt=bar_label_fmt, padding=5)
 
-    ax.set_ylabel("NDCG")
+    ax.set_ylabel(metric_up)
     ax.set_xlabel(xlabel if xlabel else x_column.replace("_", " ").title())
-    ax.set_title(title if title else f"NDCG and clip_NDCG by {x_column.replace('_', ' ').title()}")
+    ax.set_title(title if title else f"{metric_up} and clip_{metric_up} by {x_column.replace('_', ' ').title()}")
     ax.set_ylim(*ylim)
     ax.set_xticks(x)
     ax.set_xticklabels(df[x_column], rotation=rotate_xticks, ha="right")
