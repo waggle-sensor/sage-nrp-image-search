@@ -3,6 +3,8 @@ Helper functions for plotting benchmarking graphs.
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
+import pandas as pd
 
 def plot_grouped_bar_by_columns(
     df, 
@@ -220,4 +222,49 @@ def plot_multi_rank_comparison(
             ha="center", va="bottom", fontsize=10, fontweight="bold"
         )
 
+    plt.show()
+
+def plot_overall_hitrate(
+    system_version: str,
+    base_path: Path,
+    benchmarks: list[str] = ["INQUIRE", "Firebench", "Commonobjectsbench", "Cloudbench"],
+    response_limit:int=25
+):
+    """
+    Plot overall hit rate as a single bar chart.
+    :param system_version: version of the system
+    :param base_path: base path to the benchmarks directory
+    :param benchmarks: list of benchmarks to plot
+    :param response_limit: number of images returned by the benchmark results for each query. Default is 25.
+    """
+    k=response_limit
+    # Get the paths for the benchmarks
+    bench_paths = []
+    for benchmark in benchmarks:
+        bench_paths.append((benchmark, base_path / f"{benchmark}/results/{system_version}/query_eval_metrics.csv"))
+
+    # Get the hit rates for the benchmarks
+    names, hit_rates = [], []
+    for label, path in bench_paths:
+        if not path.exists():
+            print(f"Skip {label}: not found")
+            continue
+        df = pd.read_csv(path)
+        if "hit" not in df.columns:
+            print(f"Skip {label}: no 'hit' column")
+            continue
+        names.append(label)
+        hit_rates.append(df["hit"].mean())
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    x = np.arange(len(names))
+    colors = ["#2e86ab", "#a23b72", "#f18f01", "#c73e1d"]
+    bars = ax.bar(x, hit_rates, color=colors[: len(names)], alpha=0.85, edgecolor="white", linewidth=1.2)
+    ax.set_xticks(x)
+    ax.set_xticklabels(names, fontsize=12)
+    ax.set_ylabel(f"Hit Rate (Success@{k})", fontsize=12)
+    ax.set_title(f"Overall Hit Rate by Benchmark ({system_version})", fontsize=14)
+    ax.set_ylim(0, 1.05)
+    ax.bar_label(bars, fmt=lambda v: f"{v * 100:.1f}%", padding=8, fontsize=11)
+    plt.tight_layout()
     plt.show()
