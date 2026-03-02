@@ -310,6 +310,6 @@ def plot_overall_ndcg(
     ax.set_ylabel("NDCG", fontsize=12)
     ax.set_title(f"Overall NDCG by Benchmark ({system_version})", fontsize=14)
     ax.set_ylim(0, 1.05)
-    ax.bar_label(bars, fmt=lambda v: f"{v * 100:.1f}%", padding=8, fontsize=11)
+    ax.bar_label(bars, fmt=lambda v: f"{v:.2f}", padding=8, fontsize=11)
     plt.tight_layout()
     plt.show()
