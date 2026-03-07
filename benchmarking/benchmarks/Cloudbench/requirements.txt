@@ -1,9 +1,13 @@
 # CloudBench Benchmark Requirements
 # Core benchmarking framework
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.3
-imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.3
-imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.3
-imsearch_eval[nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.3
+# imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.3
+# imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.3
+# imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.3
+# imsearch_eval[nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.3 #change to 0.1.4 if diversity_metric branch works
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@diversity_metric
+imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@diversity_metric
+imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@diversity_metric
+imsearch_eval[nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@diversity_metric
 
 # Image processing
 Pillow>=10.0.0
