@@ -325,9 +325,9 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
     """
     Runs model via NRP Envoy AI Gateway.
 
-    When ``model_config.nrp_disable_thinking`` is true (default), passes
+    When ``model_config.nrp_enable_thinking`` is false (default is true), passes
     ``extra_body["chat_template_kwargs"]["enable_thinking"]=False`` for lower
-    latency. Override with env ``NRP_DISABLE_THINKING=false``.
+    latency. Override with env ``NRP_ENABLE_THINKING=true``.
     """
     NRP_MODELS={
                 "qwen3",
@@ -364,7 +364,7 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
             ],
         }
 
-        if hp.nrp_disable_thinking:
+        if not hp.nrp_enable_thinking:
             create_kwargs["extra_body"] = {
                 "chat_template_kwargs": {"enable_thinking": False},
             }
