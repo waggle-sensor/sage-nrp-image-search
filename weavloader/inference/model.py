@@ -331,12 +331,14 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
     """
     NRP_MODELS={
                 "qwen3",
+                "qwen3-small",
                 "gpt-oss",
                 "kimi",
                 "glm-4.7",
                 "minimax-m2",
                 "glm-v",
                 "gemma3",
+                "olmo"
             }
     if model not in NRP_MODELS:
         raise ValueError(f"Unsupported NRP LLM Model: {model}")
