@@ -323,7 +323,11 @@ def gemma3_run_model(triton_client, image, task_prompt=hp.gemma3_prompt):
 
 def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
     """
-    Runs model via NRP Envoy AI Gateway
+    Runs model via NRP Envoy AI Gateway.
+
+    When ``model_config.nrp_disable_thinking`` is true (default), passes
+    ``extra_body["chat_template_kwargs"]["enable_thinking"]=False`` for lower
+    latency. Override with env ``NRP_DISABLE_THINKING=false``.
     """
     NRP_MODELS={
                 "qwen3",
@@ -342,9 +346,9 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
     image_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
+        create_kwargs = {
+            "model": model,
+            "messages": [
                 {
                     "role": "user",
                     "content": [
@@ -358,7 +362,13 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
                     ],
                 }
             ],
-        )
+        }
+
+        if hp.nrp_disable_thinking:
+            create_kwargs["extra_body"] = {
+                "chat_template_kwargs": {"enable_thinking": False},
+            }
+        response = client.chat.completions.create(**create_kwargs)
 
         answer_str = response.choices[0].message.content
 

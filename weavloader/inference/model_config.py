@@ -1,5 +1,11 @@
+import os
 '''This file contains the hyper parameters that can be changed to fine tune
 the system. '''
+# Default true: send enable_thinking=False on NRP (lower latency). Set NRP_DISABLE_THINKING=false
+# to allow models that support chat_template "thinking" to use it.
+nrp_disable_thinking = (
+    os.environ.get("NRP_DISABLE_THINKING", "true").lower() in ("1", "true", "yes")
+)
 align_alpha = 0.7
 clip_alpha = 0.7
 qwen2_5_prompt="""
