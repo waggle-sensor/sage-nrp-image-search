@@ -50,6 +50,7 @@ class CloudBenchConfig(Config):
             "LLM_MODEL_PROVIDER", "triton"
         ).lower()
         self._caption_model_name = os.environ.get("CAPTION_MODEL_NAME", "gemma3")
+        self._nrp_enable_thinking = os.environ.get("NRP_ENABLE_THINKING", "true").lower() in ("1", "true", "yes")
 
         # Triton parameters
         self._triton_host = os.environ.get("TRITON_HOST", "triton")

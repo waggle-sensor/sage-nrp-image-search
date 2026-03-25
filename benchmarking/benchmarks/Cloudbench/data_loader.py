@@ -79,6 +79,7 @@ class CloudBenchDataLoader(DataLoader):
                 image,
                 self.config.gemma3_prompt,
                 model_name=self.config._caption_model_name,
+                enable_thinking=self.config._nrp_enable_thinking,
             )
             if not caption:
                 caption = summary or ""  # Fallback to dataset summary
