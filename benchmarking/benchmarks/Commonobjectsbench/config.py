@@ -54,6 +54,7 @@ class CommonObjectsBenchConfig(Config):
         self._llm_model_provider = os.environ.get(
             "LLM_MODEL_PROVIDER", "triton"
         ).lower()
+        self._caption_model_name = os.environ.get("CAPTION_MODEL_NAME", "gemma3")
 
         # Triton parameters
         self._triton_host = os.environ.get("TRITON_HOST", "triton")
