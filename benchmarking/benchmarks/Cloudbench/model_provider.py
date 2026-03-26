@@ -34,12 +34,12 @@ class MixedModelProvider(NRPModelProvider):
         self.config = config
 
         # determine which model provider to use for caption generation
-        if self.config._llm_model_provider == "triton":
+        if self.config.llm_model_provider == "triton":
             self.model_utils = self.triton_model_provider.model_utils
-        elif self.config._llm_model_provider == "nrp":
+        elif self.config.llm_model_provider == "nrp":
             self.config.is_nrp_key_set()
         else:
-            raise ValueError(f"Invalid model provider: {self.config._llm_model_provider} not supported")
+            raise ValueError(f"Invalid model provider: {self.config.llm_model_provider} not supported")
 
     def get_embedding(
         self,

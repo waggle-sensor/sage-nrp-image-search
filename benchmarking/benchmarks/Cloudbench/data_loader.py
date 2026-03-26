@@ -78,8 +78,8 @@ class CloudBenchDataLoader(DataLoader):
             caption = self.model_provider.generate_caption(
                 image,
                 self.config.gemma3_prompt,
-                model_name=self.config._caption_model_name,
-                enable_thinking=self.config._nrp_enable_thinking,
+                model_name=self.config.caption_model_name,
+                enable_thinking=self.config.nrp_enable_thinking,
             )
             if not caption:
                 caption = summary or ""  # Fallback to dataset summary

@@ -34,13 +34,13 @@ class MixedModelProvider(NRPModelProvider):
         self.triton_model_provider = triton_model_provider
         self.config = config
 
-        if self.config._llm_model_provider == "triton":
+        if self.config.llm_model_provider == "triton":
             self.model_utils = self.triton_model_provider.model_utils
-        elif self.config._llm_model_provider == "nrp":
+        elif self.config.llm_model_provider == "nrp":
             self.config.is_nrp_key_set()
         else:
             raise ValueError(
-                f"Invalid model provider: {self.config._llm_model_provider} not supported"
+                f"Invalid model provider: {self.config.llm_model_provider} not supported"
             )
 
     def get_embedding(
