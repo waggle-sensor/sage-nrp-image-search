@@ -60,6 +60,12 @@ Use a combination of ranking-sensitive and top-K metrics:
   * Measures how much of the relevant set appears in the top 25.
   * Interpreted carefully when relevant counts vary across benchmarks.
 
+* **Diversity@25**
+
+  * Measures the variety of relevant results in the top 25.
+  * Encourages exploration of different relevant items.
+>NOTE: If you are interested in "spread" of results, Diversity is a primary metric.
+
 ---
 
 ### 4️⃣ Interpretation Guidance
@@ -68,6 +74,7 @@ Use a combination of ranking-sensitive and top-K metrics:
 * MRR reflects early ranking strength.
 * Success@25 reflects practical usefulness.
 * NDCG captures ranking structure.
+* Diversity@25 encourages exploration of different relevant items.
 * Metric comparisons should primarily be made:
 
   * Within the same benchmark
@@ -86,5 +93,6 @@ For each benchmark, report:
 * Precision@25
 * NDCG@25
 * Recall@25
+* Diversity@25
 
 Use MRR and Precision@25 as primary model selection signals.
