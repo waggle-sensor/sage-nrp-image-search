@@ -313,3 +313,89 @@ def plot_overall_ndcg(
     ax.bar_label(bars, fmt=lambda v: f"{v:.2f}", padding=8, fontsize=11)
     plt.tight_layout()
     plt.show()
+
+def plot_overall_diversity(
+    system_version: str,
+    base_path: Path,
+    benchmarks: list[str] = ["INQUIRE", "Firebench", "Commonobjectsbench", "Cloudbench"],
+):
+    """
+    Plot overall diversity as a single bar chart for each benchmark.
+    :param system_version: version of the system (e.g. "v10")
+    :param base_path: base path to the benchmarks directory
+    :param benchmarks: list of benchmark names to plot
+    """
+    # Get the paths for the benchmarks
+    bench_paths = []
+    for benchmark in benchmarks:
+        bench_paths.append((benchmark, base_path / f"{benchmark}/results/{system_version}/query_eval_metrics.csv"))
+
+    # Get the hit rates for the benchmarks
+    names, diversity_values = [], []
+    for label, path in bench_paths:
+        if not path.exists():
+            print(f"Skip {label}: not found")
+            continue
+        df = pd.read_csv(path)
+        if "diversity" not in df.columns:
+            print(f"Skip {label}: no 'diversity' column")
+            continue
+        names.append(label)
+        diversity_values.append(df["diversity"].mean())
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    x = np.arange(len(names))
+    colors = ["#2e86ab", "#a23b72", "#f18f01", "#c73e1d"]
+    bars = ax.bar(x, diversity_values, color=colors[: len(names)], alpha=0.85, edgecolor="white", linewidth=1.2)
+    ax.set_xticks(x)
+    ax.set_xticklabels(names, fontsize=12)
+    ax.set_ylabel(f"Diversity", fontsize=12)
+    ax.set_title(f"Overall Diversity by Benchmark ({system_version})", fontsize=14)
+    ax.set_ylim(0, 1.05)
+    ax.bar_label(bars, fmt=lambda v: f"{v:.2f}", padding=8, fontsize=11)
+    plt.tight_layout()
+    plt.show()
+
+def plot_overall_mrr(
+    system_version: str,
+    base_path: Path,
+    benchmarks: list[str] = ["INQUIRE", "Firebench", "Commonobjectsbench", "Cloudbench"],
+):
+    """
+    Plot overall MRR as a single bar chart for each benchmark.
+    :param system_version: version of the system (e.g. "v10")
+    :param base_path: base path to the benchmarks directory
+    :param benchmarks: list of benchmark names to plot
+    """
+    bench_paths = [
+        (b, base_path / f"{b}/results/{system_version}/query_eval_metrics.csv")
+        for b in benchmarks
+    ]
+    names, mrr_values = [], []
+    for label, path in bench_paths:
+        if not path.exists():
+            print(f"Skip {label}: not found")
+            continue
+        df = pd.read_csv(path)
+        if "rerank_score_reciprocal_rank" not in df.columns:
+            print(f"Skip {label}: no 'rerank_score_reciprocal_rank' column")
+            continue
+        names.append(label)
+        mrr_values.append(df["rerank_score_reciprocal_rank"].mean())
+
+    if not names:
+        print("No benchmark data found.")
+        return
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    x = np.arange(len(names))
+    colors = ["#2e86ab", "#a23b72", "#f18f01", "#c73e1d"]
+    bars = ax.bar(x, mrr_values, color=colors[: len(names)], alpha=0.85, edgecolor="white", linewidth=1.2)
+    ax.set_xticks(x)
+    ax.set_xticklabels(names, fontsize=12)
+    ax.set_ylabel("MRR", fontsize=12)
+    ax.set_title(f"Overall MRR by Benchmark ({system_version})", fontsize=14)
+    ax.set_ylim(0, 1.05)
+    ax.bar_label(bars, fmt=lambda v: f"{v:.2f}", padding=8, fontsize=11)
+    plt.tight_layout()
+    plt.show()
