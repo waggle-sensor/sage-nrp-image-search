@@ -149,7 +149,7 @@ class INQUIREDataLoader(DataLoader):
                 Property(name="date", data_type=DataType.DATE),
                 Property(name="location", data_type=DataType.GEO_COORDINATES)
             ],
-            "vectorizer_config": [
+            "vector_config": [
                 Configure.NamedVectors.none(
                     name=TARGET_VECTOR,
                     vector_index_config=Configure.VectorIndex.hnsw(

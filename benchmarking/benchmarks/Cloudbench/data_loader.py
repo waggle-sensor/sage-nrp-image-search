@@ -171,7 +171,7 @@ class CloudBenchDataLoader(DataLoader):
                 Property(name="tags", data_type=DataType.TEXT),
                 Property(name="confidence", data_type=DataType.TEXT),
             ],
-            "vectorizer_config": [
+            "vector_config": [
                 Configure.NamedVectors.none(
                     name=TARGET_VECTOR,
                     vector_index_config=Configure.VectorIndex.hnsw(
