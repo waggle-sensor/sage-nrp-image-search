@@ -202,7 +202,7 @@ class SagebenchDataLoader(DataLoader):
                 Property(name="tags", data_type=DataType.TEXT),
                 Property(name="confidence", data_type=DataType.TEXT),
             ],
-            "vector_config": [
+            "vectorizer_config": [
                 Configure.NamedVectors.none(
                     name=target_vector,
                     vector_index_config=Configure.VectorIndex.hnsw(
