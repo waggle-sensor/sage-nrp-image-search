@@ -11,7 +11,7 @@ import requests
 import logging
 from PIL import Image
 from io import BytesIO, BufferedReader
-from inference import gemma3_run_model, get_clip_embeddings, run_nrp_model
+from inference import run_triton_model, get_clip_embeddings, run_nrp_model
 from urllib.parse import urljoin
 from weaviate.classes.data import GeoCoordinate
 from metrics import metrics
@@ -21,11 +21,16 @@ from openai import OpenAI
 
 MANIFEST_API = os.environ.get("MANIFEST_API", "https://auth.sagecontinuum.org/manifests/")
 LLM_RUN_MODE = os.environ.get("LLM_RUN_MODE", "TRITON")
+METRIC_REPORT_CAPTION_MODEL = f"{LLM_RUN_MODE}_unknown".lower()
 if LLM_RUN_MODE == 'NRP':
     NRP_API_KEY = os.environ.get("NRP_API_KEY", "")
     NRP_API_ENDPOINT = os.environ.get("NRP_API_ENDPOINT", "")
     nrp_client = OpenAI(api_key = NRP_API_KEY,base_url = NRP_API_ENDPOINT)
     NRP_LLM_MODEL = os.environ.get("NRP_LLM_MODEL","gemma3")
+    METRIC_REPORT_CAPTION_MODEL = f"{LLM_RUN_MODE}_{NRP_LLM_MODEL}".lower()
+elif LLM_RUN_MODE == 'TRITON':
+    TRITON_LLM_MODEL = os.environ.get("TRITON_LLM_MODEL", "gemma3")
+    METRIC_REPORT_CAPTION_MODEL = f"{LLM_RUN_MODE}_{TRITON_LLM_MODEL}".lower()
 
 def watch(start=None, filter=None, logger=logging.getLogger(__name__)):
     """
@@ -207,17 +212,17 @@ def process_image(image_data, username, token, weaviate_client, triton_client, l
         start_time = time.perf_counter()
         try:
             if LLM_RUN_MODE == 'TRITON':
-                caption = gemma3_run_model(triton_client, image)
+                caption = run_triton_model(triton_client, TRITON_LLM_MODEL, image)
             elif LLM_RUN_MODE == 'NRP':
                 caption = run_nrp_model(nrp_client, image, NRP_LLM_MODEL)
             else:
                 raise ValueError(f"Unsupported LLM mode: {LLM_RUN_MODE}")
 
             caption_duration = time.perf_counter() - start_time
-            metrics.record_model_inference("gemma3", "caption", caption_duration, "success")
+            metrics.record_model_inference(METRIC_REPORT_CAPTION_MODEL, "caption", caption_duration, "success")
         except Exception as e:
             caption_duration = time.perf_counter() - start_time
-            metrics.record_model_inference("gemma3", "caption", caption_duration, "failure")
+            metrics.record_model_inference(METRIC_REPORT_CAPTION_MODEL, "caption", caption_duration, "failure")
             raise e
 
         # Generate clip embedding
