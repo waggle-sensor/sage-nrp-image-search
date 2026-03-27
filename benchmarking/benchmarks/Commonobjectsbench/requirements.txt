@@ -5,6 +5,10 @@ imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0
 imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.7
 imsearch_eval[nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.7
 
+# Match Weaviate server 1.32.x (Python client 4.16.x per compatibility matrix).
+# https://docs.weaviate.io/weaviate/client-libraries/python
+weaviate-client>=4.16.0,<4.17.0
+
 # Image processing
 Pillow>=10.0.0
 
