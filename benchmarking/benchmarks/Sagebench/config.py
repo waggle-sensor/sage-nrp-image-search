@@ -99,7 +99,7 @@ class SagebenchConfig(Config):
         # Query parameters
         self.query_method = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
         self.target_vector = os.environ.get("TARGET_VECTOR", "clip")
-        self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 50))
+        self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 25))
         self.advanced_query_parameters = {
             "alpha": float(os.environ.get("QUERY_ALPHA", 0.4)),
             # add the Sage metadata as keyword search properties like in production
