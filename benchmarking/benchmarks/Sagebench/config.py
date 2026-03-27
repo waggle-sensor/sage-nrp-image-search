@@ -102,7 +102,8 @@ class SagebenchConfig(Config):
         self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 50))
         self.advanced_query_parameters = {
             "alpha": float(os.environ.get("QUERY_ALPHA", 0.4)),
-            "query_properties": ["caption"],
+            # add the Sage metadata as keyword search properties like in production
+            "query_properties": ["caption", "camera", "host", "job", "vsn", "plugin", "zone", "project", "address"],
             "autocut_jumps": int(os.environ.get("AUTOCUT_JUMPS", 0)),
             "rerank_prop": os.environ.get("RERANK_PROP", "caption"),
             "clip_alpha": float(os.environ.get("CLIP_ALPHA", 0.7)),
