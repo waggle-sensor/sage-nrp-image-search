@@ -657,3 +657,45 @@ def plot_leaderboard_scores(
     plt.xticks(rotation=45, ha="right")
     plt.tight_layout()
     plt.show()
+
+
+def render_single_benchmark_leaderboard(
+    base_path: Path,
+    benchmark: str,
+    min_version: int = 10,
+    mode: str = "primary",
+    metric_weights: dict[str, float] | None = None,
+    display_fn=None,
+) -> pd.DataFrame:
+    """
+    Build, render table, and plot leaderboard for one benchmark.
+    Returns the benchmark-only leaderboard dataframe.
+    """
+    leaderboard_df = build_benchmark_version_leaderboard(
+        base_path=base_path,
+        benchmarks=[benchmark],
+        min_version=min_version,
+        mode=mode,
+        metric_weights=metric_weights,
+    )
+
+    part = leaderboard_df[leaderboard_df["benchmark"] == benchmark].copy()
+    if part.empty:
+        print(f"Skip {benchmark}: no v{min_version}+ results")
+        return part
+
+    mode_label = "Primary + Diversity" if mode in {"primary_plus_diversity", "primary+diversity"} else "Primary"
+    print(f"\n{benchmark} ({mode_label}):")
+
+    if display_fn is not None:
+        display_fn(part)
+    else:
+        print(part.to_string(index=False))
+
+    part["label"] = part["benchmark"] + "-" + part["system_version"]
+    plot_leaderboard_scores(
+        part,
+        label_column="label",
+        title=f"{benchmark} {mode_label} Leaderboard",
+    )
+    return part
