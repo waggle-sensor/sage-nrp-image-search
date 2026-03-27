@@ -156,11 +156,11 @@ class FireBenchDataLoader(DataLoader):
                     vector_index_config=Configure.VectorIndex.hnsw(
                         distance_metric=self.config.hnsw_dist_metric,
                         dynamic_ef_factor=self.config.hnsw_ef_factor,
-                        dynamic_ef_max=self.config.hsnw_dynamicEfMax,
-                        dynamic_ef_min=self.config.hsnw_dynamicEfMin,
+                        dynamic_ef_max=self.config.hnsw_dynamicEfMax,
+                        dynamic_ef_min=self.config.hnsw_dynamicEfMin,
                         ef=self.config.hnsw_ef,
                         ef_construction=self.config.hnsw_ef_construction,
-                        filter_strategy=self.config.hsnw_filterStrategy,
+                        filter_strategy=self.config.hnsw_filterStrategy,
                         flat_search_cutoff=self.config.hnsw_flatSearchCutoff,
                         max_connections=self.config.hnsw_maxConnections,
                         vector_cache_max_objects=int(
