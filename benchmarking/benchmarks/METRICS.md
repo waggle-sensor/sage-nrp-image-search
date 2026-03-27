@@ -111,4 +111,42 @@ For each benchmark, report:
 * Recall@25
 * Diversity@25
 
-Use MRR and Precision@25 as primary model selection signals.
+Use MRR and Success@25 as primary model selection signals.
+
+---
+
+## 6️⃣ Leaderboard Ranking Configuration
+
+For cross-version leaderboards (`v10+`), use weighted composites.
+
+### Primary Leaderboard (default)
+
+Default equal metric weights:
+
+* MRR: `0.50`
+* Success@25: `0.50`
+
+Where:
+
+* `Success@25 = HitRate@25 = mean(hit)` across queries.
+
+### Primary + Diversity Leaderboard
+
+Default equal metric weights:
+
+* MRR: `1/3`
+* Success@25: `1/3`
+* Diversity@25: `1/3`
+
+### Benchmark Weights for Overall Leaderboard
+
+The overall cross-benchmark leaderboard aggregates benchmark scores per system version using benchmark-level weights.
+
+Default benchmark weighting is equal:
+
+* `INQUIRE: 1`
+* `Firebench: 1`
+* `Commonobjectsbench: 1`
+* `Cloudbench: 1`
+
+You can override either metric weights or benchmark weights, but all weights are normalized to sum to `1.0` before scoring.
