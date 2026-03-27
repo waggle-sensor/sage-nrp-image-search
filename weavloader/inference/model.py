@@ -380,3 +380,27 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
     except Exception as e:
         logging.error(f"[MODEL] Error during {model} inference via OpenAI client: {str(e)}")
         return None
+
+
+def run_triton_model(triton_client, model, image, task_prompt=hp.gemma3_prompt):
+    """
+    takes in a task prompt and image, returns an answer using a Triton-served model
+
+    input:
+        triton_client: Triton client
+        model: model name
+        image: image
+        task_prompt: task prompt
+
+    output:
+        answer: answer
+
+    raises:
+        ValueError: if the model is not supported
+    """
+    if model == "gemma3":
+        return gemma3_run_model(triton_client, image, task_prompt)
+    elif model == "qwen2_5":
+        return qwen2_5_run_model(triton_client, image, task_prompt)
+    else:
+        raise ValueError(f"Unsupported Triton model: {model}")

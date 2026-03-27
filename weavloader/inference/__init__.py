@@ -9,6 +9,7 @@ from .model import (
     qwen2_5_run_model, 
     gemma3_run_model,
     run_nrp_model,
+    run_triton_model,
 )
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     'qwen2_5_run_model', 
     'gemma3_run_model',
     'run_nrp_model',
+    'run_triton_model',
 ]
