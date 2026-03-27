@@ -80,10 +80,10 @@ class SagebenchConfig(Config):
         self.hnsw_ef = int(os.environ.get("HNSW_EF", -1))
         self.hnsw_ef_construction = int(os.environ.get("HNSW_EF_CONSTRUCTION", 100))
         self.hnsw_maxConnections = int(os.environ.get("HNSW_MAX_CONNECTIONS", 50))
-        self.hsnw_dynamicEfMax = int(os.environ.get("HNSW_DYNAMIC_EF_MAX", 500))
-        self.hsnw_dynamicEfMin = int(os.environ.get("HNSW_DYNAMIC_EF_MIN", 200))
+        self.hnsw_dynamicEfMax = int(os.environ.get("HNSW_DYNAMIC_EF_MAX", 500))
+        self.hnsw_dynamicEfMin = int(os.environ.get("HNSW_DYNAMIC_EF_MIN", 200))
         self.hnsw_ef_factor = int(os.environ.get("HNSW_EF_FACTOR", 20))
-        self.hsnw_filterStrategy = getattr(
+        self.hnsw_filterStrategy = getattr(
             VectorFilterStrategy,
             os.environ.get("HNSW_FILTER_STRATEGY", "ACORN").upper(),
         )
