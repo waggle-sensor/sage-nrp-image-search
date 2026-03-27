@@ -1,0 +1,46 @@
+name: Rebuild Benchmark Leaderboards
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'benchmarking/benchmarks/**/results/**'
+      - 'benchmarking/helpers/plot.py'
+      - '.github/workflows/leaderboards.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'benchmarking/benchmarks/**/results/**'
+      - 'benchmarking/helpers/plot.py'
+      - '.github/workflows/leaderboards.yml'
+  workflow_dispatch:
+
+jobs:
+  rebuild-leaderboards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install leaderboard dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy matplotlib jupyter nbconvert
+
+      - name: Execute benchmark leaderboard notebooks
+        run: |
+          for nb in benchmarking/benchmarks/*/results/leaderboard.ipynb; do
+            if [ -f "$nb" ]; then
+              jupyter nbconvert --to notebook --execute --inplace "$nb"
+            fi
+          done
+
+      - name: Execute overall leaderboard notebook
+        run: |
+          jupyter nbconvert --to notebook --execute --inplace "benchmarking/benchmarks/overall/leaderboard.ipynb"
