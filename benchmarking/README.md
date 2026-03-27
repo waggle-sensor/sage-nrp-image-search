@@ -47,15 +47,46 @@ benchmarking/
     └── INQUIRE/                # INQUIRE-specific Kubernetes configs
 ```
 
-## Existing Benchmarks
+## Leaderboards
 
-### INQUIRE
+Cross-version leaderboards are supported for benchmark results in `benchmarks/*/results/v10+`.
 
-- **Location**: `benchmarks/INQUIRE/`
-- **Dataset**: INQUIRE benchmark for natural world image retrieval
-- **Vector DB**: Weaviate
-- **Models**: CLIP, ColBERT, ALIGN (embeddings); Gemma3, Qwen2.5-VL (captions)
-- **Usage**: See `benchmarks/INQUIRE/Readme.md`
+### Leaderboard Notebooks
+
+- **Per-benchmark leaderboard notebook(s)**: `benchmarks/*/results/leaderboard.ipynb`
+- **Overall leaderboard notebook**: `benchmarks/overall/leaderboard.ipynb`
+- **Reusable leaderboard helpers**: `helpers/plot.py`
+
+### Ranking Modes
+
+- **Primary**: `MRR` + `Success@25` (where `Success@25 = mean(hit)`)
+- **Primary + Diversity**: `MRR` + `Success@25` + `Diversity@25`
+
+Metric and interpretation details are documented in `benchmarks/METRICS.md`.
+
+### Benchmark Auto-Discovery
+
+Leaderboard logic does not hardcode benchmark names.
+
+- Benchmarks are discovered dynamically from directories under `benchmarking/benchmarks/`
+- Excludes non-benchmark folders such as `template` and `overall`
+- New benchmark folders are automatically included (if they follow expected results layout)
+
+### GitHub Action: Rerun Leaderboards
+
+Workflow: `.github/workflows/leaderboards.yml`
+
+This workflow automatically reruns leaderboard notebooks:
+
+- Triggered on:
+  - pushes/PRs that touch benchmark results (`benchmarking/benchmarks/**/results/**`)
+  - leaderboard helper/workflow changes
+  - manual dispatch (`workflow_dispatch`)
+- Executes:
+  - all `benchmarking/benchmarks/*/results/leaderboard.ipynb`
+  - `benchmarking/benchmarks/overall/leaderboard.ipynb`
+
+The workflow is configured to rerun/update notebooks only. It does **not** generate or upload leaderboard artifacts.
 
 ## Creating a New Benchmark
 
@@ -200,6 +231,30 @@ cd MYBENCHMARK
 ```
 
 See `benchmarks/template/README.md` for complete instructions.
+
+### Step 8: Upload Results
+
+Once you have successfully run the benchmark and have the results, you can upload them into a folder called `results` under the benchmark folder.
+'''
+benchmarking/benchmarks/MYBENCHMARK/results/v10/
+benchmarking/benchmarks/MYBENCHMARK/results/v11/
+...
+'''
+
+### Step 9: Leaderboard Checklist for New Benchmarks
+
+When you add a new benchmark folder under `benchmarking/benchmarks/`, use this checklist:
+
+1. Create benchmark results version folders in the standard shape:
+   - `benchmarking/benchmarks/MYBENCHMARK/results/v10/`
+2. Ensure each version folder includes:
+   - `query_eval_metrics.csv`
+3. Include the expected metric columns in `query_eval_metrics.csv`:
+   - `hit` (for `Success@25`)
+   - `rerank_score_reciprocal_rank` (for `MRR`)
+   - `diversity` (for Primary + Diversity mode)
+4. Add `benchmarking/benchmarks/MYBENCHMARK/results/leaderboard.ipynb` if you want a benchmark-specific leaderboard notebook.
+5. Commit results/notebook changes; the leaderboard workflow will auto-discover the benchmark and rerun notebooks.
 
 ## Makefile System
 
