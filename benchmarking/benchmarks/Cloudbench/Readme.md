@@ -58,6 +58,10 @@ After a run, three files are produced:
 
 Results are written to `/app/results` in Kubernetes (with a volume mount) or to the current directory when using `make run-local`. Optional S3 upload uses paths like `{S3_PREFIX}/{timestamp}/{filename}`.
 
+#### Leaderboard
+
+Cloudbench leaderboard is supported for benchmark results in `benchmarks/Cloudbench/results/leaderboard.ipynb`. Check out the notebook for more details.
+
 ## Environment Variables
 
 - **CLOUDBENCH_DATASET**: HuggingFace dataset name (default: `sagecontinuum/CloudBench`)

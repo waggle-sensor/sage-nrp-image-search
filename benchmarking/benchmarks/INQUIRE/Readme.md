@@ -6,6 +6,11 @@ Here we use [INQUIRE](https://github.com/inquire-benchmark/INQUIRE) with Weaviat
 
 This benchmark is supposed to be used in conjunction with [Sage Image Search](../../../kubernetes/base/). The Makefile references components that are deployed in [Sage Image Search](../../../kubernetes/base/) and deploys additional containers that are used to run the INQUIRE Benchmark.
 
+### Leaderboard
+
+INQUIRE leaderboard is supported for benchmark results in `benchmarks/INQUIRE/results/leaderboard.ipynb`. Check out the notebook for more details.
+>NOTE: INQUIRE authors have their own leaderboard for the INQUIRE benchmark. This leaderboard is not the same as the one we have here. This leaderboard is modified to fit our use case and compatible with our benchmarking framework. Although, you can still use the author's leaderboard for more information.
+
 ## Running the Example
 
 ### Prerequisites

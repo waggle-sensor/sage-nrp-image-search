@@ -60,6 +60,10 @@ After a run, three files are produced:
 
 Results are written to `/app/results` in Kubernetes (with a volume mount) or to the current directory when using `make run-local`. Optional S3 upload uses paths like `{S3_PREFIX}/{timestamp}/{filename}`.
 
+#### Leaderboard
+
+Commonobjectsbench leaderboard is supported for benchmark results in `benchmarks/Commonobjectsbench/results/leaderboard.ipynb`. Check out the notebook for more details.
+
 ## Environment Variables
 
 - **COMMONOBJECTSBENCH_USE_PRIVATE**: Set to `"true"` to use the private dataset `sagecontinuum/CommonObjectsBench-private`; otherwise uses the public dataset `sagecontinuum/CommonObjectsBench` (default: `false`)
