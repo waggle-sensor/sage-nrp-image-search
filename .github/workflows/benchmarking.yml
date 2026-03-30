@@ -26,8 +26,8 @@ jobs:
       - name: Discover Benchmarks
         id: set-matrix
         run: |
-          # Find all benchmark directories, excluding template
-          BENCHMARKS=$(find benchmarking/benchmarks -mindepth 1 -maxdepth 1 -type d -not -name 'template' -not -name '.git' -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+          # Find all benchmark directories, excluding template and overall (notebooks only)
+          BENCHMARKS=$(find benchmarking/benchmarks -mindepth 1 -maxdepth 1 -type d -not -name 'template' -not -name 'overall' -not -name '.git' -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
           echo "benchmarks=$BENCHMARKS" >> $GITHUB_OUTPUT
           echo "Found benchmarks: $BENCHMARKS"
 

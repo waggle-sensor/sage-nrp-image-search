@@ -57,10 +57,10 @@ class INQUIREConfig(Config):
         self.hnsw_ef = int(os.environ.get("HNSW_EF", -1))
         self.hnsw_ef_construction = int(os.environ.get("HNSW_EF_CONSTRUCTION", 100))
         self.hnsw_maxConnections = int(os.environ.get("HNSW_MAX_CONNECTIONS", 50))
-        self.hsnw_dynamicEfMax = int(os.environ.get("HNSW_DYNAMIC_EF_MAX", 500))
-        self.hsnw_dynamicEfMin = int(os.environ.get("HNSW_DYNAMIC_EF_MIN", 200))
+        self.hnsw_dynamicEfMax = int(os.environ.get("HNSW_DYNAMIC_EF_MAX", 500))
+        self.hnsw_dynamicEfMin = int(os.environ.get("HNSW_DYNAMIC_EF_MIN", 200))
         self.hnsw_ef_factor = int(os.environ.get("HNSW_EF_FACTOR", 20))
-        self.hsnw_filterStrategy = getattr(VectorFilterStrategy, os.environ.get("HNSW_FILTER_STRATEGY", "ACORN").upper())
+        self.hnsw_filterStrategy = getattr(VectorFilterStrategy, os.environ.get("HNSW_FILTER_STRATEGY", "ACORN").upper())
         self.hnsw_flatSearchCutoff = int(os.environ.get("HNSW_FLAT_SEARCH_CUTOFF", 40000))
         self.hnsw_vector_cache_max_objects = int(os.environ.get("HNSW_VECTOR_CACHE_MAX_OBJECTS", 1e12))
         self.hnsw_quantizer = Configure.VectorIndex.Quantizer.pq(
@@ -70,7 +70,7 @@ class INQUIREConfig(Config):
         # Query parameters
         self.query_method = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
         self.target_vector = os.environ.get("TARGET_VECTOR", "clip")
-        self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 50))
+        self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 25))
         self.advanced_query_parameters = {
             "alpha": float(os.environ.get("QUERY_ALPHA", 0.4)),
             "query_properties": ["caption"],

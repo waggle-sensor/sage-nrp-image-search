@@ -1,41 +1,39 @@
-"""CommonObjectsBench-specific data loader for loading data into vector databases."""
+"""Sagebench benchmark data loader for loading data into vector databases."""
 
 import json
 import os
 import logging
 from io import BytesIO, BufferedReader
+
 from PIL import Image
 import weaviate
 from imsearch_eval.framework.interfaces import DataLoader
 
-class CommonObjectsBenchDataLoader(DataLoader):
-    """Data loader for CommonObjectsBench dataset (general object image retrieval)."""
+class SagebenchDataLoader(DataLoader):
+    """Data loader for Sagebench dataset rows into Weaviate."""
 
-    def process_item(self, item: dict) -> dict:
+    def process_item(self, item: dict) -> dict | None:
         """
-        Process a single CommonObjectsBench dataset item.
+        Process a single Sagebench dataset item.
 
-        Args:
-            item: Dictionary containing CommonObjectsBench dataset item with query_text,
-                  query_id, image_id, relevance_label, image, and metadata.
-        Returns:
-            Dictionary with 'properties' and 'vector' keys for Weaviate insertion
+        Returns a Weaviate insertion dict: {"properties": ..., "vector": ...}
+        or None if processing fails.
         """
         try:
             if not isinstance(item, dict):
                 raise TypeError(f"Expected dict, got {type(item)}")
-
             if not isinstance(item.get("image"), Image.Image):
-                raise TypeError(f"Expected PIL.Image, got {type(item.get('image'))}")
+                raise TypeError(
+                    f"Expected PIL.Image, got {type(item.get('image'))}"
+                )
 
             image = item["image"]
             image_id = item.get("image_id", "")
-
-            logging.debug(f"Processing item: {image_id}")
-
             query_text = item.get("query_text", "")
             query_id = item.get("query_id", "")
             relevance_label = item.get("relevance_label", 0)
+
+            # Handle potential numpy scalars from dataset backends.
             if hasattr(relevance_label, "item"):
                 relevance_label = int(relevance_label.item())
             relevance_label = int(relevance_label)
@@ -44,35 +42,54 @@ class CommonObjectsBenchDataLoader(DataLoader):
             license_ = item.get("license", "")
             doi = item.get("doi", "")
             summary = item.get("summary", "")
+
+            # Taxonomy / taxonomy-like fields
             viewpoint = item.get("viewpoint", "")
             lighting = item.get("lighting", "")
             environment_type = item.get("environment_type", "")
+            sky_condition = item.get("sky_condition", "")
 
-            urban_scene = bool(item.get("urban_scene", False))
-            rural_scene = bool(item.get("rural_scene", False))
-            outdoor_scene = bool(item.get("outdoor_scene", False))
+            # Scene flags
+            horizon_present = bool(item.get("horizon_present", False))
+            ground_present = bool(item.get("ground_present", False))
+            sky_dominates = bool(item.get("sky_dominates", False))
+            vegetation_present = bool(item.get("vegetation_present", False))
+            water_present = bool(item.get("water_present", False))
+            buildings_present = bool(item.get("buildings_present", False))
             vehicle_present = bool(item.get("vehicle_present", False))
             person_present = bool(item.get("person_present", False))
             animal_present = bool(item.get("animal_present", False))
-            food_present = bool(item.get("food_present", False))
-            text_visible = bool(item.get("text_visible", False))
+            night_scene = bool(item.get("night_scene", False))
+            precipitation_visible = bool(item.get("precipitation_visible", False))
             multiple_objects = bool(item.get("multiple_objects", False))
-            artificial_lighting = bool(item.get("artificial_lighting", False))
-            occlusion_present = bool(item.get("occlusion_present", False))
+
+            # Metadata
+            vsn = item.get("vsn", "")
+            zone = item.get("zone", "")
+            host = item.get("host", "")
+            job = item.get("job", "")
+            plugin = item.get("plugin", "")
+            camera = item.get("camera", "")
+            project = item.get("project", "")
+            address = item.get("address", "")
 
             tags = item.get("tags", [])
             tags_str = json.dumps(tags) if isinstance(tags, list) else str(tags)
             confidence = item.get("confidence", {})
             confidence_str = (
-                json.dumps(confidence) if isinstance(confidence, dict) else str(confidence)
+                json.dumps(confidence)
+                if isinstance(confidence, dict)
+                else str(confidence)
             )
 
+            # Encode image for Weaviate BLOB ingestion.
             image_stream = BytesIO()
             image.save(image_stream, format="JPEG")
             image_stream.seek(0)
             buffered_stream = BufferedReader(image_stream)
             encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
 
+            # Caption generation drives CLIP embedding + reranking property.
             caption = self.model_provider.generate_caption(
                 image,
                 self.config.gemma3_prompt,
@@ -102,17 +119,27 @@ class CommonObjectsBenchDataLoader(DataLoader):
                 "viewpoint": viewpoint,
                 "lighting": lighting,
                 "environment_type": environment_type,
-                "urban_scene": urban_scene,
-                "rural_scene": rural_scene,
-                "outdoor_scene": outdoor_scene,
+                "sky_condition": sky_condition,
+                "horizon_present": horizon_present,
+                "ground_present": ground_present,
+                "sky_dominates": sky_dominates,
+                "vegetation_present": vegetation_present,
+                "water_present": water_present,
+                "buildings_present": buildings_present,
                 "vehicle_present": vehicle_present,
                 "person_present": person_present,
                 "animal_present": animal_present,
-                "food_present": food_present,
-                "text_visible": text_visible,
+                "night_scene": night_scene,
+                "precipitation_visible": precipitation_visible,
                 "multiple_objects": multiple_objects,
-                "artificial_lighting": artificial_lighting,
-                "occlusion_present": occlusion_present,
+                "vsn": vsn,
+                "zone": zone,
+                "host": host,
+                "job": job,
+                "plugin": plugin,
+                "camera": camera,
+                "project": project,
+                "address": address,
                 "tags": tags_str,
                 "confidence": confidence_str,
             }
@@ -121,27 +148,22 @@ class CommonObjectsBenchDataLoader(DataLoader):
                 "properties": properties,
                 "vector": {"clip": clip_embedding},
             }
-
         except Exception as e:
             logging.error(
-                f"Error processing item {item.get('image_id', 'unknown')}: {e}"
+                f"Error processing Sagebench item {item.get('image_id', 'unknown')}: {e}"
             )
             return None
 
     def get_schema_config(self) -> dict:
-        """
-        Get Weaviate schema configuration for CommonObjectsBench collection.
-
-        Returns:
-            Dictionary containing schema configuration
-        """
+        """Get Weaviate schema configuration for the Sagebench collection."""
         from weaviate.classes.config import Configure, Property, DataType
 
-        TARGET_VECTOR = os.environ.get("TARGET_VECTOR", "clip")
-        COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "CommonObjectsBench")
+        target_vector = os.environ.get("TARGET_VECTOR", "clip")
+        collection_name = os.environ.get("COLLECTION_NAME", "Sagebench")
+
         return {
-            "name": COLLECTION_NAME,
-            "description": "CommonObjectsBench: general object image retrieval (sagecontinuum/CommonObjectsBench)",
+            "name": collection_name,
+            "description": "Sagebench: metadata-aware image retrieval on sagecontinuum/SageBench",
             "properties": [
                 Property(name="image_id", data_type=DataType.TEXT),
                 Property(name="query_text", data_type=DataType.TEXT),
@@ -156,23 +178,33 @@ class CommonObjectsBenchDataLoader(DataLoader):
                 Property(name="viewpoint", data_type=DataType.TEXT),
                 Property(name="lighting", data_type=DataType.TEXT),
                 Property(name="environment_type", data_type=DataType.TEXT),
-                Property(name="urban_scene", data_type=DataType.BOOL),
-                Property(name="rural_scene", data_type=DataType.BOOL),
-                Property(name="outdoor_scene", data_type=DataType.BOOL),
+                Property(name="sky_condition", data_type=DataType.TEXT),
+                Property(name="horizon_present", data_type=DataType.BOOL),
+                Property(name="ground_present", data_type=DataType.BOOL),
+                Property(name="sky_dominates", data_type=DataType.BOOL),
+                Property(name="vegetation_present", data_type=DataType.BOOL),
+                Property(name="water_present", data_type=DataType.BOOL),
+                Property(name="buildings_present", data_type=DataType.BOOL),
                 Property(name="vehicle_present", data_type=DataType.BOOL),
                 Property(name="person_present", data_type=DataType.BOOL),
                 Property(name="animal_present", data_type=DataType.BOOL),
-                Property(name="food_present", data_type=DataType.BOOL),
-                Property(name="text_visible", data_type=DataType.BOOL),
+                Property(name="night_scene", data_type=DataType.BOOL),
+                Property(name="precipitation_visible", data_type=DataType.BOOL),
                 Property(name="multiple_objects", data_type=DataType.BOOL),
-                Property(name="artificial_lighting", data_type=DataType.BOOL),
-                Property(name="occlusion_present", data_type=DataType.BOOL),
+                Property(name="vsn", data_type=DataType.TEXT),
+                Property(name="zone", data_type=DataType.TEXT),
+                Property(name="host", data_type=DataType.TEXT),
+                Property(name="job", data_type=DataType.TEXT),
+                Property(name="plugin", data_type=DataType.TEXT),
+                Property(name="camera", data_type=DataType.TEXT),
+                Property(name="project", data_type=DataType.TEXT),
+                Property(name="address", data_type=DataType.TEXT),
                 Property(name="tags", data_type=DataType.TEXT),
                 Property(name="confidence", data_type=DataType.TEXT),
             ],
             "vectorizer_config": [
                 Configure.NamedVectors.none(
-                    name=TARGET_VECTOR,
+                    name=target_vector,
                     vector_index_config=Configure.VectorIndex.hnsw(
                         distance_metric=self.config.hnsw_dist_metric,
                         dynamic_ef_factor=self.config.hnsw_ef_factor,
@@ -192,3 +224,4 @@ class CommonObjectsBenchDataLoader(DataLoader):
             ],
             "reranker_config": Configure.Reranker.transformers(),
         }
+

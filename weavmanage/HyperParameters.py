@@ -19,7 +19,7 @@ audioWeight = 0 # Currently not being used
 videoWeight = 0 # Currently not being used
 
 # 2) Hierarchical Navigable Small World (hnsw) for Approximate Nearest Neighbor (ANN) hyperparamaters
-# used hsnw since it works well with bigger datasets
+# HNSW works well with bigger datasets
 # more info: https://weaviate.io/developers/weaviate/config-refs/schema/vector-index#hnsw-indexes
 # configuration tips: https://weaviate.io/developers/weaviate/config-refs/schema/vector-index#hnsw-configuration-tips
 # helpful article: https://gagan-mehta.medium.com/efficient-resource-understanding-and-planning-in-weaviate-ec673f065e86
@@ -27,10 +27,10 @@ hnsw_dist_metric=VectorDistances.COSINE
 hnsw_ef=-1 #Balance search speed and recall, Weaviate automatically adjusts the ef value and creates a dynamic ef list when ef is set to -1
 hnsw_ef_construction=100 #Balance index search speed and build speed. Changed from 128 to 100
 hnsw_maxConnections=42 #Maximum number of connections per element. Changed from 50 to 42
-hsnw_dynamicEfMax=500 #Upper bound for dynamic ef
-hsnw_dynamicEfMin=200 #Lower bound for dynamic ef. Changed from 100 to 200
+hnsw_dynamicEfMax=500 #Upper bound for dynamic ef
+hnsw_dynamicEfMin=200 #Lower bound for dynamic ef. Changed from 100 to 200
 hnsw_ef_factor=20 #This setting is only used when hnsw_ef is -1, Sets the potential length of the search list. Changed from 8 to 20
-hsnw_filterStrategy=VectorFilterStrategy.ACORN #The filter strategy to use for filtering the search results.
+hnsw_filterStrategy=VectorFilterStrategy.ACORN #The filter strategy to use for filtering the search results.
 hnsw_flatSearchCutoff=40000 #cutoff to automatically switch to a flat (brute-force) vector search when a filter becomes too restrictive
 hnsw_vector_cache_max_objects=1e12 #Maximum number of objects in the memory cache
 # Auto Product Quantization (PQ)

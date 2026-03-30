@@ -1,24 +1,24 @@
-"""CommonObjectsBench-specific configuration/hyperparameters."""
+"""Sagebench benchmark configuration/hyperparameters."""
 
 import os
+
 from weaviate.classes.config import VectorDistances, Configure
-from weaviate.collections.classes.config_vector_index import VectorFilterStrategy
+from weaviate.collections.classes.config_vector_index import (
+    VectorFilterStrategy,
+)
 
 from imsearch_eval.framework.interfaces import Config
 
 
-class CommonObjectsBenchConfig(Config):
-    """Configuration for CommonObjectsBench (general object image retrieval)."""
+class SagebenchConfig(Config):
+    """Configuration for Sagebench (Sage Image Retrieval with metadata-aware queries)."""
 
-    DATASET_PUBLIC = "sagecontinuum/CommonObjectsBench"
-    DATASET_PRIVATE = "sagecontinuum/CommonObjectsBench-private"
+    DATASET_DEFAULT = "sagecontinuum/SageBench"
 
     def __init__(self):
-        """Initialize CommonObjectsBench configuration."""
-        # dataset parameters: COMMONOBJECTSBENCH_USE_PRIVATE selects public vs private repo
-        use_private = os.environ.get("COMMONOBJECTSBENCH_USE_PRIVATE", "false").lower() == "true"
-        self.commonobjectsbench_dataset = (
-            self.DATASET_PRIVATE if use_private else self.DATASET_PUBLIC
+        # Dataset parameters
+        self.sagebench_dataset = os.environ.get(
+            "SAGEBENCH_DATASET", self.DATASET_DEFAULT
         )
         self.sample_size = int(os.environ.get("SAMPLE_SIZE", 0))
         self.seed = int(os.environ.get("SEED", 42))
@@ -27,13 +27,14 @@ class CommonObjectsBenchConfig(Config):
         # Upload parameters
         self._upload_to_s3 = os.environ.get("UPLOAD_TO_S3", "false").lower() == "true"
         self._s3_bucket = os.environ.get("S3_BUCKET", "sage_imsearch")
-        self._s3_prefix = os.environ.get("S3_PREFIX", "dev-metrics/commonobjectsbench")
+        self._s3_prefix = os.environ.get("S3_PREFIX", "dev-metrics/sagebench")
         self._s3_endpoint = os.environ.get(
             "S3_ENDPOINT", "http://rook-ceph-rgw-nautiluss3.rook"
         )
         self._s3_access_key = os.environ.get("S3_ACCESS_KEY", "")
         self._s3_secret_key = os.environ.get("S3_SECRET_KEY", "")
         self._s3_secure = os.environ.get("S3_SECURE", "false").lower() == "true"
+
         self._image_results_file = os.environ.get(
             "IMAGE_RESULTS_FILE", "image_search_results.csv"
         )
@@ -48,15 +49,17 @@ class CommonObjectsBenchConfig(Config):
         self._weaviate_host = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
         self._weaviate_port = os.environ.get("WEAVIATE_PORT", "8080")
         self._weaviate_grpc_port = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
-        self._collection_name = os.environ.get("COLLECTION_NAME", "CommonObjectsBench")
+        self._collection_name = os.environ.get("COLLECTION_NAME", "Sagebench")
 
         # model provider parameters
         self.llm_model_provider = os.environ.get(
             "LLM_MODEL_PROVIDER", "triton"
         ).lower()
         self.caption_model_name = os.environ.get("CAPTION_MODEL_NAME", "gemma3")
-        self.nrp_enable_thinking = os.environ.get("NRP_ENABLE_THINKING", "true").lower() in ("1", "true", "yes")
-        
+        self.nrp_enable_thinking = (
+            os.environ.get("NRP_ENABLE_THINKING", "true").lower() in ("1", "true", "yes")
+        )
+
         # Triton parameters
         self._triton_host = os.environ.get("TRITON_HOST", "triton")
         self._triton_port = os.environ.get("TRITON_PORT", "8001")
@@ -71,7 +74,8 @@ class CommonObjectsBenchConfig(Config):
 
         # Weaviate HNSW hyperparameters
         self.hnsw_dist_metric = getattr(
-            VectorDistances, os.environ.get("HNSW_DIST_METRIC", "COSINE").upper()
+            VectorDistances,
+            os.environ.get("HNSW_DIST_METRIC", "COSINE").upper(),
         )
         self.hnsw_ef = int(os.environ.get("HNSW_EF", -1))
         self.hnsw_ef_construction = int(os.environ.get("HNSW_EF_CONSTRUCTION", 100))
@@ -83,16 +87,13 @@ class CommonObjectsBenchConfig(Config):
             VectorFilterStrategy,
             os.environ.get("HNSW_FILTER_STRATEGY", "ACORN").upper(),
         )
-        self.hnsw_flatSearchCutoff = int(
-            os.environ.get("HNSW_FLAT_SEARCH_CUTOFF", 40000)
-        )
+        self.hnsw_flatSearchCutoff = int(os.environ.get("HNSW_FLAT_SEARCH_CUTOFF", 40000))
         self.hnsw_vector_cache_max_objects = int(
             os.environ.get("HNSW_VECTOR_CACHE_MAX_OBJECTS", 1e12)
         )
+
         self.hnsw_quantizer = Configure.VectorIndex.Quantizer.pq(
-            training_limit=int(
-                os.environ.get("HNSW_QUANTIZER_TRAINING_LIMIT", 500000)
-            )
+            training_limit=int(os.environ.get("HNSW_QUANTIZER_TRAINING_LIMIT", 500000))
         )
 
         # Query parameters
@@ -101,13 +102,14 @@ class CommonObjectsBenchConfig(Config):
         self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 25))
         self.advanced_query_parameters = {
             "alpha": float(os.environ.get("QUERY_ALPHA", 0.4)),
-            "query_properties": ["caption"],
+            # add the Sage metadata as keyword search properties like in production
+            "query_properties": ["caption", "camera", "host", "job", "vsn", "plugin", "zone", "project", "address"],
             "autocut_jumps": int(os.environ.get("AUTOCUT_JUMPS", 0)),
             "rerank_prop": os.environ.get("RERANK_PROP", "caption"),
             "clip_alpha": float(os.environ.get("CLIP_ALPHA", 0.7)),
         }
 
-        # Caption prompt for general objects/scenes
+        # Caption prompt for general scenes/images
         default_prompt = """
 role:
 You are a world-class Scientific Image Captioning Expert.
@@ -136,3 +138,4 @@ format:
         """Check if NRP API key is set."""
         if os.environ.get("NRP_API_KEY", "") == "":
             raise ValueError("NRP_API_KEY is not set")
+
