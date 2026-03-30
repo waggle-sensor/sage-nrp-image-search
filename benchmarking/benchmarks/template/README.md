@@ -274,6 +274,10 @@ The benchmark generates three CSV files:
 
 Results are saved to `/app/results` if the directory exists (when running in Kubernetes with volume mount), otherwise to the current directory.
 
+### Leaderboard
+
+The template benchmark leaderboard is added in `benchmarks/template/results/leaderboard.ipynb`. Check out the notebook for more details and to see how to add a leaderboard to your benchmark.
+
 ## S3 Upload Configuration
 
 Results can be automatically uploaded to S3-compatible storage (MinIO). Configuration is done via:

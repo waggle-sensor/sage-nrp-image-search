@@ -5,6 +5,43 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 import pandas as pd
+import re
+
+# Cross-version leaderboard helpers
+LEADERBOARD_METRIC_COLUMNS = {
+    "MRR": "rerank_score_reciprocal_rank",
+    "Success@25": "hit",
+    "Precision@25": "precision",
+    "NDCG@25": "rerank_score_NDCG",
+    "Recall@25": "recall",
+    "Diversity@25": "diversity",
+}
+
+PRIMARY_METRICS = ["MRR", "Success@25"]
+PRIMARY_PLUS_DIVERSITY_METRICS = PRIMARY_METRICS + ["Diversity@25"]
+
+DEFAULT_PRIMARY_WEIGHTS = {metric: 1 / len(PRIMARY_METRICS) for metric in PRIMARY_METRICS}
+DEFAULT_PRIMARY_PLUS_DIVERSITY_WEIGHTS = {
+    metric: 1 / len(PRIMARY_PLUS_DIVERSITY_METRICS) for metric in PRIMARY_PLUS_DIVERSITY_METRICS
+}
+
+def discover_benchmark_names(base_path: Path) -> list[str]:
+    """
+    Discover benchmark directories under benchmarking/benchmarks.
+    Excludes helper/template/overall folders.
+    """
+    base_path = Path(base_path)
+    excluded = {"template", "overall", "__pycache__", "helpers"}
+    benchmarks = []
+    for p in base_path.iterdir():
+        if not p.is_dir():
+            continue
+        if p.name in excluded:
+            continue
+        if p.name.startswith("."):
+            continue
+        benchmarks.append(p.name)
+    return sorted(benchmarks)
 
 def plot_grouped_bar_by_columns(
     df, 
@@ -227,17 +264,19 @@ def plot_multi_rank_comparison(
 def plot_overall_hitrate(
     system_version: str,
     base_path: Path,
-    benchmarks: list[str] = ["INQUIRE", "Firebench", "Commonobjectsbench", "Cloudbench"],
+    benchmarks: list[str] | None = None,
     response_limit:int=25
 ):
     """
     Plot overall hit rate as a single bar chart.
     :param system_version: version of the system
     :param base_path: base path to the benchmarks directory
-    :param benchmarks: list of benchmarks to plot
+    :param benchmarks: list of benchmarks to plot, if None, all benchmarks will be plotted.
     :param response_limit: number of images returned by the benchmark results for each query. Default is 25.
     """
     k=response_limit
+    if benchmarks is None:
+        benchmarks = discover_benchmark_names(base_path)
     # Get the paths for the benchmarks
     bench_paths = []
     for benchmark in benchmarks:
@@ -273,14 +312,16 @@ def plot_overall_hitrate(
 def plot_overall_ndcg(
     system_version: str,
     base_path: Path,
-    benchmarks: list[str] = ["INQUIRE", "Firebench", "Commonobjectsbench", "Cloudbench"],
+    benchmarks: list[str] | None = None,
 ):
     """
     Plot overall NDCG (rerank_score_NDCG) as a single bar chart for each benchmark.
     :param system_version: version of the system (e.g. "v10")
     :param base_path: base path to the benchmarks directory
-    :param benchmarks: list of benchmark names to plot
+    :param benchmarks: list of benchmark names to plot, if None, all benchmarks will be plotted.
     """
+    if benchmarks is None:
+        benchmarks = discover_benchmark_names(base_path)
     bench_paths = [
         (b, base_path / f"{b}/results/{system_version}/query_eval_metrics.csv")
         for b in benchmarks
@@ -317,14 +358,16 @@ def plot_overall_ndcg(
 def plot_overall_diversity(
     system_version: str,
     base_path: Path,
-    benchmarks: list[str] = ["INQUIRE", "Firebench", "Commonobjectsbench", "Cloudbench"],
+    benchmarks: list[str] | None = None,
 ):
     """
     Plot overall diversity as a single bar chart for each benchmark.
     :param system_version: version of the system (e.g. "v10")
     :param base_path: base path to the benchmarks directory
-    :param benchmarks: list of benchmark names to plot
+    :param benchmarks: list of benchmark names to plot, if None, all benchmarks will be plotted.
     """
+    if benchmarks is None:
+        benchmarks = discover_benchmark_names(base_path)
     # Get the paths for the benchmarks
     bench_paths = []
     for benchmark in benchmarks:
@@ -359,14 +402,16 @@ def plot_overall_diversity(
 def plot_overall_mrr(
     system_version: str,
     base_path: Path,
-    benchmarks: list[str] = ["INQUIRE", "Firebench", "Commonobjectsbench", "Cloudbench"],
+    benchmarks: list[str] | None = None,
 ):
     """
     Plot overall MRR as a single bar chart for each benchmark.
     :param system_version: version of the system (e.g. "v10")
     :param base_path: base path to the benchmarks directory
-    :param benchmarks: list of benchmark names to plot
+    :param benchmarks: list of benchmark names to plot, if None, all benchmarks will be plotted.
     """
+    if benchmarks is None:
+        benchmarks = discover_benchmark_names(base_path)
     bench_paths = [
         (b, base_path / f"{b}/results/{system_version}/query_eval_metrics.csv")
         for b in benchmarks
@@ -399,3 +444,258 @@ def plot_overall_mrr(
     ax.bar_label(bars, fmt=lambda v: f"{v:.2f}", padding=8, fontsize=11)
     plt.tight_layout()
     plt.show()
+
+def _version_key(version: str):
+    match = re.fullmatch(r"v(\d+)", str(version))
+    return int(match.group(1)) if match else float("inf")
+
+
+def normalize_weights(weight_map: dict[str, float], expected_keys: list[str]) -> dict[str, float]:
+    """
+    Normalize a set of weights so they sum to 1. Missing keys default to 0.
+    """
+    values = {k: float(weight_map.get(k, 0.0)) for k in expected_keys}
+    total = sum(values.values())
+    if total <= 0:
+        raise ValueError("Weight sum must be > 0")
+    return {k: v / total for k, v in values.items()}
+
+
+def discover_benchmark_versions(
+    base_path: Path,
+    benchmarks: list[str] | None = None,
+    min_version: int = 10,
+) -> dict[str, list[str]]:
+    """
+    Discover benchmark versions with query_eval_metrics.csv from v{min_version}+.
+    Returns mapping benchmark -> sorted versions.
+    """
+    base_path = Path(base_path)
+    if benchmarks is None:
+        benchmarks = [b for b in discover_benchmark_names(base_path) if (base_path / b / "results").exists()]
+
+    out = {}
+    for benchmark in benchmarks:
+        result_dir = base_path / benchmark / "results"
+        if not result_dir.exists():
+            out[benchmark] = []
+            continue
+        versions = []
+        for version_dir in result_dir.iterdir():
+            if not version_dir.is_dir():
+                continue
+            match = re.fullmatch(r"v(\d+)", version_dir.name)
+            if not match:
+                continue
+            if int(match.group(1)) < min_version:
+                continue
+            if (version_dir / "query_eval_metrics.csv").exists():
+                versions.append(version_dir.name)
+        out[benchmark] = sorted(versions, key=_version_key)
+    return out
+
+
+def load_cross_version_metrics(
+    base_path: Path,
+    benchmarks: list[str] | None = None,
+    min_version: int = 10,
+    verbose: bool = False,
+) -> pd.DataFrame:
+    """
+    Load and aggregate query metrics for benchmark/version combinations.
+    Aggregation is the mean across queries for each metric.
+    """
+    discovered = discover_benchmark_versions(base_path, benchmarks=benchmarks, min_version=min_version)
+    rows = []
+
+    for benchmark, versions in discovered.items():
+        for version in versions:
+            csv_path = Path(base_path) / benchmark / "results" / version / "query_eval_metrics.csv"
+            if not csv_path.exists():
+                if verbose:
+                    print(f"Skip {benchmark} {version}: query_eval_metrics.csv not found")
+                continue
+            df = pd.read_csv(csv_path)
+            row = {
+                "benchmark": benchmark,
+                "system_version": version,
+                "query_count": len(df),
+            }
+            missing_cols = []
+            for display_metric, col in LEADERBOARD_METRIC_COLUMNS.items():
+                if col in df.columns:
+                    row[display_metric] = float(df[col].mean())
+                else:
+                    row[display_metric] = np.nan
+                    missing_cols.append(col)
+            if missing_cols and verbose:
+                print(f"Warning {benchmark} {version}: missing columns {missing_cols}")
+            rows.append(row)
+
+    if not rows:
+        return pd.DataFrame(columns=["benchmark", "system_version", "query_count"] + list(LEADERBOARD_METRIC_COLUMNS.keys()))
+
+    out = pd.DataFrame(rows)
+    return out.sort_values(["benchmark", "system_version"], key=lambda s: s.map(_version_key) if s.name == "system_version" else s).reset_index(drop=True)
+
+
+def _get_metric_set_and_default_weights(mode: str):
+    mode = mode.lower()
+    if mode == "primary":
+        return PRIMARY_METRICS, DEFAULT_PRIMARY_WEIGHTS
+    if mode in {"primary_plus_diversity", "primary+diversity"}:
+        return PRIMARY_PLUS_DIVERSITY_METRICS, DEFAULT_PRIMARY_PLUS_DIVERSITY_WEIGHTS
+    raise ValueError("mode must be 'primary' or 'primary_plus_diversity'")
+
+
+def add_composite_score(
+    df: pd.DataFrame,
+    mode: str = "primary",
+    metric_weights: dict[str, float] | None = None,
+    score_column: str = "composite_score",
+) -> pd.DataFrame:
+    """
+    Add a weighted composite score column to a leaderboard dataframe.
+    """
+    metrics, defaults = _get_metric_set_and_default_weights(mode)
+    metric_weights = defaults if metric_weights is None else normalize_weights(metric_weights, metrics)
+    out = df.copy()
+    out[score_column] = 0.0
+    for metric in metrics:
+        out[score_column] = out[score_column] + (out[metric].fillna(0.0) * metric_weights[metric])
+    return out
+
+
+def build_benchmark_version_leaderboard(
+    base_path: Path,
+    benchmarks: list[str] | None = None,
+    min_version: int = 10,
+    mode: str = "primary",
+    metric_weights: dict[str, float] | None = None,
+) -> pd.DataFrame:
+    """
+    Build a per-benchmark leaderboard ranking system versions.
+    """
+    df = load_cross_version_metrics(base_path, benchmarks=benchmarks, min_version=min_version)
+    if df.empty:
+        return df
+    out = add_composite_score(df, mode=mode, metric_weights=metric_weights)
+    out = out.sort_values(["benchmark", "composite_score", "system_version"], ascending=[True, False, True]).reset_index(drop=True)
+    out["rank_within_benchmark"] = out.groupby("benchmark")["composite_score"].rank(method="dense", ascending=False).astype(int)
+    return out
+
+
+def build_overall_version_leaderboard(
+    base_path: Path,
+    benchmarks: list[str] | None = None,
+    min_version: int = 10,
+    mode: str = "primary",
+    metric_weights: dict[str, float] | None = None,
+    benchmark_weights: dict[str, float] | None = None,
+) -> pd.DataFrame:
+    """
+    Build a version-level leaderboard aggregated across benchmarks.
+    benchmark_weights default to equal benchmark weighting.
+    """
+    per_benchmark = build_benchmark_version_leaderboard(
+        base_path=base_path,
+        benchmarks=benchmarks,
+        min_version=min_version,
+        mode=mode,
+        metric_weights=metric_weights,
+    )
+    if per_benchmark.empty:
+        return per_benchmark
+
+    benchmark_names = sorted(per_benchmark["benchmark"].unique())
+    if benchmark_weights is None:
+        benchmark_weights = {b: 1.0 for b in benchmark_names}
+    normalized_benchmark_weights = normalize_weights(benchmark_weights, benchmark_names)
+
+    weighted = per_benchmark.copy()
+    weighted["benchmark_weight"] = weighted["benchmark"].map(normalized_benchmark_weights).fillna(0.0)
+
+    # Re-normalize per version to avoid penalizing versions missing some benchmark runs.
+    weight_sum_by_version = weighted.groupby("system_version")["benchmark_weight"].transform("sum")
+    weighted["effective_weight"] = np.where(weight_sum_by_version > 0, weighted["benchmark_weight"] / weight_sum_by_version, 0.0)
+
+    metrics, _ = _get_metric_set_and_default_weights(mode)
+    agg_rows = []
+    for version, part in weighted.groupby("system_version"):
+        row = {"system_version": version}
+        row["benchmark_count"] = int(part["benchmark"].nunique())
+        for metric in metrics:
+            row[metric] = float((part[metric].fillna(0.0) * part["effective_weight"]).sum())
+        row["composite_score"] = float((part["composite_score"] * part["effective_weight"]).sum())
+        agg_rows.append(row)
+
+    out = pd.DataFrame(agg_rows).sort_values(["composite_score", "system_version"], ascending=[False, True]).reset_index(drop=True)
+    out["rank_overall"] = np.arange(1, len(out) + 1)
+    return out
+
+
+def plot_leaderboard_scores(
+    leaderboard_df: pd.DataFrame,
+    label_column: str,
+    score_column: str = "composite_score",
+    title: str = "Leaderboard",
+    figsize=(10, 5),
+):
+    """
+    Plot leaderboard scores as a descending bar chart.
+    """
+    if leaderboard_df.empty:
+        print("No leaderboard data found.")
+        return
+    df = leaderboard_df.sort_values(score_column, ascending=False)
+    fig, ax = plt.subplots(figsize=figsize)
+    bars = ax.bar(df[label_column].astype(str), df[score_column], alpha=0.85, edgecolor="white", linewidth=1.2)
+    ax.set_ylabel("Composite Score")
+    ax.set_title(title)
+    ax.set_ylim(0, 1.05)
+    ax.bar_label(bars, fmt=lambda v: f"{v:.3f}", padding=6, fontsize=10)
+    plt.xticks(rotation=45, ha="right")
+    plt.tight_layout()
+    plt.show()
+
+
+def render_single_benchmark_leaderboard(
+    base_path: Path,
+    benchmark: str,
+    min_version: int = 10,
+    mode: str = "primary",
+    metric_weights: dict[str, float] | None = None,
+    display_fn=None,
+) -> pd.DataFrame:
+    """
+    Build, render table, and plot leaderboard for one benchmark.
+    Returns the benchmark-only leaderboard dataframe.
+    """
+    leaderboard_df = build_benchmark_version_leaderboard(
+        base_path=base_path,
+        benchmarks=[benchmark],
+        min_version=min_version,
+        mode=mode,
+        metric_weights=metric_weights,
+    )
+
+    part = leaderboard_df[leaderboard_df["benchmark"] == benchmark].copy()
+    if part.empty:
+        print(f"Skip {benchmark}: no v{min_version}+ results")
+        return part
+
+    mode_label = "Primary + Diversity" if mode in {"primary_plus_diversity", "primary+diversity"} else "Primary"
+    print(f"\n{benchmark} ({mode_label}):")
+
+    if display_fn is not None:
+        display_fn(part)
+    else:
+        print(part.to_string(index=False))
+
+    part["label"] = part["benchmark"] + "-" + part["system_version"]
+    plot_leaderboard_scores(
+        part,
+        label_column="label",
+        title=f"{benchmark} {mode_label} Leaderboard",
+    )
+    return part
