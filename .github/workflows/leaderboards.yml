@@ -46,7 +46,7 @@ jobs:
       - name: Execute benchmark leaderboard notebooks
         run: |
           for nb in benchmarking/benchmarks/*/results/leaderboard.ipynb; do
-            if [ -f "$nb" ]; then
+            if [ -f "$nb" ] && [[ "$nb" != benchmarking/benchmarks/template/* ]]; then
               jupyter nbconvert --to notebook --execute --inplace "$nb"
             fi
           done
@@ -62,7 +62,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           for f in benchmarking/benchmarks/*/results/leaderboard.ipynb; do
-            if [ -f "$f" ]; then
+            if [ -f "$f" ] && [[ "$f" != benchmarking/benchmarks/template/* ]]; then
               git add -- "$f"
             fi
           done
