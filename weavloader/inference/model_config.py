@@ -1,5 +1,9 @@
+import os
 '''This file contains the hyper parameters that can be changed to fine tune
 the system. '''
+nrp_enable_thinking = (
+    os.environ.get("NRP_ENABLE_THINKING", "true").lower() in ("1", "true", "yes")
+)
 align_alpha = 0.7
 clip_alpha = 0.7
 qwen2_5_prompt="""

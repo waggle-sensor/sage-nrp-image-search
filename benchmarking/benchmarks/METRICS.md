@@ -1,6 +1,8 @@
-## Summary: Evaluation Metrics for Sage Image Search (Binary Labels, Top-25 Retrieval)
+# Evaluation Metrics for Sage Image Search
 
-### 1️⃣ Keep K Fixed
+This document outlines the evaluation metrics for the Sage Image Search system.
+
+## 1️⃣ Keep K Fixed
 
 * Always evaluate at **K = response_limit**, since the system returns the top `response_limit` results.
 >NOTE: at this moment, the response limit is 25. This may change in the future. - 03/01/2026
@@ -12,7 +14,7 @@
 
 ---
 
-### 2️⃣ Problem Context
+## 2️⃣ Problem Context
 
 * Labels are **binary (relevant / non-relevant)**.
 * The **average number of relevant items per query varies across benchmarks** (fire, urban, atmospheric, biology).
@@ -21,11 +23,11 @@
 
 ---
 
-### 3️⃣ Recommended Metric Strategy
+## 3️⃣ Recommended Metric Strategy
 
 Use a combination of ranking-sensitive and top-K metrics:
 
-### Primary Decision Metrics
+## Primary Decision Metrics
 
 * **MRR (Mean Reciprocal Rank)**
 
@@ -43,7 +45,7 @@ Use a combination of ranking-sensitive and top-K metrics:
 
 ---
 
-### Supporting Metrics
+## Supporting Metrics
 
 * **Precision@25**
 
@@ -68,7 +70,7 @@ Use a combination of ranking-sensitive and top-K metrics:
 
 ---
 
-### 4️⃣ Interpretation Guidance
+## 4️⃣ Interpretation Guidance
 
 * Precision reflects first-page quality.
 * MRR reflects early ranking strength.
@@ -82,9 +84,23 @@ Use a combination of ranking-sensitive and top-K metrics:
 
 Cross-benchmark comparisons require awareness of differing relevant densities.
 
+### Metric Differences to Detect
+
+As a reference, here is a rough estimation of the number of evaluation samples needed to be 95% confident that one system is better. Values from OpenAI. A useful rule is that for every 3x decrease in score difference, the number of samples needed increases by 10x (This is because the square root of 10 is 3.162).
+
+| Difference to detect | Sample size needed for 95% confidence |
+| -------------------- | -------------------------------------- |
+| 30%                 | ~10                                |
+| 10%                 | ~100                                |
+| 3%                 | ~1,000                                 |
+| 1%                 | ~10,000                               |
+
+Among evaluation benchmarks in Eleuther's [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness), the median number of examples is 1,000, and the average is 2,159. The organizers of the [Inverse Scaling prize](https://irmckenzie.co.uk/round1) suggested that 300 examples is the absolute mininum and they would prefer at least 1,000, especially if the examples are being synthesized - [Inverse Scaling: When Bigger Isn't Better](https://arxiv.org/abs/2306.09479).
+>NOTE: These notes were retrieved from the book[AI Engineering by Chip Huyen](https://github.com/chiphuyen/aie-book) which mentions that the values from the table were retrieved from OpenAI. I was unable to find the original source for these values.
+
 ---
 
-### 5️⃣ Standard Reporting Recommendation
+## 5️⃣ Standard Reporting Recommendation
 
 For each benchmark, report:
 

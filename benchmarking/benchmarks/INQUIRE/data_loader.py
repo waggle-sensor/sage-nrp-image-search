@@ -72,7 +72,12 @@ class INQUIREDataLoader(DataLoader):
             encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
             
             # Generate caption using model provider
-            caption = self.model_provider.generate_caption(image, self.config.gemma3_prompt, model_name="gemma3")
+            caption = self.model_provider.generate_caption(
+                image,
+                self.config.gemma3_prompt,
+                model_name=self.config.caption_model_name,
+                enable_thinking=self.config.nrp_enable_thinking,
+            )
             
             if not caption:
                 caption = ""  # Fallback if caption generation fails

@@ -69,7 +69,10 @@ class FireBenchDataLoader(DataLoader):
 
             # Generate caption using model provider
             caption = self.model_provider.generate_caption(
-                image, self.config.gemma3_prompt, model_name="gemma3"
+                image,
+                self.config.gemma3_prompt,
+                model_name=self.config.caption_model_name,
+                enable_thinking=self.config.nrp_enable_thinking,
             )
             if not caption:
                 caption = summary or ""  # Fallback to dataset summary

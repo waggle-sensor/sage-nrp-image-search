@@ -323,16 +323,22 @@ def gemma3_run_model(triton_client, image, task_prompt=hp.gemma3_prompt):
 
 def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
     """
-    Runs model via NRP Envoy AI Gateway
+    Runs model via NRP Envoy AI Gateway.
+
+    When ``model_config.nrp_enable_thinking`` is false (default is true), passes
+    ``extra_body["chat_template_kwargs"]["enable_thinking"]=False`` for lower
+    latency. Override with env ``NRP_ENABLE_THINKING=true``.
     """
     NRP_MODELS={
                 "qwen3",
+                "qwen3-small",
                 "gpt-oss",
                 "kimi",
                 "glm-4.7",
                 "minimax-m2",
                 "glm-v",
                 "gemma3",
+                "olmo"
             }
     if model not in NRP_MODELS:
         raise ValueError(f"Unsupported NRP LLM Model: {model}")
@@ -342,9 +348,9 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
     image_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
+        create_kwargs = {
+            "model": model,
+            "messages": [
                 {
                     "role": "user",
                     "content": [
@@ -358,7 +364,13 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
                     ],
                 }
             ],
-        )
+        }
+
+        if not hp.nrp_enable_thinking:
+            create_kwargs["extra_body"] = {
+                "chat_template_kwargs": {"enable_thinking": False},
+            }
+        response = client.chat.completions.create(**create_kwargs)
 
         answer_str = response.choices[0].message.content
 
@@ -368,3 +380,27 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
     except Exception as e:
         logging.error(f"[MODEL] Error during {model} inference via OpenAI client: {str(e)}")
         return None
+
+
+def run_triton_model(triton_client, model, image, task_prompt=hp.gemma3_prompt):
+    """
+    takes in a task prompt and image, returns an answer using a Triton-served model
+
+    input:
+        triton_client: Triton client
+        model: model name
+        image: image
+        task_prompt: task prompt
+
+    output:
+        answer: answer
+
+    raises:
+        ValueError: if the model is not supported
+    """
+    if model == "gemma3":
+        return gemma3_run_model(triton_client, image, task_prompt)
+    elif model == "qwen2_5":
+        return qwen2_5_run_model(triton_client, image, task_prompt)
+    else:
+        raise ValueError(f"Unsupported Triton model: {model}")
