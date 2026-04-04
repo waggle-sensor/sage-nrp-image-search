@@ -38,7 +38,7 @@ class INQUIREConfig(Config):
         # model provider parameters
         self.llm_model_provider = os.environ.get("LLM_MODEL_PROVIDER", "triton").lower()
         self.caption_model_name = os.environ.get("CAPTION_MODEL_NAME", "gemma")
-        self.nrp_enable_thinking = os.environ.get("NRP_ENABLE_THINKING", "true").lower() in ("1", "true", "yes")
+        self.nrp_enable_thinking = os.environ.get("NRP_ENABLE_THINKING", "false").lower() in ("1", "true", "yes")
         
         # Triton parameters
         self._triton_host = os.environ.get("TRITON_HOST", "triton")

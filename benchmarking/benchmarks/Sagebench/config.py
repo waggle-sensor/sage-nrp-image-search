@@ -57,7 +57,7 @@ class SagebenchConfig(Config):
         ).lower()
         self.caption_model_name = os.environ.get("CAPTION_MODEL_NAME", "gemma")
         self.nrp_enable_thinking = (
-            os.environ.get("NRP_ENABLE_THINKING", "true").lower() in ("1", "true", "yes")
+            os.environ.get("NRP_ENABLE_THINKING", "false").lower() in ("1", "true", "yes")
         )
 
         # Triton parameters
