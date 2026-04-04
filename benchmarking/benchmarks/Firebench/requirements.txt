@@ -1,9 +1,9 @@
 # INQUIRE Benchmark Requirements
 # Core benchmarking framework
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.7
-imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.7
-imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.7
-imsearch_eval[nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.7
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.8
+imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.8
+imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.8
+imsearch_eval[nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.8
 
 # Match Weaviate server 1.32.x (Python client 4.16.x per compatibility matrix).
 # https://docs.weaviate.io/weaviate/client-libraries/python
