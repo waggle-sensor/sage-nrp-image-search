@@ -1,4 +1,9 @@
 # INQUIRE Benchmark Requirements
+
+# weaviate-client import checks protobuf vs grpcio; cap protobuf 5.x so pip does not
+# pull 6.x (WeaviateProtobufIncompatibility with grpcio 1.67.x).
+protobuf>=5.26.1,<6
+
 # Core benchmarking framework
 imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.8
 imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.8
