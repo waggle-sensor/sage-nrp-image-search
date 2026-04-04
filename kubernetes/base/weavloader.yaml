@@ -43,6 +43,10 @@ spec:
               value: "86400.0"
             - name: LLM_RUN_MODE
               value: "NRP"
+            - name: NRP_LLM_MODEL
+              value: "gemma"
+            - name: NRP_ENABLE_THINKING
+              value: "false"
           envFrom:
             - secretRef:
                 name: sage-user-secret
