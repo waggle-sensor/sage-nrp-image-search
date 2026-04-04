@@ -26,7 +26,7 @@ if LLM_RUN_MODE == 'NRP':
     NRP_API_KEY = os.environ.get("NRP_API_KEY", "")
     NRP_API_ENDPOINT = os.environ.get("NRP_API_ENDPOINT", "")
     nrp_client = OpenAI(api_key = NRP_API_KEY,base_url = NRP_API_ENDPOINT)
-    NRP_LLM_MODEL = os.environ.get("NRP_LLM_MODEL","gemma3")
+    NRP_LLM_MODEL = os.environ.get("NRP_LLM_MODEL","gemma")
     METRIC_REPORT_CAPTION_MODEL = f"{LLM_RUN_MODE}_{NRP_LLM_MODEL}".lower()
 elif LLM_RUN_MODE == 'TRITON':
     TRITON_LLM_MODEL = os.environ.get("TRITON_LLM_MODEL", "gemma3")

@@ -6,7 +6,7 @@ nrp_enable_thinking = (
 )
 align_alpha = 0.7
 clip_alpha = 0.7
-qwen2_5_prompt="""
+caption_model_prompt="""
 role:
 You are a world-class Scientific Image Captioning Expert.
 
@@ -27,4 +27,3 @@ format:
   caption: <your_scientific_caption_here>
   keywords: <keyword1>, <keyword2>, ...
 """
-gemma3_prompt=qwen2_5_prompt

@@ -247,7 +247,7 @@ def get_clip_embeddings(triton_client, text, image=None):
 
     return embedding
 
-def qwen2_5_run_model(triton_client, image, task_prompt=hp.qwen2_5_prompt):
+def qwen2_5_run_model(triton_client, image, task_prompt=hp.caption_model_prompt):
     """
     takes in a task prompt and image, returns an answer using Qwen2.5-VL model
     """
@@ -284,7 +284,7 @@ def qwen2_5_run_model(triton_client, image, task_prompt=hp.qwen2_5_prompt):
         logging.error(f"[MODEL] Error during Qwen2.5-VL inference: {str(e)}")
         return None
     
-def gemma3_run_model(triton_client, image, task_prompt=hp.gemma3_prompt):
+def gemma3_run_model(triton_client, image, task_prompt=hp.caption_model_prompt):
     """
     takes in a task prompt and image, returns an answer using gemma3 model
     """
@@ -321,7 +321,7 @@ def gemma3_run_model(triton_client, image, task_prompt=hp.gemma3_prompt):
         logging.error(f"[MODEL] Error during Gemma3 inference: {str(e)}")
         return None
 
-def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
+def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.caption_model_prompt):
     """
     Runs model via NRP Envoy AI Gateway.
 
@@ -337,7 +337,7 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
                 "glm-4.7",
                 "minimax-m2",
                 "glm-v",
-                "gemma3",
+                "gemma",
                 "olmo"
             }
     if model not in NRP_MODELS:
@@ -382,7 +382,7 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.gemma3_prompt):
         return None
 
 
-def run_triton_model(triton_client, model, image, task_prompt=hp.gemma3_prompt):
+def run_triton_model(triton_client, model, image, task_prompt=hp.caption_model_prompt):
     """
     takes in a task prompt and image, returns an answer using a Triton-served model
 
