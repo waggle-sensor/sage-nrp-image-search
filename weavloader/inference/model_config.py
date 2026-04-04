@@ -6,7 +6,7 @@ nrp_enable_thinking = (
 )
 align_alpha = 0.7
 clip_alpha = 0.7
-caption_model_prompt="""
+default_prompt="""
 role:
 You are a world-class Scientific Image Captioning Expert.
 
@@ -27,3 +27,4 @@ format:
   caption: <your_scientific_caption_here>
   keywords: <keyword1>, <keyword2>, ...
 """
+caption_model_prompt = os.environ.get("CAPTION_MODEL_PROMPT", default_prompt)
