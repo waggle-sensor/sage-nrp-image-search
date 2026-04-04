@@ -37,7 +37,7 @@ class INQUIREConfig(Config):
 
         # model provider parameters
         self.llm_model_provider = os.environ.get("LLM_MODEL_PROVIDER", "triton").lower()
-        self.caption_model_name = os.environ.get("CAPTION_MODEL_NAME", "gemma3")
+        self.caption_model_name = os.environ.get("CAPTION_MODEL_NAME", "gemma")
         self.nrp_enable_thinking = os.environ.get("NRP_ENABLE_THINKING", "true").lower() in ("1", "true", "yes")
         
         # Triton parameters
@@ -101,7 +101,7 @@ format:
   caption: <your_scientific_caption_here>
   keywords: <keyword1>, <keyword2>, ...
 """
-        self.gemma3_prompt = os.environ.get("GEMMA3_PROMPT", default_prompt)
+        self.caption_model_prompt = os.environ.get("CAPTION_MODEL_PROMPT", default_prompt)
 
     @staticmethod
     def is_nrp_key_set():
