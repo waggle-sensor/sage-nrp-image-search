@@ -366,9 +366,9 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.caption_model_pro
             ],
         }
 
-        if not hp.nrp_enable_thinking:
+        if hp.nrp_enable_thinking:
             create_kwargs["extra_body"] = {
-                "chat_template_kwargs": {"enable_thinking": False},
+                "chat_template_kwargs": {"enable_thinking": True},
             }
         response = client.chat.completions.create(**create_kwargs)
 
