@@ -2,11 +2,11 @@ import os
 '''This file contains the hyper parameters that can be changed to fine tune
 the system. '''
 nrp_enable_thinking = (
-    os.environ.get("NRP_ENABLE_THINKING", "true").lower() in ("1", "true", "yes")
+    os.environ.get("NRP_ENABLE_THINKING", "false").lower() in ("1", "true", "yes")
 )
 align_alpha = 0.7
 clip_alpha = 0.7
-qwen2_5_prompt="""
+default_prompt="""
 role:
 You are a world-class Scientific Image Captioning Expert.
 
@@ -27,4 +27,4 @@ format:
   caption: <your_scientific_caption_here>
   keywords: <keyword1>, <keyword2>, ...
 """
-gemma3_prompt=qwen2_5_prompt
+caption_model_prompt = os.environ.get("CAPTION_MODEL_PROMPT", default_prompt)

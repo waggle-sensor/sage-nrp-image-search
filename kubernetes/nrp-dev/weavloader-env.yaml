@@ -13,6 +13,6 @@ spec:
             - name: LLM_RUN_MODE
               value: "NRP"
             - name: NRP_LLM_MODEL
-              value: "qwen3-small"
+              value: "gemma"
             - name: NRP_ENABLE_THINKING
               value: "false"
