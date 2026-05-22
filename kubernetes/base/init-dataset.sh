@@ -13,7 +13,7 @@ export DATA_DIR HF_WORKERS PYTHONUNBUFFERED HF_HOME HF_HUB_ENABLE_HF_TRANSFER
 echo "[init] Initializing environment..."
 
 # Install CLI
-pip install --no-cache-dir "huggingface_hub>=0.24" "hf_transfer>=0.1.6"
+pip install --no-cache-dir "huggingface_hub==0.34" "hf_transfer>=0.1.6"
 
 # Download dataset
 mkdir -p "$DATA_DIR"
