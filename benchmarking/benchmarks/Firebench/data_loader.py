@@ -7,6 +7,7 @@ from io import BytesIO, BufferedReader
 from PIL import Image
 import weaviate
 from imsearch_eval.framework.interfaces import DataLoader
+from helpers.ablation import generate_index_caption, get_index_embedding
 
 
 class FireBenchDataLoader(DataLoader):
@@ -67,19 +68,14 @@ class FireBenchDataLoader(DataLoader):
             buffered_stream = BufferedReader(image_stream)
             encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
 
-            # Generate caption using model provider
-            caption = self.model_provider.generate_caption(
+            caption = generate_index_caption(
+                self.model_provider,
                 image,
-                self.config.caption_model_prompt,
-                model_name=self.config.caption_model_name,
-                enable_thinking=self.config.nrp_enable_thinking,
+                self.config,
+                fallback_caption=summary or "",
             )
-            if not caption:
-                caption = summary or ""  # Fallback to dataset summary
-
-            # Generate CLIP embeddings
-            clip_embedding = self.model_provider.get_embedding(
-                caption, image=image, model_name="clip"
+            clip_embedding = get_index_embedding(
+                self.model_provider, caption, image, self.config
             )
             if clip_embedding is None:
                 raise ValueError("Failed to generate CLIP embedding")

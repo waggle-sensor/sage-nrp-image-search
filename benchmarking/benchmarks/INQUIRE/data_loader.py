@@ -9,6 +9,7 @@ from PIL import Image
 import weaviate
 from weaviate.classes.data import GeoCoordinate
 from imsearch_eval.framework.interfaces import DataLoader
+from helpers.ablation import generate_index_caption, get_index_embedding
 
 
 class INQUIREDataLoader(DataLoader):
@@ -71,19 +72,10 @@ class INQUIREDataLoader(DataLoader):
             buffered_stream = BufferedReader(image_stream)
             encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
             
-            # Generate caption using model provider
-            caption = self.model_provider.generate_caption(
-                image,
-                self.config.caption_model_prompt,
-                model_name=self.config.caption_model_name,
-                enable_thinking=self.config.nrp_enable_thinking,
+            caption = generate_index_caption(self.model_provider, image, self.config)
+            clip_embedding = get_index_embedding(
+                self.model_provider, caption, image, self.config
             )
-            
-            if not caption:
-                caption = ""  # Fallback if caption generation fails
-            
-            # Generate CLIP embeddings
-            clip_embedding = self.model_provider.get_embedding(caption, image=image, model_name="clip")
             if clip_embedding is None:
                 raise ValueError("Failed to generate CLIP embedding")
             

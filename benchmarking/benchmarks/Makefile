@@ -56,7 +56,10 @@ build:
 		echo "Error: DOCKERFILE_JOB must be set"; exit 1; \
 	fi
 	@echo "Building benchmark job image..."
+	@rm -rf ./helpers
+	@cp -r ../../helpers ./helpers
 	@docker build -t $(JOB_IMAGE):$(JOB_TAG) -f $(DOCKERFILE_JOB) .
+	@rm -rf ./helpers
 	@echo "Build complete. Push with:"
 	@echo "  docker push $(JOB_IMAGE):$(JOB_TAG)"
 
@@ -178,6 +181,7 @@ run-local: port-forward-start
 	 WEAVIATE_GRPC_PORT=$(LOCAL_WEAVIATE_GRPC_PORT) \
 	 TRITON_HOST=127.0.0.1 \
 	 TRITON_PORT=$(LOCAL_TRITON_GRPC_PORT) \
+	 PYTHONPATH=../..:$$PYTHONPATH \
 	 python $(RUN_SCRIPT) || (make port-forward-stop && exit 1)
 	@make port-forward-stop
 	@echo "Benchmark run completed. Results saved locally."

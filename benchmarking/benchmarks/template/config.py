@@ -2,6 +2,7 @@
 
 import os
 from imsearch_eval.framework.interfaces import Config
+from helpers.ablation import load_ablation_config, resolve_query_alpha
 
 
 class MyConfig(Config):
@@ -46,15 +47,23 @@ class MyConfig(Config):
         # Logging parameters
         self._log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
         
+        # Ablation parameters
+        ablation = load_ablation_config()
+        self.enable_caption_generation = ablation["enable_caption_generation"]
+        self.embed_image = ablation["embed_image"]
+        self.embed_caption = ablation["embed_caption"]
+        self.index_clip_alpha = ablation["index_clip_alpha"]
+        self.enable_bm25 = ablation["enable_bm25"]
+
         # Query parameters
         self.query_method = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
         self.target_vector = os.environ.get("TARGET_VECTOR", "clip")
         self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 50))
         self.advanced_query_parameters = {
-            "alpha": float(os.environ.get("QUERY_ALPHA", 0.4)),
+            "alpha": resolve_query_alpha(ablation),
             "query_properties": ["caption"],  # TODO: Update with your query properties
             "autocut_jumps": int(os.environ.get("AUTOCUT_JUMPS", 0)),
             "rerank_prop": os.environ.get("RERANK_PROP", "caption"),  # TODO: Update with your rerank property
-            "clip_alpha": float(os.environ.get("CLIP_ALPHA", 0.7)),
+            "clip_alpha": float(os.environ.get("QUERY_CLIP_ALPHA", 0.7)),
         }
     
