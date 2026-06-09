@@ -69,11 +69,11 @@ Notes:
    python3 -m venv env
    source env/bin/activate
    pip install -r requirements.txt
-   huggingface-cli download --local-dir DFN5B-CLIP-ViT-H-14-378  --revision "$CLIP_MODEL_VERSION" apple/DFN5B-CLIP-ViT-H-14-378
+   huggingface-cli download --local-dir clip --revision "$CLIP_MODEL_VERSION" "$CLIP_HF_REPO"
 
    huggingface-cli download --local-dir gemma-3-4b-it --revision "$GEMMA_MODEL_VERSION" google/gemma-3-4b-it
 
-   docker cp DFN5B-CLIP-ViT-H-14-378 sage-nrp-image-search-triton-1:/models/
+   docker cp clip/. sage-nrp-image-search-triton-1:/models/clip/
    docker cp gemma-3-4b-it sage-nrp-image-search-triton-1:/models/
    ```
 
