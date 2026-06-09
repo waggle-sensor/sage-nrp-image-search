@@ -1,10 +1,7 @@
 """Ablation study helpers for benchmark index and query pipelines."""
-
 import logging
 import os
 from typing import Any
-
-
 
 def parse_bool_env(name: str, default: bool = True) -> bool:
     """Parse a boolean environment variable."""
