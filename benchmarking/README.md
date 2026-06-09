@@ -99,8 +99,8 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 | `ENABLE_CAPTION_GENERATION` | `true` | When `false`, skips the caption LLM entirely and stores an empty caption |
 | `EMBED_IMAGE` | `true` | When `false`, index vectors use caption-only CLIP embeddings |
 | `EMBED_CAPTION` | `false` when caption generation is disabled | When `false`, index vectors use image-only CLIP embeddings |
-| `INDEX_CLIP_ALPHA` | `0.7` | Fusion weight for image vs caption when both modalities are embedded at index time |
-| `QUERY_CLIP_ALPHA` | `0.7` | CLIP fusion weight when embedding the query text at search time. As of right now, it is not used since only text queries are supported.|
+| `INDEX_CLIP_ALPHA` | `0.7` | Fusion weight for image vs caption when both modalities are embedded at index time. A higher value means more weight is given to the image modality. |
+| `QUERY_CLIP_ALPHA` | `0.7` | CLIP fusion weight when embedding the query text at search time. As of right now, it is not used since only text queries are supported. A higher value means more weight is given to the image modality. |
 | `ENABLE_BM25` | `true` | When `false`, sets hybrid query `alpha=1.0` (vector-only retrieval) |
 | `QUERY_ALPHA` | `0.4` | Hybrid vector/keyword blend when `ENABLE_BM25=true` |
 
