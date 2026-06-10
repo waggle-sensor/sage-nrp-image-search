@@ -18,9 +18,18 @@ class TritonPythonModel:
                 "Ensure the entrypoint downloaded the model or mount weights at this path."
             )
 
-        logging.info("Loading CLIP model from %s", model_path)
+        use_safetensors = os.environ.get("USE_SAFETENSORS", "true").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+        logging.info(
+            "Loading CLIP model from %s (use_safetensors=%s)", model_path, use_safetensors
+        )
         self.processor = CLIPProcessor.from_pretrained(model_path)
-        self.model = CLIPModel.from_pretrained(model_path, use_safetensors=True).to(
+        self.model = CLIPModel.from_pretrained(
+            model_path, use_safetensors=use_safetensors
+        ).to(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
         self.model.eval()

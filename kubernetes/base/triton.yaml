@@ -34,6 +34,8 @@ spec:
               value: "/models/gemma-3-4b-it"
             - name: GEMMA_MODEL_VERSION
               value: "093f9f388b31de276ce2de164bdc2081324b9767"
+            - name: USE_SAFETENSORS
+              value: "true"
             - name: HF_TOKEN
               valueFrom:
                 secretKeyRef:
