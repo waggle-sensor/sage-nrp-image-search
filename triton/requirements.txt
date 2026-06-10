@@ -35,6 +35,6 @@ hf_xet # better performance for large files
 Pillow==10.4.*
 timm==1.0.*
 einops==0.8.*
-triton==3.0.0
+# triton==3.0.0
 accelerate==1.10.1
 # packaging==24.2.* #enable for flash attention, flash attention must have have CUDA 11.7 and above
