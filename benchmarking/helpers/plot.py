@@ -550,6 +550,11 @@ def load_cross_version_metrics(
 
 
 def _get_metric_set_and_default_weights(mode: str):
+    """
+    Get the metric set and default weights for a given mode.
+    :param mode: the mode to get the metric set and default weights for.
+    :return: a tuple of the metric set and default weights.
+    """
     mode = mode.lower()
     if mode == "primary":
         return PRIMARY_METRICS, DEFAULT_PRIMARY_WEIGHTS
@@ -566,6 +571,11 @@ def add_composite_score(
 ) -> pd.DataFrame:
     """
     Add a weighted composite score column to a leaderboard dataframe.
+    :param df: the dataframe to add the composite score column to.
+    :param mode: the mode to add the composite score column for.
+    :param metric_weights: the weights to use for the metrics.
+    :param score_column: the name of the column to add the composite score to.
+    :return: the dataframe with the composite score column added.
     """
     metrics, defaults = _get_metric_set_and_default_weights(mode)
     metric_weights = defaults if metric_weights is None else normalize_weights(metric_weights, metrics)
@@ -585,6 +595,12 @@ def build_benchmark_version_leaderboard(
 ) -> pd.DataFrame:
     """
     Build a per-benchmark leaderboard ranking system versions.
+    :param base_path: the base path to the benchmarks directory.
+    :param benchmarks: the benchmarks to build the leaderboard for.
+    :param min_version: the minimum version to include in the leaderboard.
+    :param mode: the mode to build the leaderboard for.
+    :param metric_weights: the weights to use for the metrics.
+    :return: the leaderboard dataframe.
     """
     df = load_cross_version_metrics(base_path, benchmarks=benchmarks, min_version=min_version)
     if df.empty:
@@ -606,6 +622,13 @@ def build_overall_version_leaderboard(
     """
     Build a version-level leaderboard aggregated across benchmarks.
     benchmark_weights default to equal benchmark weighting.
+    :param base_path: the base path to the benchmarks directory.
+    :param benchmarks: the benchmarks to build the leaderboard for.
+    :param min_version: the minimum version to include in the leaderboard.
+    :param mode: the mode to build the leaderboard for.
+    :param metric_weights: the weights to use for the metrics.
+    :param benchmark_weights: the weights to use for the benchmarks.
+    :return: the leaderboard dataframe.
     """
     per_benchmark = build_benchmark_version_leaderboard(
         base_path=base_path,
@@ -653,6 +676,12 @@ def plot_leaderboard_scores(
 ):
     """
     Plot leaderboard scores as a descending bar chart.
+    :param leaderboard_df: the leaderboard dataframe to plot.
+    :param label_column: the column to use for the labels.
+    :param score_column: the column to use for the scores.
+    :param title: the title of the plot.
+    :param figsize: the size of the figure.
+    :return: the plot.
     """
     if leaderboard_df.empty:
         print("No leaderboard data found.")
@@ -680,6 +709,13 @@ def render_single_benchmark_leaderboard(
     """
     Build, render table, and plot leaderboard for one benchmark.
     Returns the benchmark-only leaderboard dataframe.
+    :param base_path: the base path to the benchmarks directory.
+    :param benchmark: the benchmark to build the leaderboard for.
+    :param min_version: the minimum version to include in the leaderboard.
+    :param mode: the mode to build the leaderboard for.
+    :param metric_weights: the weights to use for the metrics.
+    :param display_fn: the function to use to display the leaderboard.
+    :return: the leaderboard dataframe.
     """
     leaderboard_df = build_benchmark_version_leaderboard(
         base_path=base_path,
