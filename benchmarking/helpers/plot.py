@@ -25,6 +25,8 @@ DEFAULT_PRIMARY_PLUS_DIVERSITY_WEIGHTS = {
     metric: 1 / len(PRIMARY_PLUS_DIVERSITY_METRICS) for metric in PRIMARY_PLUS_DIVERSITY_METRICS
 }
 
+BASELINE_VERSION = "baseline"
+
 def discover_benchmark_names(base_path: Path) -> list[str]:
     """
     Discover benchmark directories under benchmarking/benchmarks.
@@ -446,7 +448,10 @@ def plot_overall_mrr(
     plt.show()
 
 def _version_key(version: str):
-    match = re.fullmatch(r"v(\d+)", str(version))
+    version = str(version)
+    if version == BASELINE_VERSION:
+        return 0
+    match = re.fullmatch(r"v(\d+)", version)
     return int(match.group(1)) if match else float("inf")
 
 
@@ -465,10 +470,11 @@ def discover_benchmark_versions(
     base_path: Path,
     benchmarks: list[str] | None = None,
     min_version: int = 10,
+    include_baseline: bool = True,
 ) -> dict[str, list[str]]:
     """
-    Discover benchmark versions with query_eval_metrics.csv from v{min_version}+.
-    Returns mapping benchmark -> sorted versions.
+    Discover benchmark versions with query_eval_metrics.csv from baseline and v{min_version}+.
+    Returns mapping benchmark -> sorted versions (baseline first, then v10, v11, ...).
     """
     base_path = Path(base_path)
     if benchmarks is None:
@@ -481,6 +487,10 @@ def discover_benchmark_versions(
             out[benchmark] = []
             continue
         versions = []
+        if include_baseline:
+            baseline_dir = result_dir / BASELINE_VERSION
+            if (baseline_dir / "query_eval_metrics.csv").exists():
+                versions.append(BASELINE_VERSION)
         for version_dir in result_dir.iterdir():
             if not version_dir.is_dir():
                 continue
@@ -681,7 +691,7 @@ def render_single_benchmark_leaderboard(
 
     part = leaderboard_df[leaderboard_df["benchmark"] == benchmark].copy()
     if part.empty:
-        print(f"Skip {benchmark}: no v{min_version}+ results")
+        print(f"Skip {benchmark}: no baseline or v{min_version}+ results")
         return part
 
     mode_label = "Primary + Diversity" if mode in {"primary_plus_diversity", "primary+diversity"} else "Primary"
