@@ -49,7 +49,7 @@ benchmarking/
 
 ## Leaderboards
 
-Cross-version leaderboards are supported for benchmark results in `benchmarks/*/results/v10+`.
+Cross-version leaderboards are supported for benchmark results in `benchmarks/*/results/baseline` and `v10+`.
 
 ### Leaderboard Notebooks
 
