@@ -117,7 +117,7 @@ Use MRR and Success@25 as primary model selection signals.
 
 ## 6️⃣ Leaderboard Ranking Configuration
 
-For cross-version leaderboards (`baseline` and `v10+`), use weighted composites.
+For cross-version leaderboards (`baseline`, `ablation_*`, and `v10+`), use weighted composites.
 
 ### Primary Leaderboard (default)
 
