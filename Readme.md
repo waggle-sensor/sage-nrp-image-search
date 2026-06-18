@@ -211,6 +211,7 @@ kubectl kustomize nrp-dev -o sage-image-search-dev.yaml or kubectl kustomize nrp
    - https://milvus.io/ai-quick-reference/how-is-diversity-in-search-results-achieved
 - [ ] try https://github.com/chopratejas/headroom to reduce tokens and be more efficient with the caption generation model
    - remember to benchmark the performance of the caption generation model with headroom using the [benchmarking suite](benchmarking/README.md)
+   - blog about Headroom here: https://www.theregister.com/ai-ml/2026/05/31/netflix-wiz-creates-app-to-slash-ai-bills-then-open-sources-it/5248702
 - [ ] Integrate ShieldGemma 2 to implement policies and mark images as yes/no if the image violates the policy
    - [ShieldGemma 2 Model Card](https://ai.google.dev/gemma/docs/shieldgemma/model_card_2)
 - [ ] add a heartbeat metric for Sage Object Storage (nrdstor)
