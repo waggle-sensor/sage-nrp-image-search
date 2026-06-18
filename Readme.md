@@ -209,6 +209,8 @@ kubectl kustomize nrp-dev -o sage-image-search-dev.yaml or kubectl kustomize nrp
    - [ ] look into other reranker models to see if they can improve the reranking performance
 - [ ] look into MMR (maximal marginal relevance) to see if it can improve the reranking performance or to implement it as a "toggle" to apply it only to certain queries.
    - https://milvus.io/ai-quick-reference/how-is-diversity-in-search-results-achieved
+- [ ] try https://github.com/chopratejas/headroom to reduce tokens and be more efficient with the caption generation model
+   - remember to benchmark the performance of the caption generation model with headroom using the [benchmarking suite](benchmarking/README.md)
 - [ ] Integrate ShieldGemma 2 to implement policies and mark images as yes/no if the image violates the policy
    - [ShieldGemma 2 Model Card](https://ai.google.dev/gemma/docs/shieldgemma/model_card_2)
 - [ ] add a heartbeat metric for Sage Object Storage (nrdstor)
