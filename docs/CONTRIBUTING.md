@@ -122,7 +122,7 @@ Planned improvements and research directions. Items are not guaranteed or ordere
 - [ ] add a metric to count the images that have been indexed into the vectordb
    - this answers the question "What is the total amount of images that have been indexed?"
 
-### New benchmarks
+### Benchmarking
 
 - [ ] Create new benchmarks to be added to the [benchmarking suite](../benchmarking/README.md) to test image retrieval in other domains (ex; Urban) & System-Level Performance
    - see [imsearch_benchmarks](https://github.com/waggle-sensor/imsearch_benchmarks) for the existing benchmarks
