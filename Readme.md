@@ -38,6 +38,7 @@ See [docs/getting-started.md](docs/getting-started.md) for full setup, secrets, 
 
 | Topic | Guide |
 |-------|-------|
+| Learning lab (Summer of AI) | [docs/learning.md](docs/learning.md) |
 | Overview and concepts | [docs/overview.md](docs/overview.md) |
 | System architecture | [docs/architecture.md](docs/architecture.md) |
 | Using the search UI | [docs/using-the-search-ui.md](docs/using-the-search-ui.md) |
