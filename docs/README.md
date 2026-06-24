@@ -6,6 +6,7 @@ Sage Image Search is a hybrid image retrieval system for the [SAGE Continuum](ht
 
 | Goal | Start here |
 |------|------------|
+| Learn interactively (Summer of AI lab) | [Learning Lab](learning.md) |
 | Search for images | [Using the Search UI](using-the-search-ui.md) |
 | Run or deploy the stack | [Getting Started](getting-started.md) |
 | Set up credentials | [Authentication](authentication.md) |
