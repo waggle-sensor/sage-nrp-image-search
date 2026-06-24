@@ -1,28 +1,31 @@
 # Using the Search UI
 
-The search UI is a Gradio web app that lets you find SAGE camera images using natural-language text queries.
+Sage Image Search provides a web interface for finding SAGE camera images with natural-language text queries.
 
 ## Accessing the UI
 
-| Environment | URL |
-|-------------|-----|
-| Local (Docker Compose) | [http://localhost:7860](http://localhost:7860) |
-| NRP dev | [https://dev-sage-hybrid-search.nrp-nautilus.io](https://dev-sage-hybrid-search.nrp-nautilus.io) |
-| NRP prod | [https://sage-hybrid-search.nrp-nautilus.io](https://sage-hybrid-search.nrp-nautilus.io) |
+| Environment | URL | Notes |
+|-------------|-----|-------|
+| **Sage portal (production)** | [https://portal.sagecontinuum.org/labs/image-search](https://portal.sagecontinuum.org/labs/image-search) | React web app — primary user-facing UI |
+| Local (Docker Compose) | [http://localhost:7860](http://localhost:7860) | Gradio API server (direct access during development) |
+| NRP dev | [https://dev-sage-hybrid-search.nrp-nautilus.io](https://dev-sage-hybrid-search.nrp-nautilus.io) | Gradio API server |
+| NRP prod | [https://sage-hybrid-search.nrp-nautilus.io](https://sage-hybrid-search.nrp-nautilus.io) | Gradio API server |
+
+**How it fits together:** In production, the [Sage portal](https://portal.sagecontinuum.org/labs/image-search) is a React application. It calls the Gradio service in `app/` for hybrid search, image retrieval, and metadata. The Gradio URLs above are the API backend; developers and local Docker Compose users can open Gradio directly.
 
 ## Running a search
 
-1. Open the **Text Query** tab.
+1. Open the search page (portal or Gradio).
 2. Enter a description in the text box, for example:
    - `Show me images in Hawaii`
    - `Snowy Mountains`
    - `Cars in W049`
    - `intersection in the right camera`
 3. Click **Submit**.
-4. Review the three result panels:
+4. Review the result panels:
    - **Returned Images** — thumbnail gallery of matching images
    - **Metadata** — table with scores and SAGE fields for each result
-   - **Image Locations** — map showing GPS coordinates when available
+   - **Image Locations** — map showing GPS coordinates when available (Gradio UI; portal may vary)
 
 Example queries are available in the **Example Queries** dataset below the text box. Click one to populate the search field.
 
@@ -77,12 +80,13 @@ Keyword search covers these fields: `caption`, `camera`, `host`, `job`, `vsn`, `
 
 ## Limitations
 
-- The Gradio UI is interim. A production UI integrated with beekeeper is planned.
+- The Gradio service in `app/` is the search API backend; the primary user interface is the React app at [portal.sagecontinuum.org/labs/image-search](https://portal.sagecontinuum.org/labs/image-search).
 - There is no per-user access control yet — filtering uses a static node deny list, not your Sage token permissions.
 - Local Docker Compose may not display images in the gallery unless SAGE credentials are configured for the Gradio container.
 
 ## Next steps
 
+- [Learning lab](learning.md) — build your own Gradio search UI in the interactive notebook
 - [Authentication](authentication.md) — set up Sage credentials
 - [Troubleshooting](troubleshooting.md) — fix empty results or missing images
 - [Glossary](glossary.md) — look up terms like VSN, hybrid search, reranker
