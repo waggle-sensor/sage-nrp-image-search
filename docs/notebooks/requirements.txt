@@ -1,0 +1,14 @@
+pymilvus[milvus-lite]>=2.5
+open-clip-torch
+torch
+torchvision
+transformers>=4.50
+accelerate
+datasets
+pillow
+pandas
+matplotlib
+sentence-transformers
+huggingface_hub
+gradio
+numpy
