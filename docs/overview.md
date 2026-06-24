@@ -38,6 +38,8 @@ Each image record in Weaviate (`HybridSearchExample` collection) includes:
 - **Map view** — Search results with GPS data appear on an interactive map in the UI
 - **Benchmarking** — Five domain-specific benchmarks measure retrieval quality (see [Benchmarking](benchmarking.md))
 
+**Video:** [Sage Image Search system overview](https://youtu.be/hzfKL0smzFM) — walkthrough of the production pipeline.
+
 ## Current limitations
 
 - **Interim UI** — The Gradio app in `app/` is a temporary demo. A production UI integrated with beekeeper/beehive-data-api is planned.
