@@ -2,6 +2,8 @@
 
 Sage Image Search includes a benchmarking suite to measure retrieval quality across domain-specific datasets. Benchmarks use the external [`imsearch_eval`](https://github.com/waggle-sensor/imsearch_eval) framework.
 
+**Video walkthrough:** [Image Search Benchmarking on YouTube](https://youtu.be/NUEs7AeGk4I)
+
 ## Available benchmarks
 
 | Benchmark | Dataset | Domain | Size |
