@@ -118,3 +118,6 @@ See also `benchmarks/template/QUICKSTART.md` for a 5-minute setup guide.
 - [benchmarking/benchmarks/MAKEFILE.md](../benchmarking/benchmarks/MAKEFILE.md) — Makefile commands
 - [benchmarking/benchmarks/DOCKER.md](../benchmarking/benchmarks/DOCKER.md) — Docker image details
 - [benchmarking/kubernetes/README.md](../benchmarking/kubernetes/README.md) — K8s deployment for benchmarks
+- [imsearch_eval](https://github.com/waggle-sensor/imsearch_eval) — A framework for evaluating image retrieval systems
+- [imsearch_benchmaker](https://github.com/waggle-sensor/imsearch_benchmaker) — A tool for creating benchmarks for image retrieval systems.
+- [imsearch_benchmarks](https://github.com/waggle-sensor/imsearch_benchmarks) — A repository holding config files for benchmarks using the imsearch_benchmaker framework.
