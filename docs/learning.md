@@ -27,13 +27,24 @@ Optional walkthroughs from the SAGE team (also linked in the notebook):
 
 You can complete the lab without watching either video.
 
+## Prerequisites
+
+Before starting the lab:
+
+- **Python** and basic machine learning familiarity
+- **1 GPU** (recommended; CPU fallback uses SageBench `summary` captions instead of Gemma)
+- A **[Hugging Face](https://huggingface.co/)** account
+- An **`HF_TOKEN`** — create a `read` token at [User access tokens](https://huggingface.co/docs/hub/en/security-tokens) and accept the [Gemma 4 license](https://huggingface.co/google/gemma-4-E2B) on the model page
+
+No SAGE credentials are required (the lab uses public SageBench data).
+
 ## Lab notebook walkthrough
 
 The main lab is [sage_image_search_lab.ipynb](notebooks/sage_image_search_lab.ipynb). Run cells **in order** from top to bottom.
 
 | Section | What you do |
 |---------|-------------|
-| **Setup** | Install requirements, set `HF_TOKEN` ([HF access tokens](https://huggingface.co/docs/hub/en/security-tokens)), configure `PERSIST_DIR` in `User_Persistent_Storage` |
+| **Setup** | Install requirements; sign in at [Hugging Face](https://huggingface.co/); set `HF_TOKEN` ([access tokens](https://huggingface.co/docs/hub/en/security-tokens)); configure `PERSIST_DIR` in `User_Persistent_Storage` |
 | **Load SageBench** | 50-image subset (`SEED=42`, `SAMPLE_SIZE=50`) from [`sagecontinuum/SageBench`](https://huggingface.co/datasets/sagecontinuum/SageBench) |
 | **Architecture overview** | Compare production vs lab components (with diagram) |
 | **Step 1: Embeddings** | open_clip helpers + `get_clip_embeddings()` fused with production `clip_alpha` |
@@ -61,7 +72,7 @@ Follow the same workflow as the official [NDP demo workspace](https://github.com
 1. Create an NDP workspace titled e.g. **Sage Image Search Lab**
 2. Under **Workspace Codebase**, add: `https://github.com/waggle-sensor/sage-nrp-image-search`
 3. Optionally add [`sagecontinuum/SageBench`](https://huggingface.co/datasets/sagecontinuum/SageBench) under Additional Resources
-4. Tell students to create **`HF_TOKEN`** ([User access tokens](https://huggingface.co/docs/hub/en/security-tokens); `read` role is enough), accept the [Gemma 4 license](https://huggingface.co/google/gemma-4-E2B), and set the token in the notebook or environment
+4. Tell students to sign up at [Hugging Face](https://huggingface.co/), create **`HF_TOKEN`** ([User access tokens](https://huggingface.co/docs/hub/en/security-tokens); `read` role is enough), accept the [Gemma 4 license](https://huggingface.co/google/gemma-4-E2B), and set the token in the notebook or environment
 5. Point students to this page
 
 ### Student setup
@@ -94,7 +105,7 @@ Follow the same workflow as the official [NDP demo workspace](https://github.com
 
 **Notes:**
 
-- **`HF_TOKEN` required** for Gemma 4 E2B-it (gated model). Create one at [Hugging Face access tokens](https://huggingface.co/docs/hub/en/security-tokens) (`read` role is sufficient).
+- **[Hugging Face](https://huggingface.co/) account** and **`HF_TOKEN`** required for Gemma 4 E2B-it (gated model). Create a `read` token at [User access tokens](https://huggingface.co/docs/hub/en/security-tokens).
 - No SAGE credentials required (public SageBench data)
 - Fallback install: `%pip install -r requirements.txt` in the notebook
 
@@ -104,7 +115,7 @@ Follow the same workflow as the official [NDP demo workspace](https://github.com
 |-------|-------------|
 | `AllocTimestamp` / `Method not implemented` during Milvus insert | Harmless Milvus Lite quirk if you still see `Indexed N fused vectors + BM25 text → …/sage_lab.db`. Re-install from `requirements.txt` to reduce log noise. |
 | Gradio gallery shows broken images with path text | Restart kernel, re-run **Load SageBench** through **Step 8**. Step 8 caches JPEG thumbnails under `gradio_images/` in persistent storage. Open the printed Gradio URL in a new tab if `inline=True` does not render images. |
-| `HF_TOKEN` / gated model download errors | Accept the [Gemma 4 license](https://huggingface.co/google/gemma-4-E2B), then create a `read` token at [Hugging Face access tokens](https://huggingface.co/docs/hub/en/security-tokens). |
+| `HF_TOKEN` / gated model download errors | Sign up at [Hugging Face](https://huggingface.co/), accept the [Gemma 4 license](https://huggingface.co/google/gemma-4-E2B), then create a `read` token at [User access tokens](https://huggingface.co/docs/hub/en/security-tokens). |
 | No GPU / Gemma OOM | CPU mode uses SageBench `summary` captions instead of Gemma; relaunch with 1 GPU for the full lab. |
 | Files missing after restart | Confirm you are working inside `User_Persistent_Storage`. |
 
