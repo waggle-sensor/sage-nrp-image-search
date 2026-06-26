@@ -45,6 +45,8 @@ echo -n "your_password" | base64
 
 Triton downloads CLIP and Gemma model weights from Hugging Face at startup. Your token needs access to the models configured in [`.env.example`](../.env.example) and [`triton/entrypoint.sh`](../triton/entrypoint.sh).
 
+Create a token in your Hugging Face account settings — see [User access tokens](https://huggingface.co/docs/hub/en/security-tokens). A `read` token is enough to download gated models you have accepted on the Hub.
+
 - Set `HF_TOKEN` in your `.env` file for local Docker Compose.
 - In Kubernetes, create the Hugging Face secret from the template:
 

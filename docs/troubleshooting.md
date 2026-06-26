@@ -13,7 +13,7 @@ Common issues and fixes for Sage Image Search deployments.
 
 **Fixes:**
 
-1. Verify `HF_TOKEN` is set and has access to the required models (see [Authentication](authentication.md)).
+1. Verify `HF_TOKEN` is set and has access to the required models (see [Authentication](authentication.md); create or rotate tokens at [Hugging Face access tokens](https://huggingface.co/docs/hub/en/security-tokens)).
 2. Check Triton logs: `docker compose logs triton` or `kubectl logs -l app=triton`.
 3. Manually download models and copy into the container (see [Getting Started](getting-started.md#triton-model-download-workaround)):
 

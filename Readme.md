@@ -18,7 +18,7 @@ Hybrid image search for the [SAGE Continuum](https://sagecontinuum.org) sensor n
 **Local (Docker Compose):**
 
 ```bash
-cp .env.example .env   # fill in SAGE_USER, SAGE_PASS, HF_TOKEN
+cp .env.example .env   # fill in SAGE_USER, SAGE_PASS, HF_TOKEN (see https://huggingface.co/docs/hub/en/security-tokens)
 docker compose up -d --build
 ```
 

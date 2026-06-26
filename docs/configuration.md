@@ -8,7 +8,7 @@ This page consolidates the main environment variables and search tuning paramete
 |----------|---------|-----------|-------------|
 | `SAGE_USER` | — | weavloader, Gradio (K8s) | Sage username |
 | `SAGE_PASS` | — | weavloader, Gradio (K8s) | Sage password |
-| `HF_TOKEN` | — | Triton, Weaviate | Hugging Face token for model downloads |
+| `HF_TOKEN` | — | Triton, Weaviate | Hugging Face token for model downloads ([create a token](https://huggingface.co/docs/hub/en/security-tokens)) |
 | `NRP_API_KEY` | — | weavloader | NRP AI Gateway API key |
 | `NRP_API_ENDPOINT` | — | weavloader | NRP AI Gateway endpoint URL |
 | `NRP_LLM_MODEL` | `gemma` (K8s) | weavloader | Model name for NRP captioning |

@@ -5,7 +5,7 @@ This guide walks you through running Sage Image Search locally with Docker Compo
 ## Prerequisites
 
 - **Sage credentials** — `SAGE_USER` and `SAGE_PASS` with access to SAGE images
-- **Hugging Face token** — `HF_TOKEN` with access to the configured models
+- **Hugging Face token** — `HF_TOKEN` with access to the configured models ([how to create a token](https://huggingface.co/docs/hub/en/security-tokens))
 - **NRP API credentials** (Kubernetes only) — required when `LLM_RUN_MODE=NRP`
 
 See [Authentication](authentication.md) for credential setup details.
