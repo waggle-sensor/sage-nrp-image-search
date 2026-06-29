@@ -82,11 +82,14 @@ Follow the same workflow as the official [NDP demo workspace](https://github.com
 
    | Setting | Default (camp) | Recommended | CPU fallback |
    |---------|----------------|-------------|--------------|
+   | **Region** | — | based on your location| based on your location |
+   | **Zone** | — | based on your location| based on your location |
    | **GPUs** | **1** | **1** | 0 |
    | **Cores** | 4 | 4 | 2 |
    | **RAM** | 32 GB | 32 GB | 16 GB |
-   | **GPU Type** | Any (≥16 GB VRAM recommended) | Any (≥16 GB VRAM) | — |
-   | **Image** | PyTorch / ML starter image | PyTorch / ML starter image | Minimal NDP Starter JupyterLab |
+   | **GPU Type** | Any (≥16 GB VRAM recommended) | Tesla T4 | — |
+   | **Image** | Minimal NDP Starter JupyterLab | Minimal NDP Starter JupyterLab | Minimal NDP Starter JupyterLab |
+   | **Timeout (sec)** | 1200  | 1200 | 1200 |
    | **Architecture** | amd64 | amd64 | amd64 |
 
    **Why:** Gemma 4 E2B captioning needs ~5–8 GB model memory and a GPU. Use **sequential model loading** (caption → embed → rerank). Reserve **≥5 GB** in `User_Persistent_Storage` for HF cache, `sage_lab.db`, and `gradio_images/` thumbnails.
