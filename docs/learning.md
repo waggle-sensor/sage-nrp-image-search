@@ -8,7 +8,7 @@ After completing the lab, you will be able to:
 
 - Explain the Sage Image Search pipeline: captioning, embedding, indexing, hybrid search, reranking, and search UI
 - Build fused CLIP embeddings (image + caption) and index them with Milvus Lite BM25 hybrid search
-- Run a simplified version of the stack locally using Milvus Lite, open_clip, Gemma 4 E2B, and a Gradio search UI
+- Run a simplified version of the stack locally using Milvus Lite, open_clip, [Florence-2-base](https://huggingface.co/microsoft/Florence-2-base), and a Gradio search UI
 - Map each lab component to the production system (Weaviate, Triton, NRP `run_nrp_model()`, weavloader, Gradio API, React portal)
 - Evaluate retrieval quality with MRR and Success@K on SageBench queries
 
@@ -32,9 +32,8 @@ You can complete the lab without watching either video.
 Before starting the lab:
 
 - **Python** and basic machine learning familiarity
-- **1 GPU** (recommended; CPU fallback uses SageBench `summary` captions instead of Gemma)
-- A **[Hugging Face](https://huggingface.co/)** account
-- An **`HF_TOKEN`** — create a `read` token at [User access tokens](https://huggingface.co/docs/hub/en/security-tokens) and accept the [Gemma 4 license](https://huggingface.co/google/gemma-4-E2B) on the model page
+- **1 GPU** (recommended; CPU works — Florence-2-base is 0.23B params). Set `USE_SUMMARY=True` in the notebook to skip captioning and use SageBench summaries.
+- Optional **[Hugging Face](https://huggingface.co/)** account and **`HF_TOKEN`** for faster Hub downloads ([User access tokens](https://huggingface.co/docs/hub/en/security-tokens)) — not required (Florence-2-base and SageBench are public)
 
 No SAGE credentials are required (the lab uses public SageBench data).
 
@@ -44,11 +43,11 @@ The main lab is [sage_image_search_lab.ipynb](notebooks/sage_image_search_lab.ip
 
 | Section | What you do |
 |---------|-------------|
-| **Setup** | Install requirements; sign in at [Hugging Face](https://huggingface.co/); set `HF_TOKEN` ([access tokens](https://huggingface.co/docs/hub/en/security-tokens)); configure `PERSIST_DIR` in `User_Persistent_Storage` |
+| **Setup** | Install requirements; configure `PERSIST_DIR` in `User_Persistent_Storage` |
 | **Load SageBench** | 50-image subset (`SEED=42`, `SAMPLE_SIZE=50`) from [`sagecontinuum/SageBench`](https://huggingface.co/datasets/sagecontinuum/SageBench) |
 | **Architecture overview** | Compare production vs lab components (with diagram) |
 | **Step 1: Embeddings** | open_clip helpers + `get_clip_embeddings()` fused with production `clip_alpha` |
-| **Step 2: Captions** | Gemma 4 E2B-it captioning (or `summary` fallback on CPU) → fused vectors |
+| **Step 2: Captions** | [Florence-2-base](https://huggingface.co/microsoft/Florence-2-base) captioning (`<MORE_DETAILED_CAPTION>`) or `USE_SUMMARY=True` → fused vectors |
 | **Step 3: Index** | Milvus Lite collection `sage_lab` (`sage_lab.db`) with dense vectors + BM25 on `search_text` |
 | **Step 4: Vector search** | Semantic ANN on fused CLIP vectors |
 | **Step 5: Keyword search** | BM25 on captions + metadata |
@@ -68,8 +67,7 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 ### Instructor setup (one-time)
 
 
-1. Tell students to sign up at [Hugging Face](https://huggingface.co/), create **`HF_TOKEN`** ([User access tokens](https://huggingface.co/docs/hub/en/security-tokens); `read` role is enough), accept the [Gemma 4 license](https://huggingface.co/google/gemma-4-E2B), and set the token in the notebook or environment
-2. Point students to the [Image Search Lab NDP workspace](https://nationaldataplatform.org/workspaces/7c2a994e-86b5-4119-9dd7-974dc9feb257)
+1. Point students to the [Image Search Lab NDP workspace](https://nationaldataplatform.org/workspaces/7c2a994e-86b5-4119-9dd7-974dc9feb257) and [learning.md](learning.md)
 
 ### Student setup
 
@@ -83,15 +81,14 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
    | **GPUs** | **1** | **1** | 0 |
    | **Cores** | 4 | 4 | 2 |
    | **RAM** | 32 GB | 32 GB | 16 GB |
-   | **GPU Type** | Any (≥16 GB VRAM recommended) | Tesla T4 | — |
+   | **GPU Type** | Any | Any (≥8 GB VRAM) | — |
    | **Image** | Minimal NDP Starter JupyterLab | Minimal NDP Starter JupyterLab | Minimal NDP Starter JupyterLab |
    | **Timeout (sec)** | 1200  | 1200 | 1200 |
    | **Architecture** | amd64 | amd64 | amd64 |
 
-   **Why:** Gemma 4 E2B captioning needs ~5–8 GB model memory and a GPU. Use **sequential model loading** (caption → embed → rerank). Reserve **≥5 GB** in `User_Persistent_Storage` for HF cache, `sage_lab.db`, and `gradio_images/` thumbnails.
+   **Why:** [Florence-2-base](https://huggingface.co/microsoft/Florence-2-base) is only 0.23B params (~1 GB in float16) and runs on most classroom GPUs. Use **sequential model loading** (caption → embed → rerank). Reserve **≥3 GB** in `User_Persistent_Storage` for HF cache and `sage_lab.db`.
 
-   **Expected runtime:** ~10–15 min install + ~30–40 min notebook with GPU (includes Gemma captioning and Gradio UI).
-   >NOTE: If Tesla T4 is unavailable: RTX 3090 / RTX A5000 / Quadro RTX 6000 can be used as a fallback.
+   **Expected runtime:** ~10–15 min install + ~25–35 min notebook with GPU (includes Florence captioning and Gradio UI).
 
 3. **Launch server** — Start Server, wait for JupyterLab
 4. **Set storage** — open `User_Persistent_Storage`. Files outside persistent storage are **lost** when the server stops.
@@ -105,7 +102,7 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 
 **Notes:**
 
-- **[Hugging Face](https://huggingface.co/) account** and **`HF_TOKEN`** required for Gemma 4 E2B-it (gated model). Create a `read` token at [User access tokens](https://huggingface.co/docs/hub/en/security-tokens).
+- Optional **`HF_TOKEN`** for faster Hub downloads — not required for this lab
 - No SAGE credentials required (public SageBench data)
 - Fallback install: `%pip install -r requirements.txt` in the notebook
 
@@ -115,8 +112,8 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 |-------|-------------|
 | `AllocTimestamp` / `Method not implemented` during Milvus insert | Harmless Milvus Lite quirk if you still see `Indexed N fused vectors + BM25 text → …/sage_lab.db`. Re-install from `requirements.txt` to reduce log noise. |
 | Gradio gallery shows broken images with path text | Restart kernel, re-run **Load SageBench** through **Step 8**. Step 8 caches JPEG thumbnails under `gradio_images/` in persistent storage. Open the printed Gradio URL in a new tab if `inline=True` does not render images. |
-| `HF_TOKEN` / gated model download errors | Sign up at [Hugging Face](https://huggingface.co/), accept the [Gemma 4 license](https://huggingface.co/google/gemma-4-E2B), then create a `read` token at [User access tokens](https://huggingface.co/docs/hub/en/security-tokens). |
-| No GPU / Gemma OOM | CPU mode uses SageBench `summary` captions instead of Gemma; relaunch with 1 GPU for the full lab. |
+| `HF_TOKEN` / model download errors | Optional for this lab. Set `HF_TOKEN` if Hub rate-limits you ([User access tokens](https://huggingface.co/docs/hub/en/security-tokens)). |
+| Slow captioning / no GPU | Set `USE_SUMMARY=True` in Step 2 to skip Florence and use SageBench `summary` captions. |
 | Files missing after restart | Confirm you are working inside `User_Persistent_Storage`. |
 
 ## Full vs lab mapping
@@ -124,7 +121,7 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 | Production | Lab equivalent | Why simplified |
 |------------|----------------|----------------|
 | Weaviate `HybridSearchExample` | Milvus Lite `sage_lab` (`sage_lab.db`) | Embedded DB, no Kubernetes |
-| NRP `gemma` → [gemma-4-31B-it-qat-w4a16-ct](https://huggingface.co/google/gemma-4-31B-it-qat-w4a16-ct) via `run_nrp_model()` | [gemma-4-E2B-it](https://huggingface.co/google/gemma-4-E2B) via `transformers` + optional `bitsandbytes` | Same Gemma 4 family; edge-sized model for student GPU |
+| NRP `gemma` → [gemma-4-31B-it-qat-w4a16-ct](https://huggingface.co/google/gemma-4-31B-it-qat-w4a16-ct) via `run_nrp_model()` | [Florence-2-base](https://huggingface.co/microsoft/Florence-2-base) via `transformers` | Smaller VLM (0.23B) for classroom GPUs; demonstrates the same caption → embed pipeline |
 | Triton `clip` (`DFN5B-CLIP-ViT-H-14-378`) + fused image+caption vector (`clip_alpha=0.7`) | `open_clip` ViT-B-32 + same fusion | Smaller CLIP for classroom GPUs; same `fuse_embeddings` math |
 | Weaviate hybrid (`alpha=0.4`) | Milvus `hybrid_search` + `WeightedRanker(0.4, 0.6)` | Same dense+BM25 fusion via Milvus built-in ranker |
 | `reranker-transformers` | `ms-marco-MiniLM-L-6-v2` CrossEncoder | Same reranker family |
@@ -136,9 +133,9 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 
 | | Production | Lab |
 |---|------------|-----|
-| **Model** | [gemma-4-31B-it-qat-w4a16-ct](https://huggingface.co/google/gemma-4-31B-it-qat-w4a16-ct) | [gemma-4-E2B-it](https://huggingface.co/google/gemma-4-E2B) |
-| **API** | `run_nrp_model()` in [weavloader/inference/model.py](../weavloader/inference/model.py) | `transformers` `AutoModelForMultimodalLM` |
-| **Prompt** | [model_config.py](../weavloader/inference/model_config.py) `caption_model_prompt` | Same prompt text |
+| **Model** | [gemma-4-31B-it-qat-w4a16-ct](https://huggingface.co/google/gemma-4-31B-it-qat-w4a16-ct) | [Florence-2-base](https://huggingface.co/microsoft/Florence-2-base) |
+| **API** | `run_nrp_model()` in [weavloader/inference/model.py](../weavloader/inference/model.py) | `transformers` `AutoModelForCausalLM` + `trust_remote_code=True` |
+| **Prompt** | [model_config.py](../weavloader/inference/model_config.py) `caption_model_prompt` | Built-in task token `<MORE_DETAILED_CAPTION>` |
 
 ### Key ideas (from the lab conclusion)
 
@@ -152,7 +149,7 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 | Level | Audience | Activities | Difficulty | Next steps |
 |-------|----------|------------|------------|------------|
 | **1 — Explorer** | New to the system | Run the notebook; try queries in the Gradio UI; compare with [production portal](https://portal.sagecontinuum.org/labs/image-search) | Easy | [overview.md](overview.md), [glossary.md](glossary.md) |
-| **2 — Tinkerer** | Comfortable with Python | Compare Gemma vs `summary` captions; tune `QUERY_ALPHA`; plot MRR@K | Medium | [configuration.md](configuration.md), [model_config.py](../weavloader/inference/model_config.py) |
+| **2 — Tinkerer** | Comfortable with Python | Compare Florence vs `summary` captions; try `<DETAILED_CAPTION>`; tune `QUERY_ALPHA`; plot MRR@K | Medium | [configuration.md](configuration.md), [model_config.py](../weavloader/inference/model_config.py) |
 | **3 — Builder** | Ready for real stack | Deploy dev UI on NRP; run Sagebench `make run-local`; try NRP API | Hard | [getting-started.md](getting-started.md), [benchmarking.md](benchmarking.md) |
 | **4 — Contributor** | Wants to ship code | Pick a [roadmap item](CONTRIBUTING.md#roadmap); open a PR | Hard | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | **5 — Pioneer** | Building something new from scratch | [Image Search at the Edge](https://sagecontinuum.org/docs/events/2026-Sage-Summer-Hackathon#potential-hackathon-projects) — pluginctl, edge models, NanoDB | Very Hard | Hackathon project page |
@@ -163,7 +160,7 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 
 | Notebook | Runtime | Description |
 |----------|---------|-------------|
-| [sage_image_search_lab.ipynb](notebooks/sage_image_search_lab.ipynb) | ~30–40 min (GPU) | Full pipeline lab: SageBench subset → caption → fused CLIP → Milvus hybrid → rerank → Gradio UI → mini eval |
+| [sage_image_search_lab.ipynb](notebooks/sage_image_search_lab.ipynb) | ~25–35 min (GPU) | Full pipeline lab: SageBench subset → Florence caption → fused CLIP → Milvus hybrid → rerank → Gradio UI → mini eval |
 
 Additional notebooks (edge deployment, full Weaviate path) may be added later.
 

@@ -9,7 +9,7 @@ Terms used throughout Sage Image Search documentation.
 | **Autocut** | Weaviate operator that limits results at score discontinuities instead of a fixed top‑K. Disabled in production (`autocut_jumps=0`). |
 | **BM25** | Best Matching 25 — a keyword ranking algorithm used for text-based search on captions and metadata fields. |
 | **Bi-encoder** | Model architecture that embeds query and document separately (e.g. CLIP). Used for fast first-stage retrieval; contrast with cross-encoders used for reranking. |
-| **Caption** | An AI-generated text description of an image, produced by a vision-language model (VLM) such as Gemma 4. |
+| **Caption** | An AI-generated text description of an image, produced by a vision-language model (VLM) such as Gemma 4 (production) or Florence-2 (learning lab). |
 | **Celery** | Distributed task queue used by weavloader for image processing, monitoring, and cleanup. |
 | **clip_alpha** | Index-time fusion weight when combining CLIP image and caption embeddings (default 0.7). Higher values weight the image vector more; lower values weight the caption more. See `fuse_embeddings()` in `weavloader/inference/model.py`. |
 | **CLIP** | Contrastive Language-Image Pre-training. The production embedding model is `DFN5B-CLIP-ViT-H-14-378` (served via Triton). The learning lab uses a smaller `open_clip` ViT-B-32 variant with the same fusion math. |
@@ -21,7 +21,8 @@ Terms used throughout Sage Image Search documentation.
 | **Embedding fusion** | Combining separate CLIP image and caption vectors into one stored vector via `fuse_embeddings()` and `clip_alpha` before indexing. |
 | **Flower** | Web UI for monitoring Celery workers and task queues. Runs inside the weavloader pod on port 5555. |
 | **Fusion (query)** | The process of combining vector and keyword search scores at query time. Weaviate uses `RELATIVE_SCORE` fusion; Milvus uses `WeightedRanker`. |
-| **Gemma** | Google's open vision-language model family. Production captioning on NRP uses `gemma-4-31B-it-qat-w4a16-ct` via the NRP AI Gateway; the learning lab uses the smaller `gemma-4-E2B-it`. |
+| **Florence-2** | Microsoft's vision foundation model family ([Florence-2-base](https://huggingface.co/microsoft/Florence-2-base), 0.23B params). The learning lab uses it for captioning via task prompts like `<MORE_DETAILED_CAPTION>`. |
+| **Gemma** | Google's open vision-language model family. Production captioning on NRP uses `gemma-4-31B-it-qat-w4a16-ct` via the NRP AI Gateway. |
 | **Gradio** | Python library for web UIs. In production, the Gradio app in `app/` is the **search API backend** (hybrid search, image fetch, metadata). The primary user-facing UI is the React portal; Gradio can also be opened directly for local dev. |
 | **Hybrid search** | Search that combines vector (semantic) and keyword (BM25) retrieval, fused into a single ranked result set. |
 | **HybridSearchExample** | The Weaviate collection name where indexed images are stored. |
@@ -52,7 +53,7 @@ Terms used throughout Sage Image Search documentation.
 | **Triton** | NVIDIA Triton Inference Server. Serves CLIP embeddings on NRP; may also serve Gemma caption models when `LLM_RUN_MODE=TRITON`. |
 | **UNALLOWED_NODES** | Comma-separated list of VSNs excluded from indexing and filtered from query results. |
 | **Vector search** | Semantic similarity search using embedding vectors (CLIP). Finds images conceptually similar to the query. |
-| **VLM** | Vision-Language Model. Generates captions by understanding image content (e.g. Gemma 4 on NRP, or Gemma 3 via Triton in Docker Compose). |
+| **VLM** | Vision-Language Model. Generates captions by understanding image content (e.g. Gemma 4 on NRP, Florence-2 in the learning lab, or Gemma 3 via Triton in Docker Compose). |
 | **VSN** | Virtual Sensor Number. Unique identifier for a SAGE edge node (e.g. `W049`, `W040`). |
 | **Weaviate** | Open-source vector database used in production for storage, hybrid search, and reranker integration. |
 | **WeightedRanker** | Milvus component that fuses dense vector and sparse BM25 scores with configurable weights (e.g. `WeightedRanker(0.4, 0.6)` in the learning lab). |

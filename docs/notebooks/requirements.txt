@@ -12,5 +12,5 @@ sentence-transformers
 huggingface_hub
 gradio
 numpy
-bitsandbytes
-accelerate
+timm
+einops
