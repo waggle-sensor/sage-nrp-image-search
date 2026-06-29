@@ -82,8 +82,8 @@ Follow the same workflow as the official [NDP demo workspace](https://github.com
 
    | Setting | Default (camp) | Recommended | CPU fallback |
    |---------|----------------|-------------|--------------|
-   | **Region** | — | based on your location| based on your location |
-   | **Zone** | — | based on your location| based on your location |
+   | **Region** | Any | based on your location| based on your location |
+   | **Zone** | Any | based on your location| based on your location |
    | **GPUs** | **1** | **1** | 0 |
    | **Cores** | 4 | 4 | 2 |
    | **RAM** | 32 GB | 32 GB | 16 GB |
@@ -95,6 +95,7 @@ Follow the same workflow as the official [NDP demo workspace](https://github.com
    **Why:** Gemma 4 E2B captioning needs ~5–8 GB model memory and a GPU. Use **sequential model loading** (caption → embed → rerank). Reserve **≥5 GB** in `User_Persistent_Storage` for HF cache, `sage_lab.db`, and `gradio_images/` thumbnails.
 
    **Expected runtime:** ~10–15 min install + ~30–40 min notebook with GPU (includes Gemma captioning and Gradio UI).
+   >NOTE: If Tesla T4 is unavailable: RTX 3090 / RTX A5000 / Quadro RTX 6000 can be used as a fallback.
 
 3. **Launch server** — Start Server, wait for JupyterLab
 4. **Set storage** — open `User_Persistent_Storage`. Files outside persistent storage are **lost** when the server stops.
