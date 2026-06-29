@@ -65,15 +65,11 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 
 ## NDP workspace setup
 
-Follow the same workflow as the official [NDP demo workspace](https://github.com/pramonettivega/demo-workspace). Instructors create an NDP workspace per [Set up a Workspace](https://nationaldataplatform.org/documentation/quick-start/set-up-workspace/).
-
 ### Instructor setup (one-time)
 
-1. Create an NDP workspace titled e.g. **Sage Image Search Lab**
-2. Under **Workspace Codebase**, add: `https://github.com/waggle-sensor/sage-nrp-image-search`
-3. Optionally add [`sagecontinuum/SageBench`](https://huggingface.co/datasets/sagecontinuum/SageBench) under Additional Resources
-4. Tell students to sign up at [Hugging Face](https://huggingface.co/), create **`HF_TOKEN`** ([User access tokens](https://huggingface.co/docs/hub/en/security-tokens); `read` role is enough), accept the [Gemma 4 license](https://huggingface.co/google/gemma-4-E2B), and set the token in the notebook or environment
-5. Point students to this page
+
+1. Tell students to sign up at [Hugging Face](https://huggingface.co/), create **`HF_TOKEN`** ([User access tokens](https://huggingface.co/docs/hub/en/security-tokens); `read` role is enough), accept the [Gemma 4 license](https://huggingface.co/google/gemma-4-E2B), and set the token in the notebook or environment
+2. Point students to the [Image Search Lab NDP workspace](https://nationaldataplatform.org/workspaces/7c2a994e-86b5-4119-9dd7-974dc9feb257)
 
 ### Student setup
 
