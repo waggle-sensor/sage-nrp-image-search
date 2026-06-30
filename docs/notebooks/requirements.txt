@@ -2,7 +2,9 @@ pymilvus[milvus-lite]>=2.5
 open-clip-torch
 torch
 torchvision
-transformers>=4.50
+# Florence-2-base remote code breaks on transformers 4.50+ (forced_bos_token_id AttributeError).
+# See https://github.com/huggingface/transformers/issues/36886
+transformers>=4.44.0,<4.50.0
 accelerate
 datasets
 pillow

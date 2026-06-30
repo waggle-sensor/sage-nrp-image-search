@@ -113,6 +113,7 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 | `AllocTimestamp` / `Method not implemented` during Milvus insert | Harmless Milvus Lite quirk if you still see `Indexed N fused vectors + BM25 text → …/sage_lab.db`. Re-install from `requirements.txt` to reduce log noise. |
 | Gradio gallery shows broken images with path text | Restart kernel, re-run **Load SageBench** through **Step 8**. Step 8 caches JPEG thumbnails under `gradio_images/` in persistent storage. Open the printed Gradio URL in a new tab if `inline=True` does not render images. |
 | `HF_TOKEN` / model download errors | Optional for this lab. Set `HF_TOKEN` if Hub rate-limits you ([User access tokens](https://huggingface.co/docs/hub/en/security-tokens)). |
+| `forced_bos_token_id` / Florence-2 load error | Re-install from `requirements.txt` — Florence-2 needs `transformers>=4.44,<4.50` (breaks on 4.50+). Run `%pip install -r requirements.txt` and restart the kernel. |
 | Slow captioning / no GPU | Set `USE_SUMMARY=True` in Step 2 to skip Florence and use SageBench `summary` captions. |
 | Files missing after restart | Confirm you are working inside `User_Persistent_Storage`. |
 
