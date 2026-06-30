@@ -16,3 +16,4 @@ gradio
 numpy
 timm
 einops
+jinja2>=3.1.5
