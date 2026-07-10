@@ -1,19 +1,35 @@
+import logging
 import os
 import numpy as np
 import triton_python_backend_utils as pb_utils
 import torch
 from transformers import CLIPProcessor, CLIPModel
 
-MODEL_PATH = os.environ.get("CLIP_MODEL_PATH")
 
 class TritonPythonModel:
     def initialize(self, args):
         """
-        Load CLIP’s processor and model in one shot.
+        Load CLIP's processor and model in one shot.
         """
-        # Load CLIPProcessor and CLIPModel from Hugging Face
-        self.processor = CLIPProcessor.from_pretrained(MODEL_PATH)
-        self.model = CLIPModel.from_pretrained(MODEL_PATH,use_safetensors=True).to(
+        model_path = os.environ.get("CLIP_MODEL_PATH", "/models/clip")
+        if not model_path or not os.path.isdir(model_path) or not os.listdir(model_path):
+            raise pb_utils.TritonModelException(
+                f"CLIP_MODEL_PATH '{model_path}' is missing or empty. "
+                "Ensure the entrypoint downloaded the model or mount weights at this path."
+            )
+
+        use_safetensors = os.environ.get("USE_SAFETENSORS", "true").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+        logging.info(
+            "Loading CLIP model from %s (use_safetensors=%s)", model_path, use_safetensors
+        )
+        self.processor = CLIPProcessor.from_pretrained(model_path)
+        self.model = CLIPModel.from_pretrained(
+            model_path, use_safetensors=use_safetensors
+        ).to(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
         self.model.eval()
@@ -57,7 +73,7 @@ class TritonPythonModel:
             image_tensor = pb_utils.get_input_tensor_by_name(request, "image")
             image_np = image_tensor.as_numpy()
             if not np.all(image_np == 0):
-                inputs = self.processor( images=image_np, return_tensors="pt").to(self.device)
+                inputs = self.processor(images=image_np, return_tensors="pt").to(self.device)
                 with torch.no_grad():
                     feats = self.model.get_image_features(pixel_values=inputs["pixel_values"])
                 image_embeddings = feats.cpu().numpy().astype(np.float32)

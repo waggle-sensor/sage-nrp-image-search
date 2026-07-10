@@ -24,14 +24,18 @@ spec:
               value: "1"
             - name: MODEL_REPOSITORY
               value: "/app/models"
+            - name: CLIP_HF_REPO
+              value: "apple/DFN5B-CLIP-ViT-H-14-378"
             - name: CLIP_MODEL_PATH
-              value: "/models/DFN5B-CLIP-ViT-H-14-378"
+              value: "/models/clip"
             - name: CLIP_MODEL_VERSION
               value: "419d1f8f6a96aabaf5913c526d059facda50c24b"
             - name: GEMMA_MODEL_PATH
               value: "/models/gemma-3-4b-it"
             - name: GEMMA_MODEL_VERSION
               value: "093f9f388b31de276ce2de164bdc2081324b9767"
+            - name: USE_SAFETENSORS
+              value: "true"
             - name: HF_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -60,7 +64,7 @@ spec:
             name: dshm
           - mountPath: /models/gemma-3-4b-it
             name: models-gemma
-          - mountPath: /models/DFN5B-CLIP-ViT-H-14-378
+          - mountPath: /models/clip
             name: models-clip
       volumes:
       - name: dshm

@@ -57,6 +57,7 @@ services:
     restart: on-failure
     environment:
     - MODEL_REPOSITORY
+    - CLIP_HF_REPO
     - CLIP_MODEL_PATH
     - CLIP_MODEL_VERSION
     - GEMMA_MODEL_PATH

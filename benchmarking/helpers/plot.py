@@ -25,6 +25,9 @@ DEFAULT_PRIMARY_PLUS_DIVERSITY_WEIGHTS = {
     metric: 1 / len(PRIMARY_PLUS_DIVERSITY_METRICS) for metric in PRIMARY_PLUS_DIVERSITY_METRICS
 }
 
+BASELINE_VERSION = "baseline"
+ABLATION_VERSION_PREFIX = "ablation_"
+
 def discover_benchmark_names(base_path: Path) -> list[str]:
     """
     Discover benchmark directories under benchmarking/benchmarks.
@@ -533,8 +536,16 @@ def plot_group_bar_plot(
     plt.show()
 
 def _version_key(version: str):
-    match = re.fullmatch(r"v(\d+)", str(version))
-    return int(match.group(1)) if match else float("inf")
+    """Sort order: baseline, v10+, then ablation_* (alphabetically)."""
+    version = str(version)
+    if version == BASELINE_VERSION:
+        return (0, "")
+    match = re.fullmatch(r"v(\d+)", version)
+    if match:
+        return (1, int(match.group(1)))
+    if version.startswith(ABLATION_VERSION_PREFIX):
+        return (2, version)
+    return (3, version)
 
 
 def normalize_weights(weight_map: dict[str, float], expected_keys: list[str]) -> dict[str, float]:
@@ -552,10 +563,13 @@ def discover_benchmark_versions(
     base_path: Path,
     benchmarks: list[str] | None = None,
     min_version: int = 10,
+    include_baseline: bool = True,
+    include_ablations: bool = False,
 ) -> dict[str, list[str]]:
     """
-    Discover benchmark versions with query_eval_metrics.csv from v{min_version}+.
-    Returns mapping benchmark -> sorted versions.
+    Discover benchmark versions with query_eval_metrics.csv from baseline, v{min_version}+,
+    and optionally ablation_* folders.
+    Returns mapping benchmark -> sorted versions (baseline, v10+, ablation_*).
     """
     base_path = Path(base_path)
     if benchmarks is None:
@@ -568,16 +582,23 @@ def discover_benchmark_versions(
             out[benchmark] = []
             continue
         versions = []
+        if include_baseline:
+            baseline_dir = result_dir / BASELINE_VERSION
+            if (baseline_dir / "query_eval_metrics.csv").exists():
+                versions.append(BASELINE_VERSION)
         for version_dir in result_dir.iterdir():
             if not version_dir.is_dir():
                 continue
             match = re.fullmatch(r"v(\d+)", version_dir.name)
-            if not match:
+            if match:
+                if int(match.group(1)) < min_version:
+                    continue
+                if (version_dir / "query_eval_metrics.csv").exists():
+                    versions.append(version_dir.name)
                 continue
-            if int(match.group(1)) < min_version:
-                continue
-            if (version_dir / "query_eval_metrics.csv").exists():
-                versions.append(version_dir.name)
+            if include_ablations and version_dir.name.startswith(ABLATION_VERSION_PREFIX):
+                if (version_dir / "query_eval_metrics.csv").exists():
+                    versions.append(version_dir.name)
         out[benchmark] = sorted(versions, key=_version_key)
     return out
 
@@ -586,13 +607,21 @@ def load_cross_version_metrics(
     base_path: Path,
     benchmarks: list[str] | None = None,
     min_version: int = 10,
+    include_baseline: bool = True,
+    include_ablations: bool = False,
     verbose: bool = False,
 ) -> pd.DataFrame:
     """
     Load and aggregate query metrics for benchmark/version combinations.
     Aggregation is the mean across queries for each metric.
     """
-    discovered = discover_benchmark_versions(base_path, benchmarks=benchmarks, min_version=min_version)
+    discovered = discover_benchmark_versions(
+        base_path,
+        benchmarks=benchmarks,
+        min_version=min_version,
+        include_baseline=include_baseline,
+        include_ablations=include_ablations,
+    )
     rows = []
 
     for benchmark, versions in discovered.items():
@@ -627,6 +656,11 @@ def load_cross_version_metrics(
 
 
 def _get_metric_set_and_default_weights(mode: str):
+    """
+    Get the metric set and default weights for a given mode.
+    :param mode: the mode to get the metric set and default weights for.
+    :return: a tuple of the metric set and default weights.
+    """
     mode = mode.lower()
     if mode == "primary":
         return PRIMARY_METRICS, DEFAULT_PRIMARY_WEIGHTS
@@ -643,6 +677,11 @@ def add_composite_score(
 ) -> pd.DataFrame:
     """
     Add a weighted composite score column to a leaderboard dataframe.
+    :param df: the dataframe to add the composite score column to.
+    :param mode: the mode to add the composite score column for.
+    :param metric_weights: the weights to use for the metrics.
+    :param score_column: the name of the column to add the composite score to.
+    :return: the dataframe with the composite score column added.
     """
     metrics, defaults = _get_metric_set_and_default_weights(mode)
     metric_weights = defaults if metric_weights is None else normalize_weights(metric_weights, metrics)
@@ -657,13 +696,29 @@ def build_benchmark_version_leaderboard(
     base_path: Path,
     benchmarks: list[str] | None = None,
     min_version: int = 10,
+    include_baseline: bool = True,
+    include_ablations: bool = False,
     mode: str = "primary",
     metric_weights: dict[str, float] | None = None,
 ) -> pd.DataFrame:
     """
     Build a per-benchmark leaderboard ranking system versions.
+    :param base_path: the base path to the benchmarks directory.
+    :param benchmarks: the benchmarks to build the leaderboard for.
+    :param min_version: the minimum version to include in the leaderboard.
+    :param include_baseline: whether to include the baseline run.
+    :param include_ablations: whether to include ablation_* runs.
+    :param mode: the mode to build the leaderboard for.
+    :param metric_weights: the weights to use for the metrics.
+    :return: the leaderboard dataframe.
     """
-    df = load_cross_version_metrics(base_path, benchmarks=benchmarks, min_version=min_version)
+    df = load_cross_version_metrics(
+        base_path,
+        benchmarks=benchmarks,
+        min_version=min_version,
+        include_baseline=include_baseline,
+        include_ablations=include_ablations,
+    )
     if df.empty:
         return df
     out = add_composite_score(df, mode=mode, metric_weights=metric_weights)
@@ -676,6 +731,8 @@ def build_overall_version_leaderboard(
     base_path: Path,
     benchmarks: list[str] | None = None,
     min_version: int = 10,
+    include_baseline: bool = True,
+    include_ablations: bool = False,
     mode: str = "primary",
     metric_weights: dict[str, float] | None = None,
     benchmark_weights: dict[str, float] | None = None,
@@ -683,11 +740,22 @@ def build_overall_version_leaderboard(
     """
     Build a version-level leaderboard aggregated across benchmarks.
     benchmark_weights default to equal benchmark weighting.
+    :param base_path: the base path to the benchmarks directory.
+    :param benchmarks: the benchmarks to build the leaderboard for.
+    :param min_version: the minimum version to include in the leaderboard.
+    :param include_baseline: whether to include the baseline run.
+    :param include_ablations: whether to include ablation_* runs.
+    :param mode: the mode to build the leaderboard for.
+    :param metric_weights: the weights to use for the metrics.
+    :param benchmark_weights: the weights to use for the benchmarks.
+    :return: the leaderboard dataframe.
     """
     per_benchmark = build_benchmark_version_leaderboard(
         base_path=base_path,
         benchmarks=benchmarks,
         min_version=min_version,
+        include_baseline=include_baseline,
+        include_ablations=include_ablations,
         mode=mode,
         metric_weights=metric_weights,
     )
@@ -730,6 +798,12 @@ def plot_leaderboard_scores(
 ):
     """
     Plot leaderboard scores as a descending bar chart.
+    :param leaderboard_df: the leaderboard dataframe to plot.
+    :param label_column: the column to use for the labels.
+    :param score_column: the column to use for the scores.
+    :param title: the title of the plot.
+    :param figsize: the size of the figure.
+    :return: the plot.
     """
     if leaderboard_df.empty:
         print("No leaderboard data found.")
@@ -750,6 +824,8 @@ def render_single_benchmark_leaderboard(
     base_path: Path,
     benchmark: str,
     min_version: int = 10,
+    include_baseline: bool = True,
+    include_ablations: bool = False,
     mode: str = "primary",
     metric_weights: dict[str, float] | None = None,
     display_fn=None,
@@ -757,21 +833,37 @@ def render_single_benchmark_leaderboard(
     """
     Build, render table, and plot leaderboard for one benchmark.
     Returns the benchmark-only leaderboard dataframe.
+    :param base_path: the base path to the benchmarks directory.
+    :param benchmark: the benchmark to build the leaderboard for.
+    :param min_version: the minimum version to include in the leaderboard.
+    :param include_baseline: whether to include the baseline run.
+    :param include_ablations: whether to include ablation_* runs.
+    :param mode: the mode to build the leaderboard for.
+    :param metric_weights: the weights to use for the metrics.
+    :param display_fn: the function to use to display the leaderboard.
+    :return: the leaderboard dataframe.
     """
     leaderboard_df = build_benchmark_version_leaderboard(
         base_path=base_path,
         benchmarks=[benchmark],
         min_version=min_version,
+        include_baseline=include_baseline,
+        include_ablations=include_ablations,
         mode=mode,
         metric_weights=metric_weights,
     )
 
     part = leaderboard_df[leaderboard_df["benchmark"] == benchmark].copy()
     if part.empty:
-        print(f"Skip {benchmark}: no v{min_version}+ results")
+        version_desc = f"baseline, v{min_version}+"
+        if include_ablations:
+            version_desc += f", {ABLATION_VERSION_PREFIX}*"
+        print(f"Skip {benchmark}: no {version_desc} results")
         return part
 
     mode_label = "Primary + Diversity" if mode in {"primary_plus_diversity", "primary+diversity"} else "Primary"
+    if include_ablations and mode == "primary":
+        mode_label = f"{mode_label} (with Ablation Studies)"
     print(f"\n{benchmark} ({mode_label}):")
 
     if display_fn is not None:

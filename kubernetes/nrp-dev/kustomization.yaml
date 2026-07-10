@@ -28,6 +28,10 @@ patches:
     target:
       kind: Deployment
       labelSelector: "app=weavloader"
+  - path: triton-env.yaml
+    target:
+      kind: Deployment
+      labelSelector: "app=triton"
 
 images:
   - name: semitechnologies/reranker-transformers

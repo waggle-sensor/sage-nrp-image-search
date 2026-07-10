@@ -1,7 +1,7 @@
 # Sagebench Benchmark
 
 This benchmark evaluates **image retrieval** on the Hugging Face dataset
-`sagecontinuum/SageBench`, using the `imsearch_eval` framework for end-to-end evaluation. This benchmakr focuses on retrieving images using Sage metadata-aware queries.
+`sagecontinuum/SageBench`, using the `imsearch_eval` framework for end-to-end evaluation. This benchmark focuses on retrieving images using Sage metadata-aware queries.
 
 ## Dataset
 

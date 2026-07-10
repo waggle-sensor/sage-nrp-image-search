@@ -7,12 +7,14 @@ on:
       - 'v*'
     paths:
       - 'benchmarking/benchmarks/**'
+      - 'benchmarking/helpers/**'
       - '.github/workflows/benchmarking.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'benchmarking/benchmarks/**'
+      - 'benchmarking/helpers/**'
       - '.github/workflows/benchmarking.yml'
 
 jobs:
@@ -96,7 +98,13 @@ jobs:
         run: |
           BENCHMARK_DIR="benchmarking/benchmarks/${{ matrix.benchmark }}"
           DOCKERFILE="${{ steps.docker-config.outputs.dockerfile }}"
-          
+
+          # Stage shared helpers (ablation.py, etc.) into the benchmark build context.
+          # Mirrors benchmarks/Makefile build target; Dockerfiles COPY helpers/ ./helpers/
+          rm -rf "$BENCHMARK_DIR/helpers"
+          cp -r benchmarking/helpers "$BENCHMARK_DIR/helpers"
+          trap 'rm -rf "$BENCHMARK_DIR/helpers"' EXIT
+
           # Build a single image manifest (no attestations/manifest list) so GitLab
           # registry can resolve the tag to a digest (avoids "missing manifest digest").
           docker build --provenance=false --sbom=false -f "$DOCKERFILE" -t "$REGISTRY_URL$IMAGE_PATH/$IMAGE_NAME:$IMAGE_TAG" "$BENCHMARK_DIR"
