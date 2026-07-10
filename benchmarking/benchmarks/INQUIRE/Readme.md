@@ -219,9 +219,18 @@ All environment variables are loaded through the `INQUIREConfig` class in `confi
 - `TARGET_VECTOR`: Target vector name (default: clip)
 - `RESPONSE_LIMIT`: Maximum number of results to return (default: 50)
 - `QUERY_ALPHA`: Hybrid query alpha parameter (default: 0.4)
-- `CLIP_ALPHA`: CLIP alpha parameter (default: 0.7)
+- `QUERY_CLIP_ALPHA`: CLIP fusion weight at query time (default: 0.7)
 - `AUTOCUT_JUMPS`: Autocut jumps (default: 0)
 - `RERANK_PROP`: Property to use for reranking (default: caption)
+
+**Ablation Parameters:**
+- `ENABLE_CAPTION_GENERATION`: Run caption LLM during indexing (default: true)
+- `EMBED_IMAGE`: Include image in index-time CLIP embedding (default: true)
+- `EMBED_CAPTION`: Include caption in index-time CLIP embedding (default: true)
+- `INDEX_CLIP_ALPHA`: Image/caption fusion weight at index time (default: 0.7)
+- `ENABLE_BM25`: Enable BM25 keyword leg in hybrid search (default: true)
+
+See `benchmarking/README.md` for ablation run examples.
 
 **HNSW Hyperparameters:**
 - `HNSW_DIST_METRIC`: Distance metric (default: COSINE)

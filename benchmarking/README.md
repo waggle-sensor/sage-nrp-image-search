@@ -1,5 +1,5 @@
 # Sage Image Search on NRP Benchmarks
-
+>TODO: Try out https://duckdb.org/ for analyzing the results. It might make some of the analysis easier.
 This repository contains benchmark implementations for evaluating vector databases and models using the [`imsearch_eval`](https://github.com/waggle-sensor/imsearch_eval) framework.
 
 ## What's in This Repository
@@ -49,7 +49,7 @@ benchmarking/
 
 ## Leaderboards
 
-Cross-version leaderboards are supported for benchmark results in `benchmarks/*/results/v10+`.
+Cross-version leaderboards are supported for benchmark results in `benchmarks/*/results/baseline`, `ablation_*`, and `v10+`.
 
 ### Leaderboard Notebooks
 
@@ -87,6 +87,48 @@ This workflow automatically reruns leaderboard notebooks:
   - `benchmarking/benchmarks/overall/leaderboard.ipynb`
 
 The workflow is configured to rerun/update notebooks only. It does **not** generate or upload leaderboard artifacts.
+
+## Ablation Studies
+
+Benchmark runs support env-driven ablations for index-time captioning, embedding modality, and query-time BM25 keyword search. Settings are recorded in each run's `config_values.csv`.
+
+### Ablation Environment Variables
+
+| Variable | Default | Effect |
+|----------|---------|--------|
+| `ENABLE_CAPTION_GENERATION` | `true` | When `false`, skips the caption LLM entirely and stores an empty caption |
+| `EMBED_IMAGE` | `true` | When `false`, index vectors use caption-only CLIP embeddings |
+| `EMBED_CAPTION` | `false` when caption generation is disabled | When `false`, index vectors use image-only CLIP embeddings |
+| `INDEX_CLIP_ALPHA` | `0.7` | Fusion weight for image vs caption when both modalities are embedded at index time. A higher value means more weight is given to the image modality. |
+| `QUERY_CLIP_ALPHA` | `0.7` | CLIP fusion weight when embedding the query text at search time. As of right now, it is not used since only text queries are supported. A higher value means more weight is given to the image modality. |
+| `ENABLE_BM25` | `true` | When `false`, sets hybrid query `alpha=1.0` (vector-only retrieval) |
+| `QUERY_ALPHA` | `0.4` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality. |
+
+`ENABLE_BM25=false` disables the BM25 keyword leg of hybrid search. The cross-encoder reranker still runs unless you change `QUERY_METHOD` or `RERANK_PROP`.
+
+Use a distinct `COLLECTION_NAME` for each ablation condition so indexed vectors do not mix across experiments.
+
+### Example Ablation Runs
+
+```bash
+cd benchmarking/benchmarks/INQUIRE
+
+# Baseline (current behavior)
+COLLECTION_NAME=inquire-baseline make run
+
+# No caption generation, image-only embedding
+ENABLE_CAPTION_GENERATION=false EMBED_CAPTION=false \
+COLLECTION_NAME=inquire-no-caption-img-only make run
+
+# Caption-only embedding, vector-only retrieval
+EMBED_IMAGE=false ENABLE_BM25=false \
+COLLECTION_NAME=inquire-caption-only-vector make run
+
+# Full pipeline but disable BM25 keyword matching
+ENABLE_BM25=false COLLECTION_NAME=inquire-no-bm25 make run
+```
+
+Shared ablation logic lives in [`helpers/ablation.py`](helpers/ablation.py). Index-time CLIP fusion delegates to `imsearch_eval`'s `TritonModelUtils.get_clip_embeddings()`.
 
 ## Creating a New Benchmark
 
