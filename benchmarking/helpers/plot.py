@@ -448,6 +448,93 @@ def plot_overall_mrr(
     plt.tight_layout()
     plt.show()
 
+def plot_group_bar_plot(
+    system_version: str,
+    base_path: Path,
+    benchmarks: list[str] | None = None,
+    response_limit:int=25
+):
+    """
+    Plot overall hit rate, ndcg, diversity, and mrr as a bar group bar chart.
+    :param system_version: version of the system
+    :param base_path: base path to the benchmarks directory
+    :param benchmarks: list of benchmarks to plot, if None, all benchmarks will be plotted.
+    :param response_limit: number of images returned by the benchmark results for each query. Default is 25.
+    """
+    k=response_limit
+    PALETTE = ["#0072B2", "#E69F00", "#009E73", "#D55E00",
+           "#CC79A7", "#56B4E9", "#F0E442", "#000000"]
+    if benchmarks is None:
+        benchmarks = discover_benchmark_names(base_path)
+    # Get the paths for the benchmarks
+    bench_paths = []
+    for benchmark in benchmarks:
+        bench_paths.append((benchmark, base_path / f"{benchmark}/results/{system_version}/query_eval_metrics.csv"))
+
+    metrics = {
+        "Accuracy":  "accuracy",
+        "Precision": "precision",
+        "Recall":    "recall",
+        f"Success@{k}": "hit",
+        "NDCG":      "rerank_score_NDCG",
+        "Diversity": "diversity",
+        "MRR":       "rerank_score_reciprocal_rank",
+    }
+    cols = list(metrics.values())
+    categories = list(metrics.keys())
+
+    names, metrics_by_bench, errors_by_bench = [], [], []
+    for label, path in bench_paths:
+        if not path.exists():
+            print(f"Skip {label}: not found")
+            continue
+        df = pd.read_csv(path)
+        missing = [c for c in cols if c not in df.columns]
+        if missing:
+            print(f"Skip {label}: missing columns {missing}")
+            continue
+        metrics_by_bench.append([df[c].mean() for c in cols])
+        errors_by_bench.append([df[c].sem()  for c in cols])
+        names.append(label)
+
+    if not names:
+        raise ValueError("No benchmarks had usable metrics.")
+
+    x = np.arange(len(categories))
+    n = len(names)
+    width = 0.8 / n
+
+    fig, ax = plt.subplots(figsize=(7, 4.2))
+    for i, label in enumerate(names):
+        offset = (i - (n - 1) / 2) * width
+        ax.bar(x + offset, metrics_by_bench[i], width,
+               label=label, color=PALETTE[i % len(PALETTE)],
+               edgecolor="white", linewidth=0.75,
+               yerr=errors_by_bench[i],
+               error_kw=dict(ecolor="0.3", elinewidth=0.8, capsize=2.5, capthick=0.8),
+               zorder=3)
+
+    ax.set_ylabel("Score", fontweight="bold")
+    ax.set_xticks(x)
+    ax.set_xticklabels(categories,fontweight="bold")
+    ax.set_xlim(-0.5, len(categories) - 0.5)
+    ymax = max(v + e for vals, es in zip(metrics_by_bench, errors_by_bench)
+               for v, e in zip(vals, es))
+    ax.set_ylim(0, ymax * 1.18)
+    for lbl in ax.get_yticklabels():
+        lbl.set_fontweight("bold")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.tick_params(direction="out", length=4, width=0.8)
+    ax.yaxis.grid(True, color="0.88", linewidth=0.6, zorder=0)
+    ax.set_axisbelow(True)
+    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0),
+              ncol=min(n, 3), frameon=False, handlelength=1.3,
+              prop={"weight": "bold"},
+              columnspacing=1.5, borderaxespad=0.4)
+    fig.tight_layout()
+    plt.show()
+
 def _version_key(version: str):
     """Sort order: baseline, v10+, then ablation_* (alphabetically)."""
     version = str(version)
