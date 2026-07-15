@@ -173,6 +173,7 @@ Planned improvements and research directions. Items are not guaranteed or ordere
 
 ### Knowledge Graphs
 What if we build a massive knowledge graph of images and use it to answer scientific questions? This is still a research question, but it is a very interesting one.
+- https://milvus.io/blog/vector-graph-rag-without-graph-database.md
 - https://github.com/Graphify-Labs/graphify
 
 ### Performance
