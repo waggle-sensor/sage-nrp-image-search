@@ -67,7 +67,7 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 ### Instructor setup (one-time)
 
 
-1. Point students to the [Image Search Lab NDP workspace](https://nationaldataplatform.org/workspaces/7c2a994e-86b5-4119-9dd7-974dc9feb257) and [learning.md](learning.md)
+1. Point students to the [Image Search Lab NDP workspace](https://nationaldataplatform.org/workspaces/99ea4ec4-91b5-4f6d-890a-5173afd14312) and [learning.md](learning.md)
 
 ### Student setup
 
