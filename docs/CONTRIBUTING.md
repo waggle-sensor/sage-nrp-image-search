@@ -100,6 +100,8 @@ Planned improvements and research directions. Items are not guaranteed or ordere
 - [ ] try https://github.com/chopratejas/headroom to reduce tokens and be more efficient with the caption generation model
    - remember to benchmark the performance of the caption generation model with headroom using the [benchmarking suite](../benchmarking/README.md)
    - blog about Headroom here: https://www.theregister.com/ai-ml/2026/05/31/netflix-wiz-creates-app-to-slash-ai-bills-then-open-sources-it/5248702
+- [ ] try converting the caption generation model to an agent that can be used to generate the caption.
+   - the agent will have a harness that will be helpful for the caption generation model to use.
 
 ### Reranking and retrieval
 
@@ -168,6 +170,10 @@ Planned improvements and research directions. Items are not guaranteed or ordere
       - Incremental Update Latency
          - Time between new image upload and being searchable
       - examples here: https://chatgpt.com/c/684b1286-1144-8003-8a20-85a1045375c3
+
+### Knowledge Graphs
+What if we build a massive knowledge graph of images and use it to answer scientific questions? This is still a research question, but it is a very interesting one.
+- https://github.com/Graphify-Labs/graphify
 
 ### Performance
 
