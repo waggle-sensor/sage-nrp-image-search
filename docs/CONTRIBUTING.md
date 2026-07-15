@@ -114,6 +114,9 @@ Planned improvements and research directions. Items are not guaranteed or ordere
    - [ ] look into other reranker models to see if they can improve the reranking performance
 - [ ] look into MMR (maximal marginal relevance) to see if it can improve the reranking performance or to implement it as a "toggle" to apply it only to certain queries.
    - https://milvus.io/ai-quick-reference/how-is-diversity-in-search-results-achieved
+- [ ] try implementing AgenticRAG to see if it can improve retrieval performance. Measure "performance" by using the [benchmarking suite](../benchmarking/README.md)
+   - https://huggingface.co/docs/smolagents/en/examples/rag
+   - https://youtu.be/p0FERNkpyHE?si=WV2_0OEwNfFZKwgO
 
 ### Safety and observability
 
@@ -172,7 +175,7 @@ Planned improvements and research directions. Items are not guaranteed or ordere
       - examples here: https://chatgpt.com/c/684b1286-1144-8003-8a20-85a1045375c3
 
 ### Knowledge Graphs
-What if we build a massive knowledge graph of images and use it to answer scientific questions? This is still a research question, but it is a very interesting one.
+What if we build a massive knowledge graph of images and use it to answer scientific questions? This is still a research question, but it is a very interesting one. Maybe it can even help with searching for images.
 - https://milvus.io/blog/vector-graph-rag-without-graph-database.md
 - https://github.com/Graphify-Labs/graphify
 
