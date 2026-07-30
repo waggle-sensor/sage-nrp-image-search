@@ -102,6 +102,7 @@ Planned improvements and research directions. Items are not guaranteed or ordere
    - blog about Headroom here: https://www.theregister.com/ai-ml/2026/05/31/netflix-wiz-creates-app-to-slash-ai-bills-then-open-sources-it/5248702
 - [ ] try converting the caption generation model to an agent that can be used to generate the caption.
    - the agent will have a harness that will be helpful for the caption generation model to use.
+- [ ] try out https://github.com/microsoft/SkillOpt to improve the prompt and skills
 
 ### Reranking and retrieval
 
