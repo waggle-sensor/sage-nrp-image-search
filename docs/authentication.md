@@ -80,6 +80,19 @@ echo -n "username:password" | base64
 
 Credentials and endpoint details: [NRP vector-database documentation](https://nrp.ai/documentation/userdocs/ai/vector-database/). Default URI: `https://milvus.nrp-nautilus.io:50051`. Token format is `username:password`.
 
+### Milvus UI (Attu)
+
+For local development, use [Attu](https://milvus.io/docs/quickstart_with_attu.md) — a standalone GUI for inspecting collections, schema, row counts, and running ad-hoc queries against NRP Milvus.
+
+1. Install Attu Desktop from the [Attu releases](https://github.com/zilliztech/attu/releases) (see the [Attu quickstart](https://milvus.io/docs/quickstart_with_attu.md)).
+2. Connect with the same values as `MILVUS_URI` / `MILVUS_TOKEN`:
+   - **Milvus Address:** `https://milvus.nrp-nautilus.io:50051`
+   - **Authentication:** username and password from your NRP Milvus credentials (token is `username:password`)
+   - Enable **secure gRPC** / TLS (same requirement as the app; do not use `http://`)
+3. Select database `image_search_svc` (`MILVUS_DB`), then open the collection for your env (`HybridSearchExample` or `HybridSearchExampleDev`).
+
+NRP also documents Attu under [NRP-managed vector database](https://nrp.ai/documentation/userdocs/ai/vector-database/).
+
 ## Local Docker Compose setup
 
 ```bash

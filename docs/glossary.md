@@ -6,6 +6,7 @@ Terms used throughout Sage Image Search documentation.
 |------|------------|
 | **Alpha (query)** | Hybrid search blend parameter (`query_alpha`). A value of 0 means pure keyword (BM25) search; 1 means pure vector search. The default is 0.4 (40% vector, 60% keyword) via `WeightedRanker(0.4, 0.6)`. |
 | **ANN** | Approximate nearest neighbor. Fast similarity search over embedding vectors; trades perfect accuracy for speed at large scale. |
+| **Attu** | Desktop/web GUI for Milvus. Useful in development to inspect NRP collections, schema, and row counts — see [Authentication → Milvus UI (Attu)](authentication.md#milvus-ui-attu) and the [Attu quickstart](https://milvus.io/docs/quickstart_with_attu.md). |
 | **BM25** | Best Matching 25 — a keyword ranking algorithm used for text-based search on `search_text` (caption + metadata). In Milvus, produced via `FunctionType.BM25` into a sparse vector field. |
 | **Bi-encoder** | Model architecture that embeds query and document separately (e.g. CLIP). Used for first-stage retrieval and for CLIP-based reranking (query text vs caption). |
 | **Caption** | An AI-generated text description of an image, produced by a vision-language model (VLM) such as Gemma 4 (production) or Florence-2 (learning lab). |
