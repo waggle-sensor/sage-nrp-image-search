@@ -2,7 +2,7 @@
 import os
 import traceback
 import tritonclient.grpc as TritonClient
-from client import initialize_weaviate_client
+from client import initialize_milvus_client
 from processing import process_image, parse_deny_list
 from metrics import metrics
 import time
@@ -26,9 +26,9 @@ UNALLOWED_NODES = os.environ.get("UNALLOWED_NODES", "")
 UNALLOWED_NODES = parse_deny_list(UNALLOWED_NODES)
 TRITON_HOST = os.environ.get("TRITON_HOST", "triton")
 TRITON_PORT = os.environ.get("TRITON_PORT", "8001")
-WEAVIATE_HOST = os.environ.get("WEAVIATE_HOST", "weaviate")
-WEAVIATE_PORT = os.environ.get("WEAVIATE_PORT", "8080")
-WEAVIATE_GRPC_PORT = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
+MILVUS_URI = os.environ.get("MILVUS_URI", "https://milvus.nrp-nautilus.io:50051")
+MILVUS_TOKEN = os.environ.get("MILVUS_TOKEN", "")
+MILVUS_DB = os.environ.get("MILVUS_DB", "image_search_svc")
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
 REDIS_DB = int(os.environ.get("REDIS_DB", "0"))
@@ -71,21 +71,22 @@ class DLQTask(Task):
         celery_logger.error(f"[CLEANER] Forwarded {self.name} {task_id} to DLQ: {headers}")
 
 # Initialize shared clients (one per worker process)
-_weaviate_client = None
+_milvus_client = None
 _triton_client = None
 _redis_client = None
 
-def get_weaviate_client():
-    """Get or create shared weaviate client"""
-    global _weaviate_client
-    if _weaviate_client is None:
-        _weaviate_client = initialize_weaviate_client(WEAVIATE_HOST, WEAVIATE_PORT, WEAVIATE_GRPC_PORT)
-        celery_logger.info("[SHARED] Initialized shared weaviate client")
-    if _weaviate_client.is_ready():
-        metrics.update_component_health('weaviate', True)
-    else:
-        metrics.update_component_health('weaviate', False)
-    return _weaviate_client
+def get_milvus_client():
+    """Get or create shared Milvus client"""
+    global _milvus_client
+    if _milvus_client is None:
+        _milvus_client = initialize_milvus_client(MILVUS_URI, MILVUS_TOKEN, MILVUS_DB)
+        celery_logger.info("[SHARED] Initialized shared Milvus client")
+    try:
+        _milvus_client.list_collections()
+        metrics.update_component_health('milvus', True)
+    except Exception:
+        metrics.update_component_health('milvus', False)
+    return _milvus_client
 
 def get_triton_client():
     """Get or create shared triton client"""
@@ -109,14 +110,14 @@ def get_triton_client():
 
 def cleanup_clients():
     """Cleanup shared clients"""
-    global _weaviate_client, _triton_client
-    if _weaviate_client is not None:
+    global _milvus_client, _triton_client
+    if _milvus_client is not None:
         try:
-            _weaviate_client.close()
-            celery_logger.info("[SHARED] Closed shared weaviate client")
+            _milvus_client.close()
+            celery_logger.info("[SHARED] Closed shared Milvus client")
         except Exception as e:
-            celery_logger.warning(f"[SHARED] Error closing weaviate client: {e}")
-        _weaviate_client = None
+            celery_logger.warning(f"[SHARED] Error closing Milvus client: {e}")
+        _milvus_client = None
     
     if _triton_client is not None:
         try:
@@ -164,7 +165,7 @@ def process_image_task(self, image_data, **meta):
         celery_logger.info(f"[PROCESSOR] Processing image: {image_data.get('url', 'unknown')}")
         
         # Get shared clients (reused across tasks)
-        weaviate_client = get_weaviate_client()
+        milvus_client = get_milvus_client()
         triton_client = get_triton_client()
         
         # Process the image
@@ -172,7 +173,7 @@ def process_image_task(self, image_data, **meta):
             image_data, 
             USER, 
             PASS, 
-            weaviate_client, 
+            milvus_client, 
             triton_client,
             logger=celery_logger
         )

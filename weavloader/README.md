@@ -1,6 +1,6 @@
 # Weavloader
 
-**Weavloader** is a distributed image processing service that continuously monitors SAGE data streams, processes images with AI models, and stores them in Weaviate for hybrid search capabilities.
+**Weavloader** is a distributed image processing service that continuously monitors SAGE data streams, processes images with AI models, and stores them in Milvus for hybrid search capabilities.
 
 ## **What is Weavloader?**
 
@@ -8,14 +8,14 @@ Weavloader is a job processing system that:
 
 - **Monitors SAGE data streams** for new images from environmental sensors
 - **Processes images** using AI models (Gemma3, CLIP, Florence2) for captioning and embeddings
-- **Stores processed data** in Weaviate vector database for hybrid search
+- **Stores processed data** in Milvus vector database for hybrid search
 - **Handles failures gracefully** with automatic retries and dead letter queues
 - **Scales horizontally** to process thousands of images efficiently
 
 ## **Architecture**
 
 ```
-SAGE Data Stream → Weavloader → AI Processing → Weaviate Database
+SAGE Data Stream → Weavloader → AI Processing → Milvus Database
                       ↓
                  Redis Queue (Celery)
                       ↓
@@ -38,7 +38,7 @@ weavloader/
 │   ├── server.py        # HTTP metrics server (unified endpoint)
 │   └── artifacts/       # Prometheus configuration files
 ├── processing.py        # SAGE data stream processing
-├── client.py            # Weaviate client initialization
+├── client.py            # Milvus client initialization
 ├── main.py              # Application entry point
 └── supervisord.conf     # Process management
 ```
@@ -51,7 +51,7 @@ weavloader/
 - **Flower Monitoring**: Real-time Celery task and worker monitoring
 - **Data Monitor**: Watches SAGE streams for new images
 - **Redis**: Message broker and task queue
-- **Weaviate**: Vector database for hybrid search
+- **Milvus**: Vector database for hybrid search
 
 ## **Key Features**
 
@@ -83,7 +83,7 @@ weavloader/
 
 ### **Required Services:**
 - **Redis Server** (message broker)
-- **Weaviate Database** (vector storage)
+- **Milvus Database** (vector storage)
 - **Triton Inference Server** (ML model serving)
 - **SAGE Data Access** (environmental sensor data)
 
@@ -98,8 +98,8 @@ weavloader/
    export TRITON_PORT="8001"
 
 # Database
-export WEAVIATE_HOST="weaviate"
-export WEAVIATE_PORT="8080"
+export MILVUS_URI="https://milvus.nrp-nautilus.io:50051"
+export MILVUS_DB="image_search_svc"
 
 # Celery Configuration
    export CELERY_BROKER_URL="redis://localhost:6379/0"
@@ -313,7 +313,7 @@ celery -A tasks worker --loglevel=info --concurrency=2 --hostname=worker3@%h
 ### **Horizontal Scaling:**
 - **Workers**: Scale based on image processing load
 - **Redis**: Use Redis Cluster for high availability
-- **Weaviate**: Scale Weaviate cluster for storage
+- **Milvus**: Scale Milvus collection/cluster for storage
 
 ## **Troubleshooting**
 
@@ -425,14 +425,14 @@ Import the provided `grafana-dashboard.json` to visualize:
 Use the provided `prometheus.yml` to scrape metrics from:
 - Weavloader (port 8080)
 - Redis (port 6379)
-- Weaviate (port 8080)
+- NRP Milvus (`milvus.nrp-nautilus.io:50051`)
 
 ## **Configuration Files:**
 
 ### **Core Application:**
 - **`main.py`**: Application entry point
 - **`processing.py`**: SAGE data stream processing
-- **`client.py`**: Weaviate client initialization
+- **`client.py`**: Milvus client initialization
 - **`supervisord.conf`**: Process management
 - **`Dockerfile`**: Container configuration
 - **`requirements.txt`**: Python dependencies

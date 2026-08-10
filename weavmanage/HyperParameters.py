@@ -1,44 +1,70 @@
-'''This file contains the hyper parameters that can be changed to fine tune
-the system. 
-NOTE: Not all params have been added here. More in depth search must be 
-done to find more hyper params that can be altered'''
-#NOTE: The hyperparameters will be split up based on what microservice it corresponds to. Or I can
-#   make all the microservices apart of the same deployment so the HPs continue to be easily managed
-#   and don't get split up.
+'''Hyperparameters for Milvus collection / index creation.
 
-from weaviate.classes.config import VectorDistances, Configure
-from weaviate.collections.classes.config_vector_index import VectorFilterStrategy
+These are applied once at schema create time by weavmanage migrations.
+Changing them later requires recreating (or reindexing) the collection.
 
-#TODO: Grab a big enough sample set to test a real deployment of weaviate with Sage so you can fine tune the HPs
-#  NOTE: instead of recreating the db just update the HPs when testing
+Docs:
+  HNSW: https://milvus.io/docs/hnsw.md
+  BM25 / full-text: https://milvus.io/docs/full-text-search.md
+  Analyzers: https://milvus.io/docs/analyzer-overview.md
+'''
 
-# 1) Weaviate module multi2vec-bind (Imagebind) weights
-textWeight = 0.3
-imageWeight = 0.7 # Increase the weighting here so that the embedding is more influenced by the image
-audioWeight = 0 # Currently not being used
-videoWeight = 0 # Currently not being used
+# ---------------------------------------------------------------------------
+# Schema
+# ---------------------------------------------------------------------------
+# CLIP DFN5B-ViT-H-14 projection dim. Must match Triton CLIP output.
+vector_dim = 1024
 
-# 2) Hierarchical Navigable Small World (hnsw) for Approximate Nearest Neighbor (ANN) hyperparamaters
-# HNSW works well with bigger datasets
-# more info: https://weaviate.io/developers/weaviate/config-refs/schema/vector-index#hnsw-indexes
-# configuration tips: https://weaviate.io/developers/weaviate/config-refs/schema/vector-index#hnsw-configuration-tips
-# helpful article: https://gagan-mehta.medium.com/efficient-resource-understanding-and-planning-in-weaviate-ec673f065e86
-hnsw_dist_metric=VectorDistances.COSINE
-hnsw_ef=-1 #Balance search speed and recall, Weaviate automatically adjusts the ef value and creates a dynamic ef list when ef is set to -1
-hnsw_ef_construction=100 #Balance index search speed and build speed. Changed from 128 to 100
-hnsw_maxConnections=42 #Maximum number of connections per element. Changed from 50 to 42
-hnsw_dynamicEfMax=500 #Upper bound for dynamic ef
-hnsw_dynamicEfMin=200 #Lower bound for dynamic ef. Changed from 100 to 200
-hnsw_ef_factor=20 #This setting is only used when hnsw_ef is -1, Sets the potential length of the search list. Changed from 8 to 20
-hnsw_filterStrategy=VectorFilterStrategy.ACORN #The filter strategy to use for filtering the search results.
-hnsw_flatSearchCutoff=40000 #cutoff to automatically switch to a flat (brute-force) vector search when a filter becomes too restrictive
-hnsw_vector_cache_max_objects=1e12 #Maximum number of objects in the memory cache
-# Auto Product Quantization (PQ)
-#  https://weaviate.io/developers/weaviate/configuration/compression/pq-compression
-hnsw_quantizer=Configure.VectorIndex.Quantizer.pq(
-    training_limit=100000 #threshold to begin training
-)
+# Allow undeclared fields on insert. Keep False for a strict production schema.
+enable_dynamic_field = False
 
-# 3) Weaviate module reranker-transformers (ms-marco-MiniLM-L-6-v2 Reranker Model)
-# Model info: https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L-2
-# NOTE: there is no HPs I can change in this module
+# VARCHAR limits
+search_text_max_length = 65535
+caption_max_length = 65535
+scalar_varchar_max_length = 2048
+
+# ---------------------------------------------------------------------------
+# Analyzer (tokenization for BM25 on search_text)
+# ---------------------------------------------------------------------------
+# Built-in analyzers: "standard", "english", "chinese", ...
+# Or custom: {"tokenizer": "standard", "filter": ["lowercase", ...]}
+# https://milvus.io/docs/analyzer-overview.md
+analyzer_params = {
+    "type": "standard",
+    # Optional stop-word list for the standard analyzer, e.g. ["a", "an", "the"]
+    # "stop_words": [],
+}
+
+# ---------------------------------------------------------------------------
+# Dense vector index (HNSW on fused CLIP embeddings)
+# ---------------------------------------------------------------------------
+# Metric: COSINE is correct for L2-normalized CLIP embeddings (IP is equivalent).
+dense_metric_type = "COSINE"
+dense_index_type = "HNSW"
+
+# Max edges per node. Higher → better recall, more memory, slower build/insert.
+# Typical range: [5, 100]. Default in Milvus docs often ~30.
+hnsw_M = 16
+
+# Candidate pool during index build. Higher → better graph quality, slower build.
+# Typical range: [50, 500].
+hnsw_ef_construction = 256
+
+# ---------------------------------------------------------------------------
+# Sparse BM25 index (on FunctionType.BM25 output field `sparse`)
+# ---------------------------------------------------------------------------
+sparse_index_type = "SPARSE_INVERTED_INDEX"
+sparse_metric_type = "BM25"
+
+# Query/build algorithm for the inverted index:
+#   "DAAT_MAXSCORE" (default) — good for larger k / many query terms
+#   "DAAT_WAND"              — good for small k / short queries
+#   "TAAT_NAIVE"             — adapts to changing avgdl; slower baseline
+#   "BLOCK_MAX_MAXSCORE", "BLOCK_MAX_WAND" — block-max variants (newer Milvus)
+bm25_inverted_index_algo = "DAAT_MAXSCORE"
+
+# Term-frequency saturation. Higher → repeated terms count more. Range ~[1.2, 2.0].
+bm25_k1 = 1.2
+
+# Document-length normalization. 0 = none, 1 = full. Typical default 0.75.
+bm25_b = 0.75

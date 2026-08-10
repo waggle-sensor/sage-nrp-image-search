@@ -6,20 +6,26 @@ This folder contains the Kubernetes manifests for deploying the `sage-nrp-image-
 
 - `base/`: Base kustomize configuration and manifests for core deployment
 - `base/kustomization.yaml`: Main kustomization file listing services, secrets, and configMaps
-- `base/*.yaml`: Service, Deployment, Job, and Secret manifests for all core components (Weaviate, Triton, Reranker, Gradio UI, etc.)
+- `base/*.yaml`: Service, Deployment, Job, and Secret manifests for core components (Triton, Gradio UI, weavloader, weavmanage, etc.)
 
 ## Deployment Overview
 
 The resources here stand up the core application stack:
 
-- **Weaviate** (vector database)
+- **NRP-managed Milvus** (vector database — no Milvus pod; URI/token via `milvus-secret`)
 - **Triton** (inference server)
-- **Reranker Transformers** (optional re-ranking model)
-- **Gradio UI**
-- **Support jobs** for dataset management, storage, and configuration
-- **Secrets** for Hugging Face, S3, and Sage user credentials
+- **Gradio UI** (hybrid search + Triton CLIP rerank)
+- **Weavloader / Weavmanage** (ingest + schema Job; internals use pymilvus)
+- **Secrets** for Hugging Face, Sage user, NRP LLM, and Milvus credentials
 
 All roles and deployments are configured using kustomize to simplify environment management and overlays.
+
+Collection names per env:
+
+| Overlay | `MILVUS_COLLECTION` |
+|---------|---------------------|
+| nrp-prod | `HybridSearchExample` |
+| nrp-dev / prs | `HybridSearchExampleDev` |
 
 ## Setting Up Secrets
 
@@ -33,7 +39,7 @@ Copy the template and fill in your HuggingFace token (base64-encoded):
 cp base/huggingface-secret.template.yaml base/._huggingface-secret.yaml
 ```
 
-To generateb base64 encoded Hugging Face token:
+To generate base64 encoded Hugging Face token:
 ```
 echo -n "your_hf_token_here" | base64
 ```
@@ -47,7 +53,7 @@ cp base/sage-user-secret.template.yaml base/._sage-user-secret.yaml
 ```
 
 Base64 encoded SAGE_USER and SAGE_PASS to generate:
-``
+```
 echo -n "your_username_here" | base64
 echo -n "your_password_here" | base64
 ```
@@ -65,10 +71,25 @@ cp base/nrp-llm-user-secret.template.yaml base/._nrp-llm-user-secret.yaml
 ```
 
 Base64 encoded NRP_API_ENDPOINT and NRP_API_KEY to generate:
-``
+```
 echo -n "your_username_here" | base64
 echo -n "your_password_here" | base64
 ```
+
+### 4. Milvus Secret
+
+```bash
+cp base/milvus-secret.template.yaml base/._milvus-secret.yaml
+```
+
+Fill base64-encoded `MILVUS_URI` (default `https://milvus.nrp-nautilus.io:50051`) and `MILVUS_TOKEN` (`user:password`) from the [NRP vector-database docs](https://nrp.ai/documentation/userdocs/ai/vector-database/):
+
+```
+echo -n "https://milvus.nrp-nautilus.io:50051" | base64
+echo -n "username:password" | base64
+```
+
+Collections are created in `MILVUS_DB=image_search_svc` (database already provisioned by NRP admins).
 
 
 ## Deploying
@@ -119,8 +140,6 @@ The following manual steps are required for now:
 - port-forwarding for any of the services to test out (update `pr`):
     - `kubectl port-forward svc/pr-triton 8001:8001`: triton endpoint to call the LLM models locally
     - `kubectl port-forward svc/pr-gradio-ui 7860:7860`: Search UI
-    - `kubectl port-forward svc/pr-weaviate 8080:8080`: Weaviate REST endpoint
-    - `kubectl port-forward svc/pr-weaviate 50051:50051`: Weaviate GRPC endpoint
     - `kubectl port-forward svc/pr-weavloader-metrics 5555:5555`: Weavloader Flower endpoint
     - `kubectl port-forward svc/pr-weavloader-metrics 8081:8080`: Weavloader Prometheus endpoint
 
@@ -149,5 +168,4 @@ You can extend or patch this `base/` deployment using kustomize overlays for dif
 
 ## Note
 
-- These resources do **not** include benchmark job definitions. For benchmarking, see `benchmarking/kubernetes/`.
-- Update secret files as needed to match your deployment’s authentication requirements.
+After cutover, tear down legacy Weaviate / reranker Deployments and PVCs once the UI smoke-tests cleanly against Milvus.

@@ -1,4 +1,4 @@
-weaviate_client==4.14.* #https://weaviate.io/developers/weaviate/release-notes#weaviate-core-and-client-releases
+pymilvus==2.5.*
 imageio==2.33.1
 sage_data_client==0.7.1
 matplotlib==3.8.2

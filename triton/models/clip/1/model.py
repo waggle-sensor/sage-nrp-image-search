@@ -79,11 +79,16 @@ class TritonPythonModel:
                 image_embeddings = feats.cpu().numpy().astype(np.float32)
 
             # ── 3) PACKAGE THE OUTPUTS ────────────────────────────────
-            output_tensors = []
+            # Match HF CLIPModel.forward: logits_per_image uses exp(logit_scale)
+            logit_scale = (
+                self.model.logit_scale.detach().exp().float().cpu().numpy().reshape(1).astype(np.float32)
+            )
             text_out = pb_utils.Tensor("text_embedding", text_embeddings)
             img_out = pb_utils.Tensor("image_embedding", image_embeddings)
-            output_tensors.extend([text_out, img_out])
-            responses.append(pb_utils.InferenceResponse(output_tensors=output_tensors))
+            scale_out = pb_utils.Tensor("logit_scale", logit_scale)
+            responses.append(
+                pb_utils.InferenceResponse(output_tensors=[text_out, img_out, scale_out])
+            )
 
         return responses
 

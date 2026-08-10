@@ -8,7 +8,7 @@ Sage Image Search requires credentials for three external services. Without them
 |------------|---------------------|---------|---------|
 | Sage username | `SAGE_USER` | weavloader, Gradio (K8s) | Authenticate to SAGE object storage |
 | Sage password | `SAGE_PASS` | weavloader, Gradio (K8s) | Authenticate to SAGE object storage |
-| Hugging Face token | `HF_TOKEN` | Triton, Weaviate init | Download gated ML models |
+| Hugging Face token | `HF_TOKEN` | Triton | Download gated ML models |
 
 ## Optional credentials
 
@@ -64,6 +64,22 @@ cp kubernetes/base/nrp-llm-user-secret.template.yaml kubernetes/base/._nrp-llm-u
 # Edit with base64-encoded NRP_API_ENDPOINT and NRP_API_KEY
 ```
 
+## Milvus (NRP vector database)
+
+Production and NRP Kubernetes use managed Milvus. Copy the template and set URI/token:
+
+```bash
+cp kubernetes/base/milvus-secret.template.yaml kubernetes/base/._milvus-secret.yaml
+# Edit with base64-encoded MILVUS_URI and MILVUS_TOKEN
+```
+
+```bash
+echo -n "https://milvus.nrp-nautilus.io:50051" | base64
+echo -n "username:password" | base64
+```
+
+Credentials and endpoint details: [NRP vector-database documentation](https://nrp.ai/documentation/userdocs/ai/vector-database/). Default URI: `https://milvus.nrp-nautilus.io:50051`. Token format is `username:password`.
+
 ## Local Docker Compose setup
 
 ```bash
@@ -76,6 +92,9 @@ Edit `.env` and fill in at minimum:
 SAGE_USER=your_username
 SAGE_PASS=your_password
 HF_TOKEN=your_hf_token
+MILVUS_URI=https://milvus.nrp-nautilus.io:50051
+MILVUS_TOKEN=your_nrp_user:your_milvus_password
+MILVUS_DB=image_search_svc
 ```
 
 Then start the stack:
@@ -84,7 +103,7 @@ Then start the stack:
 docker compose up -d --build
 ```
 
-> **Note:** The Gradio UI container in `docker-compose.yml` does not include `SAGE_USER`/`SAGE_PASS` by default. Image thumbnails may not display locally unless you add these variables to the gradio-ui service.
+> **Note:** Set `MILVUS_URI` and `MILVUS_TOKEN` in `.env` — Compose uses the same NRP-hosted Milvus as Kubernetes.
 
 ## Access control limitations
 

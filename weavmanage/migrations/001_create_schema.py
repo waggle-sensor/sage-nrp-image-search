@@ -1,119 +1,102 @@
-from weaviate.classes.config import Configure, Property, DataType, Multi2VecField
+'''Create the Milvus hybrid search collection (dense CLIP + BM25 sparse).'''
+import logging
+import os
+
+from pymilvus import DataType, Function, FunctionType
+
 import HyperParameters as hp
 
+COLLECTION_NAME = os.getenv("MILVUS_COLLECTION", "HybridSearchExample")
+
+SCALAR_VARCHAR_FIELDS = [
+    "filename",
+    "caption",
+    "link",
+    "timestamp",
+    "vsn",
+    "node",
+    "zone",
+    "task",
+    "host",
+    "job",
+    "plugin",
+    "camera",
+    "project",
+    "address",
+]
+
+
 def run(client):
-    """Create the initial schema"""
-    # Create a schema to add images, audio, etc.
-    # I have used the web pages:
-    # https://weaviate.io/developers/weaviate/manage-data
-    # https://weaviate.io/developers/weaviate/model-providers/imagebind/embeddings-multimodal
-    # to get help on making a suitable schema. You can read the contents of this web page to know more.
-    # Define the schema (collection)
-    client.collections.create(
-        name="HybridSearchExample",
-        description="A collection to implement Hybrid Search example",
-        properties=[
-            Property(name="filename", data_type=DataType.TEXT),
-            Property(name="image", data_type=DataType.BLOB),
-            Property(name="audio", data_type=DataType.BLOB),
-            Property(name="video", data_type=DataType.BLOB),
-            Property(name="caption", data_type=DataType.TEXT),  # Caption for keyword search
-            Property(name="link", data_type=DataType.TEXT),
-            Property(name="timestamp", data_type=DataType.TEXT),
-            Property(name="vsn", data_type=DataType.TEXT),
-            Property(name="node", data_type=DataType.TEXT),
-            Property(name="zone", data_type=DataType.TEXT),
-            Property(name="task", data_type=DataType.TEXT),
-            Property(name="host", data_type=DataType.TEXT),
-            Property(name="job", data_type=DataType.TEXT),
-            Property(name="plugin", data_type=DataType.TEXT),
-            Property(name="camera", data_type=DataType.TEXT),
-            Property(name="project", data_type=DataType.TEXT),
-            Property(name="address", data_type=DataType.TEXT),
-            Property(name="location", data_type=DataType.GEO_COORDINATES)
-        ],
-        vectorizer_config=[
-            # Configure.NamedVectors.multi2vec_bind(
-            #     name="imagebind",
-            #     vectorize_collection_name= False,
-            #     # Define fields for vectorization
-            #     image_fields=[
-            #         Multi2VecField(name="image", weight=hp.imageWeight)
-            #     ],
-            #     text_fields=[
-            #         Multi2VecField(name="caption", weight=hp.textWeight)
-            #     ],
-            #     audio_fields=[
-            #         Multi2VecField(name="audio", weight=hp.audioWeight)
-            #     ],
-            #     video_fields=[
-            #         Multi2VecField(name="video", weight=hp.videoWeight)
-            #     ],
-            #     vector_index_config=Configure.VectorIndex.hnsw( #https://weaviate.io/developers/weaviate/concepts/vector-index , https://weaviate.io/developers/weaviate/config-refs/schema/vector-index
-            #         distance_metric=hp.hnsw_dist_metric, #works well to compare images with different attributes such as brightness levels or sizes.
-            #         dynamic_ef_factor=hp.hnsw_ef_factor,
-            #         dynamic_ef_max=hp.hnsw_dynamicEfMax,
-            #         dynamic_ef_min=hp.hnsw_dynamicEfMin,
-            #         ef=hp.hnsw_ef,
-            #         ef_construction=hp.hnsw_ef_construction,
-            #         filter_strategy=hp.hnsw_filterStrategy,
-            #         flat_search_cutoff=hp.hnsw_flatSearchCutoff,
-            #         max_connections=hp.hnsw_maxConnections,
-            #         vector_cache_max_objects=int(hp.hnsw_vector_cache_max_objects),
-            #         quantizer=hp.hnsw_quantizer,
-            #     )
-            # ),
-            # Configure.NamedVectors.none(
-            #     name="colbert",
-            #     vector_index_config=Configure.VectorIndex.hnsw( #https://weaviate.io/developers/weaviate/concepts/vector-index , https://weaviate.io/developers/weaviate/config-refs/schema/vector-index
-            #         distance_metric=hp.hnsw_dist_metric, #works well to compare images with different attributes such as brightness levels or sizes.
-            #         dynamic_ef_factor=hp.hnsw_ef_factor,
-            #         dynamic_ef_max=hp.hnsw_dynamicEfMax,
-            #         dynamic_ef_min=hp.hnsw_dynamicEfMin,
-            #         ef=hp.hnsw_ef,
-            #         ef_construction=hp.hnsw_ef_construction,
-            #         filter_strategy=hp.hnsw_filterStrategy,
-            #         flat_search_cutoff=hp.hnsw_flatSearchCutoff,
-            #         max_connections=hp.hnsw_maxConnections,
-            #         vector_cache_max_objects=int(hp.hnsw_vector_cache_max_objects),
-            #         quantizer=hp.hnsw_quantizer,
-            #         multi_vector=Configure.VectorIndex.MultiVector.multi_vector()
-            #     )
-            # ),
-            # Configure.NamedVectors.none(
-            #     name="align",
-            #     vector_index_config=Configure.VectorIndex.hnsw( #https://weaviate.io/developers/weaviate/concepts/vector-index , https://weaviate.io/developers/weaviate/config-refs/schema/vector-index
-            #         distance_metric=hp.hnsw_dist_metric, #works well to compare images with different attributes such as brightness levels or sizes.
-            #         dynamic_ef_factor=hp.hnsw_ef_factor,
-            #         dynamic_ef_max=hp.hnsw_dynamicEfMax,
-            #         dynamic_ef_min=hp.hnsw_dynamicEfMin,
-            #         ef=hp.hnsw_ef,
-            #         ef_construction=hp.hnsw_ef_construction,
-            #         filter_strategy=hp.hnsw_filterStrategy,
-            #         flat_search_cutoff=hp.hnsw_flatSearchCutoff,
-            #         max_connections=hp.hnsw_maxConnections,
-            #         vector_cache_max_objects=int(hp.hnsw_vector_cache_max_objects),
-            #         quantizer=hp.hnsw_quantizer,
-            #     )
-            # ),
-            Configure.NamedVectors.none(
-                name="clip",
-                vector_index_config=Configure.VectorIndex.hnsw( #https://weaviate.io/developers/weaviate/concepts/vector-index , https://weaviate.io/developers/weaviate/config-refs/schema/vector-index
-                    distance_metric=hp.hnsw_dist_metric, #works well to compare images with different attributes such as brightness levels or sizes.
-                    dynamic_ef_factor=hp.hnsw_ef_factor,
-                    dynamic_ef_max=hp.hnsw_dynamicEfMax,
-                    dynamic_ef_min=hp.hnsw_dynamicEfMin,
-                    ef=hp.hnsw_ef,
-                    ef_construction=hp.hnsw_ef_construction,
-                    filter_strategy=hp.hnsw_filterStrategy,
-                    flat_search_cutoff=hp.hnsw_flatSearchCutoff,
-                    max_connections=hp.hnsw_maxConnections,
-                    vector_cache_max_objects=int(hp.hnsw_vector_cache_max_objects),
-                    quantizer=hp.hnsw_quantizer,
-                )
-            ),
-        ],
-        reranker_config=Configure.Reranker.transformers()
+    """Create the initial Milvus schema if it does not already exist."""
+    if client.has_collection(COLLECTION_NAME):
+        logging.debug(
+            f"Collection {COLLECTION_NAME} already exists, skipping create."
+        )
+        return
+
+    schema = client.create_schema(enable_dynamic_field=hp.enable_dynamic_field)
+    schema.add_field("id", DataType.INT64, is_primary=True, auto_id=True)
+    schema.add_field(
+        "vector", DataType.FLOAT_VECTOR, dim=hp.vector_dim
+    )
+    schema.add_field(
+        "search_text",
+        DataType.VARCHAR,
+        max_length=hp.search_text_max_length,
+        enable_analyzer=True,
+        analyzer_params=hp.analyzer_params,
+    )
+    schema.add_field("sparse", DataType.SPARSE_FLOAT_VECTOR)
+
+    for name in SCALAR_VARCHAR_FIELDS:
+        max_length = (
+            hp.caption_max_length
+            if name == "caption"
+            else hp.scalar_varchar_max_length
+        )
+        schema.add_field(name, DataType.VARCHAR, max_length=max_length)
+
+    schema.add_field("location_lat", DataType.FLOAT)
+    schema.add_field("location_lon", DataType.FLOAT)
+
+    schema.add_function(
+        Function(
+            name="search_text_bm25",
+            function_type=FunctionType.BM25,
+            input_field_names=["search_text"],
+            output_field_names=["sparse"],
+        )
     )
 
-    return
+    index_params = client.prepare_index_params()
+    index_params.add_index(
+        field_name="vector",
+        index_type=hp.dense_index_type,
+        metric_type=hp.dense_metric_type,
+        params={
+            "M": hp.hnsw_M,
+            "efConstruction": hp.hnsw_ef_construction,
+        },
+    )
+    index_params.add_index(
+        field_name="sparse",
+        index_type=hp.sparse_index_type,
+        metric_type=hp.sparse_metric_type,
+        params={
+            "inverted_index_algo": hp.bm25_inverted_index_algo,
+            "bm25_k1": hp.bm25_k1,
+            "bm25_b": hp.bm25_b,
+        },
+    )
+
+    client.create_collection(
+        collection_name=COLLECTION_NAME,
+        schema=schema,
+        index_params=index_params,
+    )
+    client.load_collection(COLLECTION_NAME)
+    logging.debug(
+        f"Created and loaded collection {COLLECTION_NAME} "
+        f"(HNSW M={hp.hnsw_M}, efC={hp.hnsw_ef_construction}; "
+        f"BM25 k1={hp.bm25_k1}, b={hp.bm25_b}, algo={hp.bm25_inverted_index_algo})"
+    )

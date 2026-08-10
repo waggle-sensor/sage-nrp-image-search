@@ -20,12 +20,10 @@ spec:
           env:
             - name: PYTHONUNBUFFERED
               value: "1"
-            - name: WEAVIATE_HOST
-              value: "$(WEAVIATE_SERVICE)"
-            - name: WEAVIATE_PORT
-              value: "8080"
-            - name: WEAVIATE_GRPC_PORT
-              value: "50051"
+            - name: MILVUS_DB
+              value: "image_search_svc"
+            - name: MILVUS_COLLECTION
+              value: "HybridSearchExample"
             - name: CLUSTER_FLAG
               value: "True"
             - name: TRITON_HOST
@@ -35,6 +33,8 @@ spec:
           envFrom:
           - secretRef:
               name: sage-user-secret
+          - secretRef:
+              name: milvus-secret
           resources:
             limits:
               cpu: 1

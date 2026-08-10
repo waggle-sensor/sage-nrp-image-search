@@ -1,6 +1,6 @@
 # Sage Image Search on NRP
 
-Hybrid image search for the [SAGE Continuum](https://sagecontinuum.org) sensor network. Images are captioned by a vision-language model, embedded with CLIP, and stored in Weaviate. Search combines vector similarity and keyword matching (BM25), then reranks results for relevance.
+Hybrid image search for the [SAGE Continuum](https://sagecontinuum.org) sensor network. Images are captioned by a vision-language model, embedded with CLIP, and stored in NRP-managed Milvus. Search combines vector similarity and keyword matching (BM25), then reranks results for relevance.
 
 **[Full documentation →](docs/README.md)**
 

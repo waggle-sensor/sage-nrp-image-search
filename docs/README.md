@@ -1,6 +1,6 @@
 # Sage Image Search Documentation
 
-Sage Image Search is a hybrid image retrieval system for the [SAGE Continuum](https://sagecontinuum.org) sensor network. It continuously indexes camera images from SAGE, generates AI captions and embeddings, stores them in Weaviate, and lets you search with natural-language text queries.
+Sage Image Search is a hybrid image retrieval system for the [SAGE Continuum](https://sagecontinuum.org) sensor network. It continuously indexes camera images from SAGE, generates AI captions and embeddings, stores them in NRP-managed Milvus, and lets you search with natural-language text queries.
 
 ## I want to...
 

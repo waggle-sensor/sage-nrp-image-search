@@ -25,5 +25,13 @@ output [
     name: "image_embedding"
     data_type: TYPE_FP32
     dims: [ -1 ]
+  },
+  {
+    # Multiplicative scale used by HF CLIPModel.forward for logits_per_image:
+    #   logits_per_image = cosine(image, text) * logit_scale
+    # Value is exp(model.logit_scale), shape [1].
+    name: "logit_scale"
+    data_type: TYPE_FP32
+    dims: [ 1 ]
   }
 ]

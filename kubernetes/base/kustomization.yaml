@@ -3,31 +3,15 @@ kind: Kustomization
 namespace: sage
 
 resources:
-  - reranker-transformers.yaml
-  - weaviate.yaml
   - ._huggingface-secret.yaml
   - ._sage-user-secret.yaml
   - ._nrp-llm-user-secret.yaml
+  - ._milvus-secret.yaml
   - triton.yaml
   - gradio-ui.yaml
   - weavmanage.yaml
   - weavloader.yaml
-  - hf_pvc.yaml
 vars:
-  - name: RERANKER_SERVICE
-    objref:
-      kind: Service
-      name: reranker-transformers
-      apiVersion: v1
-    fieldref:
-      fieldpath: metadata.name
-  - name: WEAVIATE_SERVICE
-    objref:
-      kind: Service
-      name: weaviate
-      apiVersion: v1
-    fieldref:
-      fieldpath: metadata.name
   - name: TRITON_SERVICE
     objref:
       kind: Service
@@ -35,8 +19,3 @@ vars:
       apiVersion: v1
     fieldref:
       fieldpath: metadata.name
-
-configMapGenerator:
-  - name: init-dataset-script-cm
-    files:
-      - init-dataset.sh

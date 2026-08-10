@@ -4,15 +4,13 @@
 
 import gradio as gr
 import os
-import weaviate
-from weaviate.classes.init import Timeout, AdditionalConfig
-import argparse
 import logging
 import time
 import tritonclient.grpc as TritonClient
 import plotly.graph_objects as go
 import pandas as pd
-from query import Weav_query, Sage_query
+from pymilvus import MilvusClient
+from query import Milvus_query, Sage_query
 
 # Disable Gradio analytics
 os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
@@ -34,50 +32,27 @@ def allowed_file(filename):
     '''
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def initialize_weaviate_client():
+def initialize_milvus_client():
     '''
-    Intialize weaviate client based on arg or env var
+    Initialize Milvus client from MILVUS_URI / MILVUS_TOKEN / MILVUS_DB env vars.
     '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--weaviate_host",
-        default=os.getenv("WEAVIATE_HOST","127.0.0.1"),
-        help="Weaviate host IP.",
-    )
-    parser.add_argument(
-        "--weaviate_port",
-        default=os.getenv("WEAVIATE_PORT","8080"),
-        help="Weaviate REST port.",
-    )
-    parser.add_argument(
-        "--weaviate_grpc_port",
-        default=os.getenv("WEAVIATE_GRPC_PORT","50051"),
-        help="Weaviate GRPC port.",
-    )
-    args = parser.parse_args()
+    uri = os.getenv("MILVUS_URI", "https://milvus.nrp-nautilus.io:50051")
+    token = os.getenv("MILVUS_TOKEN", "")
+    db_name = os.getenv("MILVUS_DB", "image_search_svc")
 
-    weaviate_host = args.weaviate_host
-    weaviate_port = args.weaviate_port
-    weaviate_grpc_port = args.weaviate_grpc_port
+    logging.debug(f"Attempting to connect to Milvus at {uri} (db={db_name})")
 
-    logging.debug(f"Attempting to connect to Weaviate at {weaviate_host}:{weaviate_port}")
-
-    # Retry logic to connect to Weaviate
     while True:
         try:
-            add_config = AdditionalConfig(
-                timeout=Timeout(init=15, query=120, insert=120)
-            )
-            client = weaviate.connect_to_local(
-                host=weaviate_host,
-                port=weaviate_port,
-                grpc_port=weaviate_grpc_port,
-                additional_config=add_config,
-            )
-            logging.debug("Successfully connected to Weaviate")
+            kwargs = {"uri": uri, "db_name": db_name}
+            if token:
+                kwargs["token"] = token
+            client = MilvusClient(**kwargs)
+            client.list_collections()
+            logging.debug(f"Successfully connected to Milvus db={db_name}")
             return client
-        except weaviate.exceptions.WeaviateConnectionError as e:
-            logging.error(f"Failed to connect to Weaviate: {e}")
+        except Exception as e:
+            logging.error(f"Failed to connect to Milvus: {e}")
             logging.debug("Retrying in 10 seconds...")
             time.sleep(10)
 
@@ -143,24 +118,30 @@ def filter_map(df):
 
     return fig
 
-weaviate_client = initialize_weaviate_client()
+milvus_client = initialize_milvus_client()
 
 TRITON_HOST = os.environ.get("TRITON_HOST","triton")
 TRITON_PORT = os.environ.get("TRITON_PORT","8001")
 triton_client = TritonClient.InferenceServerClient(url=f"{TRITON_HOST}:{TRITON_PORT}")
 
-wq = Weav_query(weaviate_client, triton_client)
+wq = Milvus_query(milvus_client, triton_client)
 sq = Sage_query()
 def text_query(description):
     '''
-    Send text query to a weaviate query and engineer results to display in Gradio
+    Send text query to Milvus hybrid search and engineer results to display in Gradio
     '''
-    # send the query to Weaviate and get the results
+    # send the query to Milvus and get the results
     df = wq.clip_hybrid_query(description)
+
+    if df is None or df.empty:
+        return [], gr.DataFrame(value=None), gr.Plot(value=None)
 
     # authorize results based on allowed nodes
     # TODO: implement auth using username and key from sage user
     df = df[df['vsn'].apply(lambda x: sq.authorize(x))]
+
+    if df.empty:
+        return [], gr.DataFrame(value=None), gr.Plot(value=None)
 
     # Extract the image links and captions from the DataFrame
     images = []
@@ -183,12 +164,15 @@ def text_query(description):
 
 def search(query):
     '''
-    Send text query to a weaviate query and return results.
+    Send text query to Milvus hybrid search and return results.
 
     NOTE: This will be similar to what we will have in our Sage data API.
     '''
-    # send the query to Weaviate and get the results
+    # send the query to Milvus and get the results
     df = wq.clip_hybrid_query(query)
+
+    if df is None or df.empty:
+        return {"headers": [], "data": [], "metadata": None}
 
     #drop columns that I dont want
     results = df.drop(columns=["uuid"])

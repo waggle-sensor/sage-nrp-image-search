@@ -29,21 +29,20 @@ docker cp "$(basename "$GEMMA_MODEL_PATH")" sage-nrp-image-search-triton-1:/mode
 
 ---
 
-## Gradio cannot connect to Weaviate
+## Gradio cannot connect to Milvus
 
-**Symptoms:** UI shows connection errors, logs repeat "Failed to connect to Weaviate".
+**Symptoms:** UI shows connection errors, logs repeat "Failed to connect to Milvus".
 
 **Causes:**
-- Weaviate is still starting up
-- Wrong host/port configuration
-- Weaviate pod crashed
+- NRP Milvus endpoint unreachable
+- Wrong `MILVUS_URI` / `MILVUS_TOKEN`
+- Missing or invalid milvus secret on Kubernetes / missing token in `.env` for Compose
 
 **Fixes:**
 
-1. Wait — the Gradio app retries every 10 seconds until Weaviate is ready.
-2. Verify Weaviate is running: `docker compose ps weaviate` or `kubectl get pods -l app=weaviate`.
-3. Check environment variables: `WEAVIATE_HOST`, `WEAVIATE_PORT`, `WEAVIATE_GRPC_PORT`.
-4. Port-forward if needed: `kubectl port-forward svc/dev-weaviate 8080:8080`.
+1. Wait — the Gradio app retries every 10 seconds until Milvus is ready.
+2. Check environment variables: `MILVUS_URI`, `MILVUS_TOKEN`, `MILVUS_COLLECTION`.
+3. Confirm NRP credentials from [vector-database docs](https://nrp.ai/documentation/userdocs/ai/vector-database/).
 
 ---
 
@@ -52,9 +51,9 @@ docker cp "$(basename "$GEMMA_MODEL_PATH")" sage-nrp-image-search-triton-1:/mode
 **Symptoms:** Queries return empty results or an empty metadata table.
 
 **Causes:**
-- Weavloader has not indexed any images yet
+- Weavloader has not indexed any images yet (fresh collections after Milvus cutover start empty)
 - All matching nodes are on the `UNALLOWED_NODES` deny list
-- The Weaviate collection is empty
+- The Milvus collection is empty or the wrong `MILVUS_COLLECTION` is configured
 - Query is too specific or uses terms not in indexed data
 
 **Fixes:**
@@ -86,7 +85,7 @@ docker cp "$(basename "$GEMMA_MODEL_PATH")" sage-nrp-image-search-triton-1:/mode
 
 ## Weavloader not ingesting images
 
-**Symptoms:** No new images appear in Weaviate; weavloader logs show no processing activity.
+**Symptoms:** No new images appear in Milvus; weavloader logs show no processing activity.
 
 **Causes:**
 - Invalid Sage credentials
@@ -128,10 +127,10 @@ For detailed weavloader troubleshooting (DLQ, queue lengths, scaling), see the [
 
 **Fixes:**
 
-1. Ensure the main stack (Weaviate + Triton) is deployed and healthy before running benchmarks.
+1. Ensure the main stack (Milvus credentials + Triton) is deployed and healthy before running benchmarks.
 2. Check job logs: `make logs` from the benchmark directory.
 3. See [benchmarking/kubernetes/README.md](../benchmarking/kubernetes/README.md) for deployment details.
-4. For local debugging: `make run-local` port-forwards Weaviate and Triton.
+4. For local debugging: `make run-local` port-forwards Triton (and any still-Weaviate-based benchmark adapters as documented under `benchmarking/`).
 
 ---
 
@@ -139,9 +138,9 @@ For detailed weavloader troubleshooting (DLQ, queue lengths, scaling), see the [
 
 **Symptoms:** Search works on NRP but not locally (or vice versa), different result quality.
 
-**Cause:** Local Compose uses `multi2vec-bind` vectorizer; NRP K8s uses user-provided CLIP vectors with a different query path.
+**Cause:** Caption backends may differ (`LLM_RUN_MODE=TRITON` vs `NRP`), or Compose/K8s use different `MILVUS_COLLECTION` values. Collections start empty until weavloader backfills.
 
-**Fix:** This is expected. For production-like behavior, test against the NRP deployment. See [Architecture](architecture.md#docker-compose-vs-kubernetes).
+**Fix:** Align `MILVUS_COLLECTION` and credentials with the target env. For production-like behavior, test against the NRP deployment. See [Architecture](architecture.md#docker-compose-vs-kubernetes).
 
 ---
 

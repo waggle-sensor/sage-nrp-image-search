@@ -12,29 +12,29 @@ Sage Image Search indexes images from SAGE edge cameras and retrieves them using
 
 1. **Caption generation** — A vision-language model (VLM) writes a detailed caption for each indexed image.
 2. **Embedding** — CLIP produces vector embeddings from the image and caption.
-3. **Storage** — Captions, metadata, embeddings, and the image blob are stored in Weaviate.
+3. **Storage** — Captions, metadata, and fused CLIP embeddings are stored in NRP-managed Milvus (no image blob; UI loads via SAGE URL).
 4. **Hybrid search** — When you query, the system combines:
    - **Vector search** — semantic similarity between your query and CLIP embeddings
-   - **Keyword search** — BM25 text matching on captions and SAGE metadata fields
-5. **Reranking** — A cross-encoder reranker re-scores the top results against your query for better ordering.
+   - **Keyword search** — BM25 text matching on `search_text` (caption + SAGE metadata)
+5. **Reranking** — Triton CLIP re-scores the top results by query–image embedding similarity.
 
 ## What gets indexed
 
-Each image record in Weaviate (`HybridSearchExample` collection) includes:
+Each image record in Milvus (`MILVUS_COLLECTION`, default `HybridSearchExample`) includes:
 
 | Data | Description |
 |------|-------------|
 | Caption | AI-generated description of the image |
-| Image blob | The original image bytes |
-| CLIP embedding | Named vector `clip` for semantic search |
+| CLIP embedding | Dense `vector` (1024-d) for semantic search |
+| search_text | Caption + metadata blob for BM25 (`sparse` filled by Milvus) |
 | SAGE metadata | `vsn`, `camera`, `zone`, `job`, `host`, `plugin`, `project`, `task`, `address`, `timestamp`, `link` |
-| Location | GPS coordinates when available |
+| Location | `location_lat` / `location_lon` when available |
 
 ## Key features
 
 - **Hybrid search** — Combines semantic and keyword retrieval for better accuracy than either alone
 - **Continuous ingestion** — Weavloader polls the SAGE data stream and indexes new images automatically
-- **Reranking** — Cross-encoder model refines result order after initial retrieval
+- **Reranking** — Triton CLIP refines result order after initial retrieval
 - **Map view** — Search results with GPS data appear on an interactive map in the UI
 - **Benchmarking** — Five domain-specific benchmarks measure retrieval quality (see [Benchmarking](benchmarking.md))
 
@@ -44,9 +44,9 @@ Each image record in Weaviate (`HybridSearchExample` collection) includes:
 
 - **Interim UI** — The Gradio app in `app/` is a temporary demo. A production UI integrated with beekeeper/beehive-data-api is planned.
 - **Text search only** — Image-to-image search is not implemented yet (the Image Query tab is commented out).
-- **No REST API** — There is no standalone search API today; the Gradio app queries Weaviate directly.
+- **No REST API** — There is no standalone search API today; the Gradio app queries Milvus directly.
 - **Static access control** — Results are filtered by a static node deny list (`UNALLOWED_NODES`), not per-user Sage ACL. Images you lack Sage access to are skipped during indexing.
-- **Docker Compose vs Kubernetes** — Local Docker Compose uses a different vectorizer setup (`multi2vec-bind`) than the NRP Kubernetes deployment (user-provided CLIP vectors). See [Architecture](architecture.md) for details.
+- **Fresh re-ingest** — After the Weaviate → Milvus cutover, collections start empty until weavloader backfills from the SAGE stream.
 
 ## Next steps
 

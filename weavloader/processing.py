@@ -1,8 +1,7 @@
-'''This file contains code that adds data to weaviate using sage_data_client.
+'''This file contains code that adds data to Milvus using sage_data_client.
 These images will be the ones with which the hybrid search will compare
 the text query given by the user.'''
 
-import weaviate
 import os
 import pandas as pd
 import time
@@ -10,16 +9,16 @@ import sage_data_client
 import requests
 import logging
 from PIL import Image
-from io import BytesIO, BufferedReader
-from inference import run_triton_model, get_clip_embeddings, run_nrp_model
+from io import BytesIO
+from inference import get_clip_embeddings, run_nrp_model, run_triton_model
 from urllib.parse import urljoin
-from weaviate.classes.data import GeoCoordinate
 from metrics import metrics
 import numpy as np
 from math import isfinite
 from openai import OpenAI
 
 MANIFEST_API = os.environ.get("MANIFEST_API", "https://auth.sagecontinuum.org/manifests/")
+MILVUS_COLLECTION = os.environ.get("MILVUS_COLLECTION", "HybridSearchExample")
 LLM_RUN_MODE = os.environ.get("LLM_RUN_MODE", "TRITON")
 METRIC_REPORT_CAPTION_MODEL = f"{LLM_RUN_MODE}_unknown".lower()
 if LLM_RUN_MODE == 'NRP':
@@ -136,15 +135,15 @@ def safe_str(value, default="unknown"):
         return default
     return str(value)
 
-def process_image(image_data, username, token, weaviate_client, triton_client, logger=logging.getLogger(__name__)):
+def process_image(image_data, username, token, milvus_client, triton_client, logger=logging.getLogger(__name__)):
     """
-    Process a single image and add it to Weaviate.
+    Process a single image and add it to Milvus.
     
     Args:
         image_data (dict): Dictionary containing image metadata
         username (str): SAGE username
         token (str): SAGE token
-        weaviate_client: Weaviate client instance
+        milvus_client: MilvusClient instance
         triton_client: Triton client instance
         
     Returns:
@@ -177,18 +176,7 @@ def process_image(image_data, username, token, weaviate_client, triton_client, l
         if not image_content:
             raise ValueError(f"Empty content received for URL: {url}")
 
-        # Wrap the BytesIO stream in BufferedReader
         image_stream = BytesIO(image_content)
-        buffered_stream = BufferedReader(image_stream)
-
-        # Reset the pointer to the beginning
-        image_stream.seek(0)  
-
-        # Encode the image
-        encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
-
-        # Reset the pointer to the beginning, to be used again
-        image_stream.seek(0)
         image = Image.open(image_stream).convert("RGB")
 
         # Get the manifest
@@ -236,9 +224,6 @@ def process_image(image_data, username, token, weaviate_client, triton_client, l
             metrics.record_model_inference("clip", "embedding", embedding_duration, "failure")
             raise e
 
-        # Get Weaviate collection
-        collection = weaviate_client.collections.get("HybridSearchExample")
-
         # finite checks
         lat_sanitized = safe_coord(lat, default=0.0, label="lat", logger=logger)
         lon_sanitized = safe_coord(lon, default=0.0, label="lon", logger=logger)
@@ -246,38 +231,61 @@ def process_image(image_data, username, token, weaviate_client, triton_client, l
             logger.error(f"[PROCESSING] Non-finite values in embedding vector for {url}")
             raise ValueError(f"Non-finite values in embedding vector for {url}")
 
-        # Prepare data for insertion into Weaviate
-        data_properties = {
+        caption_s = safe_str(caption)
+        camera_s = safe_str(camera)
+        host_s = safe_str(host)
+        job_s = safe_str(job)
+        vsn_s = safe_str(vsn)
+        plugin_s = safe_str(plugin)
+        zone_s = safe_str(zone)
+        project_s = safe_str(project)
+        address_s = safe_str(address)
+
+        # Same fields Weaviate used in query_properties for BM25
+        search_text = (
+            f"{caption_s} {camera_s} {host_s} {job_s} {vsn_s} "
+            f"{plugin_s} {zone_s} {project_s} {address_s}"
+        )
+
+        vector = (
+            clip_embedding.tolist()
+            if hasattr(clip_embedding, "tolist")
+            else list(clip_embedding)
+        )
+
+        row = {
+            "vector": vector,
+            "search_text": search_text[:65535],
             "filename": safe_str(filename),
-            "image": encoded_image,
             "timestamp": safe_str(timestamp.strftime('%y-%m-%d %H:%M Z')),
             "link": safe_str(url),
-            "caption": safe_str(caption),
-            "camera": safe_str(camera),
-            "host": safe_str(host),
-            "job": safe_str(job),
+            "caption": caption_s[:65535],
+            "camera": camera_s,
+            "host": host_s,
+            "job": job_s,
             "node": safe_str(node),
-            "plugin": safe_str(plugin),
+            "plugin": plugin_s,
             "task": safe_str(task),
-            "vsn": safe_str(vsn),
-            "zone": safe_str(zone),
-            "project": safe_str(project),
-            "address": safe_str(address),
-            "location": GeoCoordinate(latitude=lat_sanitized, longitude=lon_sanitized),
+            "vsn": vsn_s,
+            "zone": zone_s,
+            "project": project_s,
+            "address": address_s,
+            "location_lat": float(lat_sanitized),
+            "location_lon": float(lon_sanitized),
         }
 
-        # Insert into Weaviate with metrics
+        # Insert into Milvus with metrics
         start_time = time.perf_counter()
         try:
-            collection.data.insert(
-                properties=data_properties,
-                vector={"clip": clip_embedding}
+            milvus_client.insert(
+                collection_name=MILVUS_COLLECTION,
+                data=[row],
             )
             insert_duration = time.perf_counter() - start_time
-            metrics.record_weaviate_operation("insert", "success", insert_duration)
+            metrics.record_milvus_operation("insert", "success", insert_duration)
         except Exception as e:
             insert_duration = time.perf_counter() - start_time
-            metrics.record_weaviate_operation("insert", "failure", insert_duration)
+            metrics.record_milvus_operation("insert", "failure", insert_duration)
             raise e
         
         logger.debug(f'[PROCESSING] Image added: {url}')

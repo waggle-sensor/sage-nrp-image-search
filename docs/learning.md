@@ -9,7 +9,7 @@ After completing the lab, you will be able to:
 - Explain the Sage Image Search pipeline: captioning, embedding, indexing, hybrid search, reranking, and search UI
 - Build fused CLIP embeddings (image + caption) and index them with Milvus Lite BM25 hybrid search
 - Run a simplified version of the stack locally using Milvus Lite, open_clip, [Florence-2-base](https://huggingface.co/microsoft/Florence-2-base), and a Gradio search UI
-- Map each lab component to the production system (Weaviate, Triton, NRP `run_nrp_model()`, weavloader, Gradio API, React portal)
+- Map each lab component to the production system (NRP Milvus, Triton, NRP `run_nrp_model()`, weavloader, Gradio API, React portal)
 - Evaluate retrieval quality with MRR and Success@K on SageBench queries
 
 Try the live production UI at **[portal.sagecontinuum.org/labs/image-search](https://portal.sagecontinuum.org/labs/image-search)** — a React web app backed by the Gradio API server in `app/`.
@@ -121,11 +121,11 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 
 | Production | Lab equivalent | Why simplified |
 |------------|----------------|----------------|
-| Weaviate `HybridSearchExample` | Milvus Lite `sage_lab` (`sage_lab.db`) | Embedded DB, no Kubernetes |
+| NRP Milvus `HybridSearchExample` (+Dev) | Milvus Lite `sage_lab` (`sage_lab.db`) | Embedded DB, no cluster credentials |
 | NRP `gemma` → [gemma-4-31B-it-qat-w4a16-ct](https://huggingface.co/google/gemma-4-31B-it-qat-w4a16-ct) via `run_nrp_model()` | [Florence-2-base](https://huggingface.co/microsoft/Florence-2-base) via `transformers` | Smaller VLM (0.23B) for classroom GPUs; demonstrates the same caption → embed pipeline |
 | Triton `clip` (`DFN5B-CLIP-ViT-H-14-378`) + fused image+caption vector (`clip_alpha=0.7`) | `open_clip` ViT-B-32 + same fusion | Smaller CLIP for classroom GPUs; same `fuse_embeddings` math |
-| Weaviate hybrid (`alpha=0.4`) | Milvus `hybrid_search` + `WeightedRanker(0.4, 0.6)` | Same dense+BM25 fusion via Milvus built-in ranker |
-| `reranker-transformers` | `ms-marco-MiniLM-L-6-v2` CrossEncoder | Same reranker family |
+| Milvus `hybrid_search` + `WeightedRanker(0.4, 0.6)` | Same API shape in the notebook | Lab uses Milvus Lite; production uses NRP-managed Milvus |
+| Triton CLIP query–image rerank (`DFN5B-CLIP-ViT-H-14-378`) | CrossEncoder `ms-marco-MiniLM-L-6-v2` in notebook | Lab keeps a classic cross-encoder for teaching; production scores query vs image via Triton CLIP |
 | weavloader Celery ingestion | Notebook indexing loop | No distributed queues |
 | Gradio API (`app/main.py`) + [React portal](https://portal.sagecontinuum.org/labs/image-search) | Gradio UI in notebook (`lab_text_query`) | Lab combines UI and API; production splits React frontend from Gradio backend |
 | Full benchmarking suite | Mini MRR / Success@K on SageBench | Links to [Sagebench](../benchmarking/benchmarks/Sagebench/) |
@@ -163,7 +163,7 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 |----------|---------|-------------|
 | [sage_image_search_lab.ipynb](notebooks/sage_image_search_lab.ipynb) | ~25–35 min (GPU) | Full pipeline lab: SageBench subset → Florence caption → fused CLIP → Milvus hybrid → rerank → Gradio UI → mini eval |
 
-Additional notebooks (edge deployment, full Weaviate path) may be added later.
+Additional notebooks (edge deployment, etc.) may be added later.
 
 ## Reference documentation
 

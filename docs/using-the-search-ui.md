@@ -38,7 +38,7 @@ Each result includes these fields:
 | `caption` | AI-generated description of the image |
 | `score` | Hybrid search fusion score (higher is more relevant) |
 | `explainScore` | Breakdown of how vector and keyword scores were combined |
-| `rerank_score` | Relevance score from the cross-encoder reranker |
+| `rerank_score` | Relevance score from Triton CLIP query–image similarity |
 | `vsn` | SAGE node identifier (Virtual Sensor Number) |
 | `camera` | Camera name on the node (e.g. `top`, `left`, `right`) |
 | `zone` | Deployment zone |
@@ -54,8 +54,8 @@ Results are limited to **25** by default (`response_limit` in `app/HyperParamete
 
 Results are ranked in two stages:
 
-1. **Hybrid retrieval** — Weaviate combines vector similarity (CLIP embedding of your query vs. stored embeddings) with BM25 keyword matching on captions and metadata. The blend weight `alpha=0.4` means 40% vector, 60% keyword.
-2. **Reranking** — A cross-encoder model (`ms-marco-MiniLM-L-6-v2`) re-scores the top results by comparing your query against each image's caption.
+1. **Hybrid retrieval** — Milvus combines vector similarity (CLIP embedding of your query vs. stored embeddings) with BM25 keyword matching on `search_text` (captions + metadata). The blend weight `alpha=0.4` means 40% vector, 60% keyword via `WeightedRanker`.
+2. **Reranking** — Triton CLIP (`DFN5B-CLIP-ViT-H-14-378`) re-scores the top results by similarity between your query text and each retrieved image (same idea as HF CLIP `logits_per_image`).
 
 Keyword search covers these fields: `caption`, `camera`, `host`, `job`, `vsn`, `plugin`, `zone`, `project`, `address`.
 
@@ -69,7 +69,7 @@ Keyword search covers these fields: `caption`, `camera`, `host`, `job`, `vsn`, `
 ## What you will and won't see
 
 **You will see:**
-- Images that have been indexed by weavloader into Weaviate
+- Images that have been indexed by weavloader into Milvus
 - Results from nodes not on the `UNALLOWED_NODES` deny list
 - Images your Sage credentials can download (in K8s deployments where SAGE creds are configured)
 
