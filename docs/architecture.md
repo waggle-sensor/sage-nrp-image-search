@@ -79,6 +79,7 @@ Collections live in the NRP-provisioned database `MILVUS_DB=image_search_svc` (N
 
 - **Dense vector:** `vector` FLOAT_VECTOR dim=1024 (fused CLIP; COSINE / HNSW)
 - **BM25:** `search_text` VARCHAR with analyzer → `sparse` via `FunctionType.BM25`
+- **Time:** `timestamp` TIMESTAMPTZ (ISO 8601 on insert; stored as UTC; STL_SORT index)
 - **Scalars:** caption, SAGE metadata fields, `location_lat` / `location_lon`
 - **Not stored:** image/audio/video blobs (UI loads via SAGE `link`)
 

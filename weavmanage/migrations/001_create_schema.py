@@ -12,7 +12,6 @@ SCALAR_VARCHAR_FIELDS = [
     "filename",
     "caption",
     "link",
-    "timestamp",
     "vsn",
     "node",
     "zone",
@@ -26,13 +25,35 @@ SCALAR_VARCHAR_FIELDS = [
 ]
 
 
+def _field_type(client, field_name: str):
+    """Return DataType for a field, or None if the collection/field is missing."""
+    if not client.has_collection(COLLECTION_NAME):
+        return None
+    for field in client.describe_collection(COLLECTION_NAME).get("fields", []):
+        if field.get("name") == field_name:
+            return field.get("type")
+    return None
+
+
 def run(client):
-    """Create the initial Milvus schema if it does not already exist."""
-    if client.has_collection(COLLECTION_NAME):
-        logging.debug(
-            f"Collection {COLLECTION_NAME} already exists, skipping create."
+    """Create the initial Milvus schema if it does not already exist.
+
+    If an older VARCHAR ``timestamp`` collection is present, drop and recreate
+    so TIMESTAMPTZ (Milvus 2.6.6+) can be used. Fresh re-ingest is expected.
+    """
+    existing_ts_type = _field_type(client, "timestamp")
+    if existing_ts_type is not None:
+        if existing_ts_type == DataType.TIMESTAMPTZ:
+            logging.debug(
+                f"Collection {COLLECTION_NAME} already exists with "
+                "TIMESTAMPTZ timestamp, skipping create."
+            )
+            return
+        logging.warning(
+            f"Collection {COLLECTION_NAME} has timestamp type "
+            f"{existing_ts_type}; dropping to recreate with TIMESTAMPTZ."
         )
-        return
+        client.drop_collection(COLLECTION_NAME)
 
     schema = client.create_schema(enable_dynamic_field=hp.enable_dynamic_field)
     schema.add_field("id", DataType.INT64, is_primary=True, auto_id=True)
@@ -55,6 +76,10 @@ def run(client):
             else hp.scalar_varchar_max_length
         )
         schema.add_field(name, DataType.VARCHAR, max_length=max_length)
+
+    # Stored as UTC absolute time; accept ISO 8601 with offset on insert.
+    # https://milvus.io/docs/timestamptz-field.md
+    schema.add_field("timestamp", DataType.TIMESTAMPTZ)
 
     schema.add_field("location_lat", DataType.FLOAT)
     schema.add_field("location_lon", DataType.FLOAT)
@@ -88,6 +113,10 @@ def run(client):
             "bm25_b": hp.bm25_b,
         },
     )
+    index_params.add_index(
+        field_name="timestamp",
+        index_type=hp.timestamptz_index_type,
+    )
 
     client.create_collection(
         collection_name=COLLECTION_NAME,
@@ -98,5 +127,6 @@ def run(client):
     logging.debug(
         f"Created and loaded collection {COLLECTION_NAME} "
         f"(HNSW M={hp.hnsw_M}, efC={hp.hnsw_ef_construction}; "
-        f"BM25 k1={hp.bm25_k1}, b={hp.bm25_b}, algo={hp.bm25_inverted_index_algo})"
+        f"BM25 k1={hp.bm25_k1}, b={hp.bm25_b}, algo={hp.bm25_inverted_index_algo}; "
+        f"timestamp={hp.timestamptz_index_type})"
     )

@@ -43,7 +43,7 @@ Each result includes these fields:
 | `camera` | Camera name on the node (e.g. `top`, `left`, `right`) |
 | `zone` | Deployment zone |
 | `project` | SAGE project |
-| `timestamp` | When the image was captured |
+| `timestamp` | When the image was captured (UTC, `TIMESTAMPTZ`) |
 | `host`, `job`, `plugin`, `task` | SAGE task metadata |
 | `address` | Human-readable location string |
 | `filename` | Original image filename |

@@ -1,4 +1,4 @@
-pymilvus==2.5.*
+pymilvus>=2.6.6,<4
 gradio==5.14.0
 Pillow==10.4.*
 plotly==6.0.*

@@ -135,6 +135,15 @@ def safe_str(value, default="unknown"):
         return default
     return str(value)
 
+def _to_milvus_timestamptz(ts: pd.Timestamp) -> str:
+    """Normalize a SAGE timestamp to ISO 8601 UTC for DataType.TIMESTAMPTZ."""
+    if ts.tzinfo is None:
+        ts = ts.tz_localize("UTC")
+    else:
+        ts = ts.tz_convert("UTC")
+    # Prefer Zulu form; Milvus accepts offset or Z.
+    return ts.isoformat().replace("+00:00", "Z")
+
 def process_image(image_data, username, token, milvus_client, triton_client, logger=logging.getLogger(__name__)):
     """
     Process a single image and add it to Milvus.
@@ -257,7 +266,9 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
             "vector": vector,
             "search_text": search_text[:65535],
             "filename": safe_str(filename),
-            "timestamp": safe_str(timestamp.strftime('%y-%m-%d %H:%M Z')),
+            # TIMESTAMPTZ: ISO 8601 with offset; Milvus stores as UTC.
+            # https://milvus.io/docs/timestamptz-field.md
+            "timestamp": _to_milvus_timestamptz(timestamp),
             "link": safe_str(url),
             "caption": caption_s[:65535],
             "camera": camera_s,

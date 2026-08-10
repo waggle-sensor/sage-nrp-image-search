@@ -7,6 +7,7 @@ Docs:
   HNSW: https://milvus.io/docs/hnsw.md
   BM25 / full-text: https://milvus.io/docs/full-text-search.md
   Analyzers: https://milvus.io/docs/analyzer-overview.md
+  TIMESTAMPTZ: https://milvus.io/docs/timestamptz-field.md
 '''
 
 # ---------------------------------------------------------------------------
@@ -22,6 +23,9 @@ enable_dynamic_field = False
 search_text_max_length = 65535
 caption_max_length = 65535
 scalar_varchar_max_length = 2048
+
+# TIMESTAMPTZ scalar index (requires Milvus 2.6.6+). Accelerates time filters.
+timestamptz_index_type = "STL_SORT"
 
 # ---------------------------------------------------------------------------
 # Analyzer (tokenization for BM25 on search_text)
