@@ -11,8 +11,48 @@ import HyperParameters as hp
 
 MODEL_PATH = os.environ.get("GEMMA_MODEL_PATH")
 
+REQUIRED_PROCESSOR_FILES = (
+    "config.json",
+    "processor_config.json",
+    "preprocessor_config.json",
+    "tokenizer_config.json",
+)
+
+
+def _missing_model_files(model_path: str):
+    if not model_path or not os.path.isdir(model_path):
+        return list(REQUIRED_PROCESSOR_FILES) + ["model*.safetensors"]
+    missing = [
+        name
+        for name in REQUIRED_PROCESSOR_FILES
+        if not os.path.isfile(os.path.join(model_path, name))
+    ]
+    has_weights = (
+        os.path.isfile(os.path.join(model_path, "model.safetensors"))
+        or os.path.isfile(os.path.join(model_path, "model.safetensors.index.json"))
+        or any(
+            name.startswith("model-") and name.endswith(".safetensors")
+            for name in os.listdir(model_path)
+        )
+    )
+    if not has_weights:
+        missing.append("model*.safetensors")
+    return missing
+
+
 class TritonPythonModel:
     def initialize(self, args):
+        if not MODEL_PATH:
+            raise ValueError("GEMMA_MODEL_PATH is not set")
+
+        missing = _missing_model_files(MODEL_PATH)
+        if missing:
+            raise FileNotFoundError(
+                f"Incomplete Gemma model at {MODEL_PATH}; missing: {missing}. "
+                "Delete the Triton pod to clear emptyDir and let entrypoint re-download "
+                "(HF_TOKEN must have access to google/gemma-3-4b-it)."
+            )
+
         # load GEMMA processor
         self.processor = AutoProcessor.from_pretrained(
             MODEL_PATH,

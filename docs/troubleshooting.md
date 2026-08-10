@@ -4,18 +4,23 @@ Common issues and fixes for Sage Image Search deployments.
 
 ## Triton fails to load models
 
-**Symptoms:** Triton container restarts, logs show OSErrors loading CLIP or Gemma weights, or models stuck in `LOADING` state.
+**Symptoms:** Triton container restarts, logs show OSErrors loading CLIP or Gemma weights, models stuck in `LOADING` state, or:
+
+`Unrecognized processing class in /models/gemma-3-4b-it` / `failed to load all models`
 
 **Causes:**
-- Missing or invalid `HF_TOKEN`
+- Missing or invalid `HF_TOKEN` (or token without access to gated `google/gemma-3-4b-it`)
+- Incomplete Gemma download left in the pod `emptyDir` (entrypoint used to skip whenever the directory was non-empty)
+- Missing `processor_config.json` / `preprocessor_config.json` so `AutoProcessor` fails while CLIP still loads
 - Network issues downloading from Hugging Face
-- Insufficient disk space in the model volume
+- Insufficient disk / ephemeral-storage for model weights
 
 **Fixes:**
 
-1. Verify `HF_TOKEN` is set and has access to the required models (see [Authentication](authentication.md); create or rotate tokens at [Hugging Face access tokens](https://huggingface.co/docs/hub/en/security-tokens)).
+1. Verify `HF_TOKEN` is set, can access `google/gemma-3-4b-it`, and you have accepted the model license on Hugging Face (see [Authentication](authentication.md)).
 2. Check Triton logs: `docker compose logs triton` or `kubectl logs -l app=triton`.
-3. Manually download models and copy into the container (see [Getting Started](getting-started.md#triton-model-download-workaround)):
+3. On Kubernetes, **delete the Triton pod** so `emptyDir` model caches are cleared and `entrypoint.sh` re-downloads a complete snapshot (it now validates processor + weight files before skipping).
+4. Manually download models and copy into the container (see [Getting Started](getting-started.md#triton-model-download-workaround)):
 
 ```bash
 source .env
@@ -27,6 +32,7 @@ docker cp clip/. sage-nrp-image-search-triton-1:/models/clip/
 docker cp "$(basename "$GEMMA_MODEL_PATH")" sage-nrp-image-search-triton-1:/models/
 ```
 
+Triton is started with `--exit-on-error=false --strict-readiness=false` so CLIP can stay up even if Gemma fails; captioning on NRP (`LLM_RUN_MODE=NRP`) does not need local Gemma.
 ---
 
 ## Gradio cannot connect to Milvus
