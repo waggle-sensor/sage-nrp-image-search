@@ -10,7 +10,7 @@ import tritonclient.grpc as TritonClient
 import plotly.graph_objects as go
 import pandas as pd
 from pymilvus import MilvusClient
-from query import Milvus_query, Sage_query
+from query import Milvus_query, Sage_query, parse_wkt_point
 
 # Disable Gradio analytics
 os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
@@ -89,10 +89,14 @@ def filter_map(df):
     rerank_score = df["rerank_score"].tolist()
     data = [(uuid[i], address[i], score[i], rerank_score[i]) for i in range(0, len(uuid))]
 
+    coords = [parse_wkt_point(wkt) for wkt in df["location"].tolist()]
+    lats = [lat for lat, _ in coords]
+    lons = [lon for _, lon in coords]
+
     # Create the plot
     fig = go.Figure(go.Scattermapbox(
-        lat=df['location_lat'].tolist(),
-        lon=df['location_lon'].tolist(),
+        lat=lats,
+        lon=lons,
         mode='markers',
         marker=go.scattermapbox.Marker(
             size=6
@@ -153,11 +157,11 @@ def text_query(description):
                 images.append((image, f"{row['uuid']}"))
 
     #get location details
-    location = df[['location_lat', 'location_lon', 'uuid', 'score', 'rerank_score', 'address']]
+    location = df[['location', 'uuid', 'score', 'rerank_score', 'address']]
     map_fig = filter_map(location)
 
     #drop columns that I dont want to show
-    meta = df.drop(columns=["link", "node", "location_lat", "location_lon"])
+    meta = df.drop(columns=["link", "node"])
 
     # Return the images, DataFrame, and map
     return images, meta, map_fig

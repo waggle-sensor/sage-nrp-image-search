@@ -28,7 +28,7 @@ Each image record in Milvus (`MILVUS_COLLECTION`, default `HybridSearchExample`)
 | CLIP embedding | Dense `vector` (1024-d) for semantic search |
 | search_text | Caption + metadata blob for BM25 (`sparse` filled by Milvus) |
 | SAGE metadata | `vsn`, `camera`, `zone`, `job`, `host`, `plugin`, `project`, `task`, `address`, `timestamp`, `link` |
-| Location | `location_lat` / `location_lon` when available |
+| Location | `location` GEOMETRY (`POINT(lon lat)` WKT) when available |
 
 ## Key features
 

@@ -144,6 +144,10 @@ def _to_milvus_timestamptz(ts: pd.Timestamp) -> str:
     # Prefer Zulu form; Milvus accepts offset or Z.
     return ts.isoformat().replace("+00:00", "Z")
 
+def _to_milvus_wkt_point(lon: float, lat: float) -> str:
+    """Build WKT POINT(lon lat) for DataType.GEOMETRY."""
+    return f"POINT({float(lon)} {float(lat)})"
+
 def process_image(image_data, username, token, milvus_client, triton_client, logger=logging.getLogger(__name__)):
     """
     Process a single image and add it to Milvus.
@@ -281,8 +285,8 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
             "zone": zone_s,
             "project": project_s,
             "address": address_s,
-            "location_lat": float(lat_sanitized),
-            "location_lon": float(lon_sanitized),
+            # GEOMETRY: WKT POINT(lon lat). https://milvus.io/docs/geometry-field.md
+            "location": _to_milvus_wkt_point(lon_sanitized, lat_sanitized),
         }
 
         # Insert into Milvus with metrics

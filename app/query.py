@@ -9,6 +9,7 @@ from model import get_clip_embeddings, clip_image_text_score
 import logging
 import requests
 import os
+import re
 from PIL import Image
 from io import BytesIO
 import pandas as pd
@@ -29,9 +30,26 @@ OUTPUT_FIELDS = [
     "zone",
     "node",
     "address",
-    "location_lat",
-    "location_lon",
+    "location",
 ]
+
+# WKT POINT(lon lat) — x=longitude, y=latitude
+_POINT_RE = re.compile(
+    r"POINT\s*\(\s*([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s+"
+    r"([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*\)",
+    re.IGNORECASE,
+)
+
+
+def parse_wkt_point(wkt) -> tuple[float, float]:
+    """Return (lat, lon) from a Milvus GEOMETRY WKT POINT. Invalid → (0.0, 0.0)."""
+    if not wkt:
+        return 0.0, 0.0
+    match = _POINT_RE.search(str(wkt))
+    if not match:
+        return 0.0, 0.0
+    lon, lat = float(match.group(1)), float(match.group(2))
+    return lat, lon
 
 
 class Milvus_query:
@@ -95,6 +113,7 @@ class Milvus_query:
         for hit in hit_list:
             entity = hit.get("entity", hit)
             caption = entity.get("caption", "") or ""
+            location = entity.get("location", "") or ""
             objects.append({
                 "uuid": str(hit.get("id", "")),
                 "filename": entity.get("filename", "") or "",
@@ -113,8 +132,7 @@ class Milvus_query:
                 "zone": entity.get("zone", "") or "",
                 "node": entity.get("node", "") or "",
                 "address": entity.get("address", "") or "",
-                "location_lat": float(entity.get("location_lat", 0.0) or 0.0),
-                "location_lon": float(entity.get("location_lon", 0.0) or 0.0),
+                "location": location,
             })
             logging.debug("----------------%s----------------", objects[-1]["uuid"])
             logging.debug(f"Properties: {objects[-1]}")

@@ -8,6 +8,8 @@ Docs:
   BM25 / full-text: https://milvus.io/docs/full-text-search.md
   Analyzers: https://milvus.io/docs/analyzer-overview.md
   TIMESTAMPTZ: https://milvus.io/docs/timestamptz-field.md
+  GEOMETRY: https://milvus.io/docs/geometry-field.md
+  RTREE: https://milvus.io/docs/rtree.md
 '''
 
 # ---------------------------------------------------------------------------
@@ -26,6 +28,9 @@ scalar_varchar_max_length = 2048
 
 # TIMESTAMPTZ scalar index (requires Milvus 2.6.6+). Accelerates time filters.
 timestamptz_index_type = "STL_SORT"
+
+# GEOMETRY spatial index (requires Milvus 2.6.4+). Accelerates st_* filters.
+geometry_index_type = "RTREE"
 
 # ---------------------------------------------------------------------------
 # Analyzer (tokenization for BM25 on search_text)

@@ -45,6 +45,7 @@ Each result includes these fields:
 | `project` | SAGE project |
 | `timestamp` | When the image was captured (UTC, `TIMESTAMPTZ`) |
 | `host`, `job`, `plugin`, `task` | SAGE task metadata |
+| `location` | Capture coordinates as WKT `POINT(lon lat)` (`GEOMETRY`) |
 | `address` | Human-readable location string |
 | `filename` | Original image filename |
 
