@@ -82,7 +82,7 @@ See [Troubleshooting](troubleshooting.md) for more details.
 
 - The Gradio UI container does not include Sage credentials by default, so image thumbnails may not display.
 - Compose and Kubernetes both use NRP-managed Milvus at `milvus.nrp-nautilus.io:50051` — set `MILVUS_URI` / `MILVUS_TOKEN` in `.env`. See [Architecture](architecture.md).
-- To browse collections and run ad-hoc queries while developing, connect [Attu](https://milvus.io/docs/quickstart_with_attu.md) to NRP Milvus (see [Authentication → Milvus UI (Attu)](authentication.md#milvus-ui-attu)).
+- To browse collections and run ad-hoc queries while developing, connect [Attu](https://milvus.io/docs/quickstart_with_attu.md) to NRP Milvus. For pymilvus help, see [milvus-skill](https://github.com/zilliztech/milvus-skill). Details: [Authentication → Milvus development tools](authentication.md#milvus-development-tools).
 
 ---
 

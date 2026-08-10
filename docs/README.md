@@ -10,7 +10,7 @@ Sage Image Search is a hybrid image retrieval system for the [SAGE Continuum](ht
 | Search for images | [Using the Search UI](using-the-search-ui.md) |
 | Run or deploy the stack | [Getting Started](getting-started.md) |
 | Set up credentials | [Authentication](authentication.md) |
-| Inspect Milvus collections (Attu) | [Authentication → Milvus UI (Attu)](authentication.md#milvus-ui-attu) |
+| Inspect Milvus (Attu / milvus-skill) | [Authentication → Milvus development tools](authentication.md#milvus-development-tools) |
 | Understand how it works | [Overview](overview.md) → [Architecture](architecture.md) |
 | Configure models or search tuning | [Configuration](configuration.md) |
 | Fix a problem | [Troubleshooting](troubleshooting.md) |

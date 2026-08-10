@@ -6,7 +6,7 @@ Terms used throughout Sage Image Search documentation.
 |------|------------|
 | **Alpha (query)** | Hybrid search blend parameter (`query_alpha`). A value of 0 means pure keyword (BM25) search; 1 means pure vector search. The default is 0.4 (40% vector, 60% keyword) via `WeightedRanker(0.4, 0.6)`. |
 | **ANN** | Approximate nearest neighbor. Fast similarity search over embedding vectors; trades perfect accuracy for speed at large scale. |
-| **Attu** | Desktop/web GUI for Milvus. Useful in development to inspect NRP collections, schema, and row counts — see [Authentication → Milvus UI (Attu)](authentication.md#milvus-ui-attu) and the [Attu quickstart](https://milvus.io/docs/quickstart_with_attu.md). |
+| **Attu** | Desktop/web GUI for Milvus. Useful in development to inspect NRP collections, schema, and row counts — see [Authentication → Milvus development tools](authentication.md#milvus-development-tools) and the [Attu quickstart](https://milvus.io/docs/quickstart_with_attu.md). |
 | **BM25** | Best Matching 25 — a keyword ranking algorithm used for text-based search on `search_text` (caption + metadata). In Milvus, produced via `FunctionType.BM25` into a sparse vector field. |
 | **Bi-encoder** | Model architecture that embeds query and document separately (e.g. CLIP). Used for first-stage retrieval and for CLIP-based reranking (query text vs caption). |
 | **Caption** | An AI-generated text description of an image, produced by a vision-language model (VLM) such as Gemma 4 (production) or Florence-2 (learning lab). |
@@ -29,7 +29,7 @@ Terms used throughout Sage Image Search documentation.
 | **imsearch_eval** | Python benchmarking framework ([waggle-sensor/imsearch_eval](https://github.com/waggle-sensor/imsearch_eval)) used to index datasets, run queries, and compute MRR and Success@K across Sagebench, Firebench, and other benchmarks. |
 | **Ingestion** | The pipeline stage that downloads SAGE images, generates captions, computes embeddings, and writes records to the vector database. Handled by weavloader. |
 | **Inner product (IP)** | Vector similarity metric (dot product). Used by Milvus dense indexes in the learning lab; higher scores mean closer vectors. Production dense metric is COSINE (equivalent for L2-normalized embeddings). |
-| **Milvus** | Open-source vector database with native hybrid search (dense + sparse BM25). Compose and Kubernetes use NRP-managed Milvus at `milvus.nrp-nautilus.io:50051`. |
+| **Milvus** | Open-source vector database with native hybrid search (dense + sparse BM25). Compose and Kubernetes use NRP-managed Milvus at `milvus.nrp-nautilus.io:50051`. Dev tooling: [Attu](https://milvus.io/docs/quickstart_with_attu.md), [milvus-skill](https://github.com/zilliztech/milvus-skill). |
 | **Milvus Lite** | Embedded Milvus mode that runs locally without a separate server. Used in `docs/notebooks/sage_image_search_lab.ipynb`. |
 | **MMR** | Maximal Marginal Relevance. Diversity-aware reranking that reduces near-duplicate results. Discussed as a future improvement; not in production today. |
 | **MRR** | Mean Reciprocal Rank. Benchmark metric measuring how quickly the first relevant result appears in the ranked list. |

@@ -80,7 +80,9 @@ echo -n "username:password" | base64
 
 Credentials and endpoint details: [NRP vector-database documentation](https://nrp.ai/documentation/userdocs/ai/vector-database/). Default URI: `https://milvus.nrp-nautilus.io:50051`. Token format is `username:password`.
 
-### Milvus UI (Attu)
+### Milvus development tools
+
+#### Attu (GUI)
 
 For local development, use [Attu](https://milvus.io/docs/quickstart_with_attu.md) — a standalone GUI for inspecting collections, schema, row counts, and running ad-hoc queries against NRP Milvus.
 
@@ -92,6 +94,10 @@ For local development, use [Attu](https://milvus.io/docs/quickstart_with_attu.md
 3. Select database `image_search_svc` (`MILVUS_DB`), then open the collection for your env (`HybridSearchExample` or `HybridSearchExampleDev`).
 
 NRP also documents Attu under [NRP-managed vector database](https://nrp.ai/documentation/userdocs/ai/vector-database/).
+
+#### milvus-skill (agent / pymilvus)
+
+When writing or reviewing Milvus code (schema, insert, hybrid search, BM25, indexes), use the [zilliztech/milvus-skill](https://github.com/zilliztech/milvus-skill) agent skill — it documents current `pymilvus` patterns for collections, vector CRUD, hybrid/full-text search, and common RAG-style workflows.
 
 ## Local Docker Compose setup
 

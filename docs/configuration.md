@@ -27,7 +27,7 @@ See [Authentication](authentication.md) for setup instructions.
 
 Schema is managed by weavmanage migrations in [`weavmanage/migrations/`](../weavmanage/migrations/). Compose and Kubernetes both use NRP-managed Milvus (no Milvus service in this repo).
 
-To inspect collections during development, use [Attu](https://milvus.io/docs/quickstart_with_attu.md) — see [Authentication → Milvus UI (Attu)](authentication.md#milvus-ui-attu).
+To inspect collections during development, use [Attu](https://milvus.io/docs/quickstart_with_attu.md). For pymilvus agent help, see [zilliztech/milvus-skill](https://github.com/zilliztech/milvus-skill). Details: [Authentication → Milvus development tools](authentication.md#milvus-development-tools).
 
 ## Triton
 
