@@ -6,7 +6,7 @@ from pymilvus import DataType, Function, FunctionType
 
 import HyperParameters as hp
 
-COLLECTION_NAME = os.getenv("MILVUS_COLLECTION", "HybridSearchExample")
+COLLECTION_NAME = os.getenv("MILVUS_COLLECTION", "SageImageSearch")
 
 SCALAR_VARCHAR_FIELDS = [
     "filename",
