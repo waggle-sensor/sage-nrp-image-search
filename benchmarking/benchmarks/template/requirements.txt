@@ -1,12 +1,12 @@
 # Python dependencies for benchmark
 # Add your benchmark-specific dependencies here
 
-# Core benchmarking framework
+# Core benchmarking framework (pre-release: milvus branch; switch to @0.2.0 after release)
 # TODO: Install the module you need
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
-imsearch_eval[milvus] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
-imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
-imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@milvus
+imsearch_eval[milvus] @ git+https://github.com/waggle-sensor/imsearch_eval.git@milvus
+imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@milvus
+imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@milvus
 
 # S3 upload support (MinIO)
 minio>=7.2.0
