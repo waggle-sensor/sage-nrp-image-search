@@ -26,7 +26,7 @@ The base `benchmarks/Makefile` contains all generic commands that work for any b
 
 - **Build**: `make build` - Build Docker job image
 - **Run**: `make run` - Deploy and run benchmark job (loads data and evaluates)
-- **Run Local**: `make run-local` - Run benchmark locally with port-forwarding
+- **Run Local**: `make run-local` - Run benchmark locally (Triton port-forward; Weaviate port-forward only if `VECTOR_DB=weaviate`). Pass `MILVUS_TOKEN` for NRP Milvus.
 - **Status**: `make status` - Show deployment status
 - **Logs**: `make logs` - View job logs
 - **Port Forward**: `make port-forward-start` / `make port-forward-stop` - Manage port-forwarding

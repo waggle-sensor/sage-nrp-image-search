@@ -99,9 +99,13 @@ Update environment variables for dev environment:
 
 ```yaml
 env:
-  # Vector DB configuration (Weaviate)
+  # Vector DB configuration
   - name: WEAVIATE_HOST
     value: "dev-weaviate.sage.svc.cluster.local"
+  - name: VECTOR_DB
+    value: "milvus"
+  - name: MILVUS_DB
+    value: "image_search_svc"
   # Inference server configuration (Triton)
   - name: TRITON_HOST
     value: "dev-triton.sage.svc.cluster.local"
@@ -118,9 +122,13 @@ Update environment variables for prod environment:
 
 ```yaml
 env:
-  # Vector DB configuration (Weaviate) - prod environment
+  # Vector DB configuration
   - name: WEAVIATE_HOST
     value: "prod-weaviate.sage.svc.cluster.local"
+  - name: VECTOR_DB
+    value: "milvus"
+  - name: MILVUS_DB
+    value: "image_search_svc"
   # Inference server configuration (Triton) - prod environment
   - name: TRITON_HOST
     value: "prod-triton.sage.svc.cluster.local"

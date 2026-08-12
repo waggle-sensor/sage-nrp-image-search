@@ -7,6 +7,7 @@ resources:
   - ._s3-secret.yaml
   - ._huggingface-secret.yaml
   - ._nrp-secret.yaml
+  - ._milvus-secret.yaml
 
 # Note: Vector DB and inference server configuration should be added
 # in benchmark-specific overlays via environment variable patches

@@ -12,7 +12,7 @@ This overlay extends `../base/` with INQUIRE-specific configuration:
 
 ### Prerequisites
 
-- Kubernetes cluster with access to Weaviate and Triton services
+- Kubernetes cluster with access to Triton and NRP Milvus (or in-cluster Weaviate if `VECTOR_DB=weaviate`)
 - Images built and pushed to registry
 - `kubectl` configured with appropriate context
 
@@ -49,15 +49,18 @@ make down ENV=prod # Remove prod deployments
 The following environment variables are set in `nrp-dev/env.yaml` and `nrp-prod/env.yaml`:
 
 **Vector DB Configuration:**
-- `WEAVIATE_HOST`: Weaviate service host (dev: `dev-weaviate.sage.svc.cluster.local`, prod: `prod-weaviate.sage.svc.cluster.local`)
+- `VECTOR_DB`: `milvus` (default) or `weaviate`
+- `MILVUS_DB`: NRP Milvus database (default: `image_search_svc`)
+- `MILVUS_URI` / `MILVUS_TOKEN`: loaded from `milvus-secret`
+- `WEAVIATE_HOST`: Weaviate service host (used when `VECTOR_DB=weaviate`)
 
 **Inference Server Configuration:**
 - `TRITON_HOST`: Triton service host (dev: `dev-triton.sage.svc.cluster.local`, prod: `prod-triton.sage.svc.cluster.local`)
 
 **Benchmark-Specific Configuration:**
 - `INQUIRE_DATASET`: HuggingFace dataset name (default: `sagecontinuum/INQUIRE-Benchmark-small`)
-- `COLLECTION_NAME`: Weaviate collection name (default: `INQUIRE`)
-- `QUERY_METHOD`: Query method to use (default: `clip_hybrid_query`)
+- `COLLECTION_NAME`: collection name (default: `INQUIRE`)
+- `QUERY_METHOD`: Query method (Milvus default: `clip_hybrid_query_dual_index`)
 - `QUERY_BATCH_SIZE`: Batch size for parallel queries
 - `IMAGE_BATCH_SIZE`: Batch size for processing images
 - `SAMPLE_SIZE`: Number of samples (0 = all)

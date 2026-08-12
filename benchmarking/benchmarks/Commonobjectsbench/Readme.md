@@ -1,6 +1,6 @@
 # CommonObjectsBench Benchmark
 
-This benchmark uses [CommonObjectsBench](https://huggingface.co/datasets/sagecontinuum/CommonObjectsBench) with Weaviate as the vector database for evaluating text-to-image retrieval on general objects and common scenes. CommonObjectsBench is a benchmark dataset for general object image retrieval: natural language queries paired with images and binary relevance labels.
+This benchmark uses [CommonObjectsBench](https://huggingface.co/datasets/sagecontinuum/CommonObjectsBench) with Milvus (default) or Weaviate as the vector database for evaluating text-to-image retrieval on general objects and common scenes. CommonObjectsBench is a benchmark dataset for general object image retrieval: natural language queries paired with images and binary relevance labels.
 
 ## Dataset
 
@@ -20,7 +20,7 @@ This benchmark is intended to be used with [Sage Image Search](../../../kubernet
 - **Kubernetes cluster** access with `kubectl` configured
 - **kustomize** (or kubectl with kustomize support)
 - **Docker** for building images
-- **Weaviate and Triton** deployed (e.g. from `kubernetes/nrp-dev` or `kubernetes/nrp-prod`)
+- **Triton** deployed and NRP Milvus credentials. Weaviate is optional (`VECTOR_DB=weaviate`).
 
 ### Steps
 
@@ -42,13 +42,13 @@ This benchmark is intended to be used with [Sage Image Search](../../../kubernet
    make run   # defaults to dev environment
    make logs  # monitor progress
    ```
-   This loads the selected CommonObjectsBench dataset (public or private) into Weaviate, runs the evaluation, and saves results.
+   This loads the selected CommonObjectsBench dataset (public or private) into the configured vector database, runs the evaluation, and saves results.
 
 4. **Run locally (development)**:
    ```bash
    make run-local
    ```
-   Uses port-forwarding to Weaviate and Triton. To use the private dataset locally, set `COMMONOBJECTSBENCH_USE_PRIVATE=true` and `HF_TOKEN`.
+   Uses port-forwarding to Triton (and Weaviate if `VECTOR_DB=weaviate`). Pass `MILVUS_TOKEN` for NRP Milvus. To use the private dataset locally, set `COMMONOBJECTSBENCH_USE_PRIVATE=true` and `HF_TOKEN`.
 
 ### Results
 
@@ -67,7 +67,8 @@ Commonobjectsbench leaderboard is supported for benchmark results in `benchmarks
 ## Environment Variables
 
 - **COMMONOBJECTSBENCH_USE_PRIVATE**: Set to `"true"` to use the private dataset `sagecontinuum/CommonObjectsBench-private`; otherwise uses the public dataset `sagecontinuum/CommonObjectsBench` (default: `false`)
-- **COLLECTION_NAME**: Weaviate collection name (default: `CommonObjectsBench`)
+- **COLLECTION_NAME**: collection name (default: `CommonObjectsBench`)
+- **VECTOR_DB**: `milvus` (default) or `weaviate`
 - **SAMPLE_SIZE**: Number of samples (0 = use full dataset)
 - **SEED**, **HF_TOKEN**, **WORKERS**, **IMAGE_BATCH_SIZE**, **QUERY_BATCH_SIZE**: Data and processing
 - **QUERY_METHOD**, **TARGET_VECTOR**, **RESPONSE_LIMIT**: Query and retrieval

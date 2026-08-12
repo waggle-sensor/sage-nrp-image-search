@@ -3,7 +3,10 @@
 
 # Core benchmarking framework
 # TODO: Install the module you need
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[milvus] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
 
 # S3 upload support (MinIO)
 minio>=7.2.0

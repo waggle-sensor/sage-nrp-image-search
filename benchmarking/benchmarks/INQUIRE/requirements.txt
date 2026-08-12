@@ -3,10 +3,11 @@
 protobuf>=5.26.1,<6
 
 # Core benchmarking framework
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.9
-imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.9
-imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.9
-imsearch_eval[nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.9
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[milvus] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
 
 # Match Weaviate server 1.32.x (Python client 4.16.x per compatibility matrix).
 # https://docs.weaviate.io/weaviate/client-libraries/python

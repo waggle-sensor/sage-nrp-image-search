@@ -5,7 +5,8 @@ from weaviate.classes.config import VectorDistances, Configure
 from weaviate.collections.classes.config_vector_index import VectorFilterStrategy
 
 from imsearch_eval.framework.interfaces import Config
-from helpers.ablation import load_ablation_config, resolve_query_alpha
+from helpers.ablation import load_ablation_config
+from helpers.backend import apply_vector_db_config
 
 
 class CloudBenchConfig(Config):
@@ -40,10 +41,7 @@ class CloudBenchConfig(Config):
             "CONFIG_VALUES_FILE", "config_values.csv"
         )
 
-        # Weaviate parameters
-        self._weaviate_host = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
-        self._weaviate_port = os.environ.get("WEAVIATE_PORT", "8080")
-        self._weaviate_grpc_port = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
+        # Collection
         self._collection_name = os.environ.get("COLLECTION_NAME", "CloudBench")
 
         # model provider parameters
@@ -99,17 +97,9 @@ class CloudBenchConfig(Config):
         self.index_clip_alpha = ablation["index_clip_alpha"]
         self.enable_bm25 = ablation["enable_bm25"]
 
-        # Query parameters
-        self.query_method = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
-        self.target_vector = os.environ.get("TARGET_VECTOR", "clip")
+        # Vector DB + query parameters
+        apply_vector_db_config(self, ablation, query_properties=["caption"])
         self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 25))
-        self.advanced_query_parameters = {
-            "alpha": resolve_query_alpha(ablation),
-            "query_properties": ["caption"],
-            "autocut_jumps": int(os.environ.get("AUTOCUT_JUMPS", 0)),
-            "rerank_prop": os.environ.get("RERANK_PROP", "caption"),
-            "clip_alpha": float(os.environ.get("QUERY_CLIP_ALPHA", 0.7)),
-        }
 
         # Caption prompts (same as Firebench)
         default_prompt = """

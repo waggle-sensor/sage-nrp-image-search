@@ -128,7 +128,8 @@ The structure should be:
 ```python
 from config import MyConfig
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter
-from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider, WeaviateQuery
+from imsearch_eval.adapters import TritonModelProvider
+from helpers.backend import init_vector_db
 from benchmark_dataset import MyBenchmarkDataset
 from data_loader import MyDataLoader  # Optional
 
@@ -229,6 +230,10 @@ The `imsearch-eval` package provides shared adapters you can use:
 - **TritonModelProvider**: For Triton inference server (implements `ModelProvider`)
 - **TritonModelUtils**: Triton implementation of `ModelUtils` interface
 
+**Milvus adapters** (default):
+- **MilvusAdapter**: For Milvus vector database (implements `VectorDBAdapter`)
+- **MilvusQuery**: Dual-dense + BM25 hybrid with CLIP rerank
+
 **Weaviate adapters**:
 - **WeaviateAdapter**: For Weaviate vector database (implements `VectorDBAdapter`)
 - **WeaviateQuery**: Weaviate query implementation (implements `Query` interface)
@@ -236,12 +241,12 @@ The `imsearch-eval` package provides shared adapters you can use:
 Import them:
 
 ```python
-from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider, WeaviateQuery, TritonModelUtils
+from imsearch_eval.adapters import MilvusAdapter, WeaviateAdapter, TritonModelProvider, WeaviateQuery, TritonModelUtils
 ```
 
 **Note**: Install the package with all extras needed:
 ```bash
-pip install "imsearch_eval[weaviate,triton,huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0"
+pip install "imsearch_eval[weaviate,milvus,triton,huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0"
 ```
 
 ## Deployment

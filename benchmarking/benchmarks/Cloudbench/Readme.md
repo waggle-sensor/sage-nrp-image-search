@@ -1,6 +1,6 @@
 # CloudBench Benchmark
 
-This benchmark uses [CloudBench](https://huggingface.co/datasets/sagecontinuum/CloudBench) with Weaviate as the vector database for evaluating text-to-image retrieval in cloud and atmospheric science. CloudBench is a benchmark dataset for cloud image retrieval: natural language queries paired with images and binary relevance labels.
+This benchmark uses [CloudBench](https://huggingface.co/datasets/sagecontinuum/CloudBench) with Milvus (default) or Weaviate as the vector database for evaluating text-to-image retrieval in cloud and atmospheric science. CloudBench is a benchmark dataset for cloud image retrieval: natural language queries paired with images and binary relevance labels.
 
 ## Dataset
 
@@ -19,7 +19,7 @@ This benchmark is intended to be used with [Sage Image Search](../../../kubernet
 - **Kubernetes cluster** access with `kubectl` configured
 - **kustomize** (or kubectl with kustomize support)
 - **Docker** for building images
-- **Weaviate and Triton** deployed (e.g. from `kubernetes/nrp-dev` or `kubernetes/nrp-prod`)
+- **Triton** deployed and NRP Milvus credentials. Weaviate is optional (`VECTOR_DB=weaviate`).
 
 ### Steps
 
@@ -40,13 +40,13 @@ This benchmark is intended to be used with [Sage Image Search](../../../kubernet
    make run   # defaults to dev environment
    make logs  # monitor progress
    ```
-   This loads `sagecontinuum/CloudBench` into Weaviate, runs the evaluation, and saves results.
+   This loads `sagecontinuum/CloudBench` into the configured vector database, runs the evaluation, and saves results.
 
 4. **Run locally (development)**:
    ```bash
    make run-local
    ```
-   Uses port-forwarding to Weaviate and Triton.
+   Uses port-forwarding to Triton (and Weaviate if `VECTOR_DB=weaviate`). Pass `MILVUS_TOKEN` for NRP Milvus.
 
 ### Results
 
@@ -65,7 +65,8 @@ Cloudbench leaderboard is supported for benchmark results in `benchmarks/Cloudbe
 ## Environment Variables
 
 - **CLOUDBENCH_DATASET**: HuggingFace dataset name (default: `sagecontinuum/CloudBench`)
-- **COLLECTION_NAME**: Weaviate collection name (default: `CloudBench`)
+- **COLLECTION_NAME**: collection name (default: `CloudBench`)
+- **VECTOR_DB**: `milvus` (default) or `weaviate`
 - **SAMPLE_SIZE**: Number of samples (0 = use full dataset)
 - **SEED**, **HF_TOKEN**, **WORKERS**, **IMAGE_BATCH_SIZE**, **QUERY_BATCH_SIZE**: Data and processing
 - **QUERY_METHOD**, **TARGET_VECTOR**, **RESPONSE_LIMIT**: Query and retrieval

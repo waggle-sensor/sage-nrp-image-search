@@ -27,6 +27,7 @@ The `base/` directory contains generic resources that can be reused by any bench
 - **benchmark-job.yaml**: Job that runs the combined benchmark script (loads data and evaluates)
 - **._s3-secret.yaml**: Secret for S3 credentials (access key and secret key)
 - **._huggingface-secret.yaml**: Secret for HuggingFace token (for accessing private datasets)
+- **._milvus-secret.yaml**: Secret for NRP Milvus (`MILVUS_URI`, `MILVUS_TOKEN`). Copy from `milvus-secret.template.yaml`.
 
 The job is **vector database and inference server agnostic**:
 - Includes health checks and resource limits
@@ -82,9 +83,13 @@ spec:
       containers:
         - name: benchmark-job
           env:
-            # Vector DB configuration (Weaviate)
+            # Vector DB configuration
             - name: WEAVIATE_HOST
               value: "dev-weaviate.sage.svc.cluster.local"
+            - name: VECTOR_DB
+              value: "milvus"
+            - name: MILVUS_DB
+              value: "image_search_svc"
             # Inference server configuration (Triton)
             - name: TRITON_HOST
               value: "dev-triton.sage.svc.cluster.local"
@@ -239,8 +244,8 @@ make run-local
 ```
 
 This will:
-1. Start port-forwarding for Weaviate and Triton services
-2. Run the benchmark locally
+1. Start port-forwarding for Triton (and Weaviate if `VECTOR_DB=weaviate`)
+2. Run the benchmark locally against NRP Milvus by default (`VECTOR_DB=milvus`)
 3. Stop port-forwarding when done
 
 Results are saved locally in the current directory.

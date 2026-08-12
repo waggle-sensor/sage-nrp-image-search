@@ -7,7 +7,8 @@ import sys
 from pathlib import Path
 import tritonclient.grpc as TritonClient
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter
-from imsearch_eval.adapters import WeaviateAdapter, WeaviateQuery, TritonModelProvider
+from imsearch_eval.adapters import TritonModelProvider
+from helpers.backend import init_vector_db
 from model_provider import MixedModelProvider
 from benchmark_dataset import CommonObjectsBench
 from config import CommonObjectsBenchConfig
@@ -21,7 +22,7 @@ def load_data(
     vector_db: VectorDBAdapter,
     hf_dataset,
 ):
-    """Load CommonObjectsBench dataset into Weaviate."""
+    """Load CommonObjectsBench dataset into the vector database."""
     try:
         logging.info("Creating collection schema...")
         schema_config = data_loader.get_schema_config()
@@ -38,7 +39,7 @@ def load_data(
         )
         logging.info(f"Inserted {inserted} items.")
         logging.info(
-            f"Successfully loaded {config.commonobjectsbench_dataset} into Weaviate collection '{config._collection_name}'"
+            f"Successfully loaded {config.commonobjectsbench_dataset} into {config.vector_db} collection '{config._collection_name}'"
         )
     except Exception as e:
         logging.error(f"Error loading data: {e}")
@@ -114,28 +115,13 @@ def main():
     logging.info("=" * 80)
     logging.info("Step 0: Setting up benchmark environment")
     logging.info("=" * 80)
-    logging.info("Initializing Weaviate client...")
-    weaviate_client = WeaviateAdapter.init_client(
-        host=config._weaviate_host,
-        port=config._weaviate_port,
-        grpc_port=config._weaviate_grpc_port,
-    )
-
     logging.info("Initializing Triton client...")
     triton_client = TritonClient.InferenceServerClient(
         url=f"{config._triton_host}:{config._triton_port}"
     )
 
-    query_method = WeaviateQuery(
-        weaviate_client=weaviate_client, triton_client=triton_client
-    )
-
-    logging.info("Creating adapters...")
-    vector_db = WeaviateAdapter(
-        weaviate_client=weaviate_client,
-        triton_client=triton_client,
-        query_method=query_method,
-    )
+    logging.info("Creating vector database adapters...")
+    vector_db, query_instance = init_vector_db(config, triton_client)
 
     logging.info("Creating model provider...")
     triton_model_provider = TritonModelProvider(triton_client=triton_client)
@@ -168,7 +154,7 @@ def main():
         dataset=benchmark_dataset,
         collection_name=config._collection_name,
         limit=config.response_limit,
-        query_method=getattr(query_method, config.query_method),
+        query_method=getattr(query_instance, config.query_method),
         query_parameters=config.advanced_query_parameters,
         score_columns=["rerank_score", "clip_score"],
         target_vector=config.target_vector,

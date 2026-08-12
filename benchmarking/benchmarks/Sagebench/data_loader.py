@@ -8,7 +8,12 @@ from io import BytesIO, BufferedReader
 from PIL import Image
 import weaviate
 from imsearch_eval.framework.interfaces import DataLoader
-from helpers.ablation import generate_index_caption, get_index_embedding
+from helpers.ablation import (
+    generate_index_caption,
+    get_index_embedding,
+    milvus_index_payload,
+)
+from helpers.backend import is_milvus
 
 class SagebenchDataLoader(DataLoader):
     """Data loader for Sagebench dataset rows into Weaviate."""
@@ -83,6 +88,66 @@ class SagebenchDataLoader(DataLoader):
                 else str(confidence)
             )
 
+            caption = generate_index_caption(
+                self.model_provider,
+                image,
+                self.config,
+                fallback_caption=summary or "",
+            )
+
+            if is_milvus(self.config):
+                caption_vector, image_vector, search_text, link = milvus_index_payload(
+                    self.model_provider,
+                    caption,
+                    image,
+                    image_id,
+                    self.config,
+                    extra_search_fields=[
+                        camera, host, job, vsn, plugin, zone, project, address,
+                    ],
+                )
+                return {
+                    "image_id": image_id or "",
+                    "query_text": query_text or "",
+                    "query_id": str(query_id or ""),
+                    "caption": caption or "",
+                    "relevance_label": relevance_label,
+                    "clip_score": clip_score,
+                    "license": license_ or "",
+                    "doi": doi or "",
+                    "summary": summary or "",
+                    "viewpoint": viewpoint or "",
+                    "lighting": lighting or "",
+                    "environment_type": environment_type or "",
+                    "sky_condition": sky_condition or "",
+                    "horizon_present": horizon_present,
+                    "ground_present": ground_present,
+                    "sky_dominates": sky_dominates,
+                    "vegetation_present": vegetation_present,
+                    "water_present": water_present,
+                    "buildings_present": buildings_present,
+                    "vehicle_present": vehicle_present,
+                    "person_present": person_present,
+                    "animal_present": animal_present,
+                    "night_scene": night_scene,
+                    "precipitation_visible": precipitation_visible,
+                    "multiple_objects": multiple_objects,
+                    "vsn": vsn or "",
+                    "zone": zone or "",
+                    "host": host or "",
+                    "job": job or "",
+                    "plugin": plugin or "",
+                    "camera": camera or "",
+                    "project": project or "",
+                    "address": address or "",
+                    "tags": tags_str,
+                    "confidence": confidence_str,
+                    "link": link,
+                    "caption_vector": caption_vector,
+                    "image_vector": image_vector,
+                    "search_text": search_text,
+                }
+
             # Encode image for Weaviate BLOB ingestion.
             image_stream = BytesIO()
             image.save(image_stream, format="JPEG")
@@ -90,12 +155,6 @@ class SagebenchDataLoader(DataLoader):
             buffered_stream = BufferedReader(image_stream)
             encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
 
-            caption = generate_index_caption(
-                self.model_provider,
-                image,
-                self.config,
-                fallback_caption=summary or "",
-            )
             clip_embedding = get_index_embedding(
                 self.model_provider, caption, image, self.config
             )
@@ -152,11 +211,56 @@ class SagebenchDataLoader(DataLoader):
             return None
 
     def get_schema_config(self) -> dict:
-        """Get Weaviate schema configuration for the Sagebench collection."""
+        """Get schema configuration for the Sagebench collection."""
+        collection_name = os.environ.get("COLLECTION_NAME", "Sagebench")
+        if is_milvus(self.config):
+            from imsearch_eval.adapters.milvus import build_benchmark_schema
+
+            return build_benchmark_schema(
+                name=collection_name,
+                scalar_fields=[
+                    {"field_name": "image_id", "datatype": "VARCHAR"},
+                    {"field_name": "query_text", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "query_id", "datatype": "VARCHAR"},
+                    {"field_name": "caption", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "relevance_label", "datatype": "INT64"},
+                    {"field_name": "clip_score", "datatype": "FLOAT"},
+                    {"field_name": "license", "datatype": "VARCHAR"},
+                    {"field_name": "doi", "datatype": "VARCHAR"},
+                    {"field_name": "summary", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "viewpoint", "datatype": "VARCHAR"},
+                    {"field_name": "lighting", "datatype": "VARCHAR"},
+                    {"field_name": "environment_type", "datatype": "VARCHAR"},
+                    {"field_name": "sky_condition", "datatype": "VARCHAR"},
+                    {"field_name": "horizon_present", "datatype": "BOOL"},
+                    {"field_name": "ground_present", "datatype": "BOOL"},
+                    {"field_name": "sky_dominates", "datatype": "BOOL"},
+                    {"field_name": "vegetation_present", "datatype": "BOOL"},
+                    {"field_name": "water_present", "datatype": "BOOL"},
+                    {"field_name": "buildings_present", "datatype": "BOOL"},
+                    {"field_name": "vehicle_present", "datatype": "BOOL"},
+                    {"field_name": "person_present", "datatype": "BOOL"},
+                    {"field_name": "animal_present", "datatype": "BOOL"},
+                    {"field_name": "night_scene", "datatype": "BOOL"},
+                    {"field_name": "precipitation_visible", "datatype": "BOOL"},
+                    {"field_name": "multiple_objects", "datatype": "BOOL"},
+                    {"field_name": "vsn", "datatype": "VARCHAR"},
+                    {"field_name": "zone", "datatype": "VARCHAR"},
+                    {"field_name": "host", "datatype": "VARCHAR"},
+                    {"field_name": "job", "datatype": "VARCHAR"},
+                    {"field_name": "plugin", "datatype": "VARCHAR"},
+                    {"field_name": "camera", "datatype": "VARCHAR"},
+                    {"field_name": "project", "datatype": "VARCHAR"},
+                    {"field_name": "address", "datatype": "VARCHAR"},
+                    {"field_name": "tags", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "confidence", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "link", "datatype": "VARCHAR"},
+                ],
+            )
+
         from weaviate.classes.config import Configure, Property, DataType
 
         target_vector = os.environ.get("TARGET_VECTOR", "clip")
-        collection_name = os.environ.get("COLLECTION_NAME", "Sagebench")
 
         return {
             "name": collection_name,

@@ -1,7 +1,11 @@
 """Ablation study helpers for benchmark index and query pipelines."""
 import logging
 import os
-from typing import Any
+import re
+from typing import Any, Iterable, Optional
+
+import numpy as np
+from PIL import Image
 
 def parse_bool_env(name: str, default: bool = True) -> bool:
     """Parse a boolean environment variable."""
@@ -106,3 +110,73 @@ def get_index_embedding(model_provider, caption: str, image: Any, config):
         return model_utils.get_clip_embeddings("", image=image, alpha=1.0)
 
     return model_utils.get_clip_embeddings(caption, image=None, alpha=0.0)
+
+
+def _to_list(embedding) -> list:
+    if isinstance(embedding, np.ndarray):
+        return embedding.tolist()
+    return list(embedding)
+
+
+def get_index_embedding_pair(model_provider, caption: str, image: Any, config):
+    """
+    Build separate caption_vector and image_vector for Milvus indexing.
+
+    Disabled modalities are stored as zero vectors; the corresponding hybrid
+    search leg is omitted at query time via enable_image_vector / enable_caption_vector.
+    """
+    model_utils = get_triton_model_utils(model_provider)
+    caption_vec, image_vec = model_utils.get_clip_embedding_pair(caption or "", image)
+    if caption_vec is None or image_vec is None:
+        return None, None
+
+    dim = len(image_vec)
+    if not config.embed_caption:
+        caption_vec = np.zeros(dim, dtype=np.float32)
+    if not config.embed_image:
+        image_vec = np.zeros(dim, dtype=np.float32)
+    return _to_list(caption_vec), _to_list(image_vec)
+
+
+def build_search_text(
+    caption: str,
+    extra_fields: Optional[Iterable[Any]] = None,
+    max_length: int = 65535,
+) -> str:
+    """Concatenate caption and optional metadata fields for BM25 search_text."""
+    parts = [caption or ""]
+    if extra_fields:
+        parts.extend("" if field is None else str(field) for field in extra_fields)
+    return " ".join(part for part in parts if part).strip()[:max_length]
+
+
+def cache_index_image(image: Image.Image, image_id: Any, cache_dir: str) -> str:
+    """Write a JPEG under cache_dir and return the path for Milvus `link`."""
+    os.makedirs(cache_dir, exist_ok=True)
+    safe_id = re.sub(r"[^A-Za-z0-9._-]+", "_", str(image_id) or "image")
+    path = os.path.join(cache_dir, f"{safe_id}.jpg")
+    image.convert("RGB").save(path, format="JPEG")
+    return path
+
+
+def milvus_index_payload(
+    model_provider,
+    caption: str,
+    image: Image.Image,
+    image_id: Any,
+    config,
+    extra_search_fields: Optional[Iterable[Any]] = None,
+):
+    """
+    Build Milvus index fields: caption_vector, image_vector, search_text, link.
+
+    Raises ValueError if embeddings cannot be generated.
+    """
+    caption_vector, image_vector = get_index_embedding_pair(
+        model_provider, caption, image, config
+    )
+    if caption_vector is None or image_vector is None:
+        raise ValueError("Failed to generate CLIP embedding pair")
+    link = cache_index_image(image, image_id, config._image_cache_dir)
+    search_text = build_search_text(caption, extra_search_fields)
+    return caption_vector, image_vector, search_text, link

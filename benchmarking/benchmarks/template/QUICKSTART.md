@@ -80,10 +80,10 @@ find . -type f -name "*.yaml" -exec sed -i '' 's/MYBENCHMARK/mybenchmark/g' {} +
 
 ## Step 8: Update config.py (if needed)
 
-If your config needs Weaviate connection parameters, ensure they're in your config:
-- `WEAVIATE_HOST`
-- `WEAVIATE_PORT`
-- `WEAVIATE_GRPC_PORT`
+If your config needs vector DB connection parameters, `helpers.backend.apply_vector_db_config` loads:
+- `VECTOR_DB` (`milvus` or `weaviate`)
+- `MILVUS_URI`, `MILVUS_TOKEN`, `MILVUS_DB`
+- `WEAVIATE_HOST`, `WEAVIATE_PORT`, `WEAVIATE_GRPC_PORT`
 
 These are typically set via environment variables in Kubernetes.
 

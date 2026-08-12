@@ -13,6 +13,8 @@ This repository provides:
 
 The framework code itself (interfaces, adapters, evaluator) is in the separate [`imsearch_eval`](https://github.com/waggle-sensor/imsearch_eval) package.
 
+New runs default to **Milvus** on the NRP-managed cluster (`VECTOR_DB=milvus`, `MILVUS_DB=image_search_svc`) with per-benchmark collection names. Set `VECTOR_DB=weaviate` to use the in-cluster Weaviate path. Historical Weaviate result folders are unchanged.
+
 The existing benchmarks are in the [imsearch_benchmarks](https://github.com/waggle-sensor/imsearch_benchmarks) repository. Some of them have been implemented here in this repository.
 
 ## Quick Start: Creating a New Benchmark
@@ -96,17 +98,18 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 
 | Variable | Default | Effect |
 |----------|---------|--------|
+| `VECTOR_DB` | `milvus` | Backend: `milvus` (default) or `weaviate` |
 | `ENABLE_CAPTION_GENERATION` | `true` | When `false`, skips the caption LLM entirely and stores an empty caption |
-| `EMBED_IMAGE` | `true` | When `false`, index vectors use caption-only CLIP embeddings |
-| `EMBED_CAPTION` | `false` when caption generation is disabled | When `false`, index vectors use image-only CLIP embeddings |
-| `INDEX_CLIP_ALPHA` | `0.7` | Fusion weight for image vs caption when both modalities are embedded at index time. A higher value means more weight is given to the image modality. |
-| `QUERY_CLIP_ALPHA` | `0.7` | CLIP fusion weight when embedding the query text at search time. As of right now, it is not used since only text queries are supported. A higher value means more weight is given to the image modality. |
-| `ENABLE_BM25` | `true` | When `false`, sets hybrid query `alpha=1.0` (vector-only retrieval) |
-| `QUERY_ALPHA` | `0.4` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality. |
+| `EMBED_IMAGE` | `true` | Milvus: omit the `image_vector` hybrid leg. Weaviate: index-time CLIP fusion uses image only when caption is also disabled |
+| `EMBED_CAPTION` | `false` when caption generation is disabled | Milvus: omit the `caption_vector` hybrid leg. Weaviate: index-time CLIP fusion |
+| `INDEX_CLIP_ALPHA` | `0.7` | Weaviate-only index-time fusion weight for image vs caption. Unused on Milvus (fusion is query-time via `QUERY_CLIP_ALPHA`) |
+| `QUERY_CLIP_ALPHA` | `0.7` | Within dense retrieval, weight for `image_vector` vs `caption_vector` (Milvus) or fused query embedding (Weaviate) |
+| `ENABLE_BM25` | `true` | When `false`, omits the BM25/keyword leg (Milvus) or sets hybrid `alpha=1.0` (Weaviate) |
+| `QUERY_ALPHA` | `0.4` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality |
 
-`ENABLE_BM25=false` disables the BM25 keyword leg of hybrid search. The cross-encoder reranker still runs unless you change `QUERY_METHOD` or `RERANK_PROP`.
+`ENABLE_BM25=false` disables the BM25 keyword leg of hybrid search. The reranker still runs unless you change `QUERY_METHOD` or disable rerank.
 
-Use a distinct `COLLECTION_NAME` for each ablation condition so indexed vectors do not mix across experiments.
+Use a distinct `COLLECTION_NAME` for each ablation condition so indexed vectors do not mix across experiments. New Milvus result folders should use a new version name (e.g. `v13`) so leaderboards can compare against historical Weaviate runs.
 
 ### Example Ablation Runs
 
@@ -182,8 +185,7 @@ from imsearch_eval.framework.interfaces import Config
 class MyConfig(Config):
     def __init__(self):
         self.MYBENCHMARK_DATASET = os.environ.get("MYBENCHMARK_DATASET", "your-dataset/name")
-        self.WEAVIATE_HOST = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
-        # ... add more environment variables
+        # VECTOR_DB, MILVUS_*, WEAVIATE_* are loaded via helpers.backend.apply_vector_db_config
 ```
 
 See `benchmarks/template/config.py` and `benchmarks/INQUIRE/config.py` for examples.
@@ -200,7 +202,8 @@ Create `run_benchmark.py` that combines data loading and evaluation. The script 
 ```python
 from config import MyConfig
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter
-from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider, WeaviateQuery
+from imsearch_eval.adapters import TritonModelProvider
+from helpers.backend import init_vector_db
 from benchmark_dataset import MyBenchmarkDataset
 from data_loader import MyDataLoader  # Optional
 
@@ -253,9 +256,11 @@ Add the required packages:
 
 ```txt
 # Core benchmarking framework (install with all extras needed)
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[milvus] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+```
 
 # S3 upload support (MinIO)
 minio>=7.2.0
@@ -390,19 +395,12 @@ The `benchmarks/template/` directory provides a complete starting point for new 
 All benchmarks depend on the [`imsearch_eval`](https://github.com/waggle-sensor/imsearch_eval) package, which provides:
 - Abstract interfaces (`VectorDBAdapter`, `ModelProvider`, `Query`, `BenchmarkDataset`, etc.)
 - Evaluation logic (`BenchmarkEvaluator`)
-- Shared adapters (`WeaviateAdapter`, `TritonModelProvider`, etc.)
+- Shared adapters (`MilvusAdapter`, `WeaviateAdapter`, `TritonModelProvider`, etc.)
 
 Install it via:
 ```bash
 # Install with all extras needed for benchmarks
-pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-pip install imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-pip install imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-```
-
-Or install all at once:
-```bash
-pip install "imsearch_eval[weaviate,triton,huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0"
+pip install "imsearch_eval[weaviate,milvus,triton,huggingface,nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0"
 ```
 
 See the [`imsearch_eval` README](https://github.com/waggle-sensor/imsearch_eval) for framework documentation.

@@ -7,7 +7,12 @@ from io import BytesIO, BufferedReader
 from PIL import Image
 import weaviate
 from imsearch_eval.framework.interfaces import DataLoader
-from helpers.ablation import generate_index_caption, get_index_embedding
+from helpers.ablation import (
+    generate_index_caption,
+    get_index_embedding,
+    milvus_index_payload,
+)
+from helpers.backend import is_milvus
 
 class CommonObjectsBenchDataLoader(DataLoader):
     """Data loader for CommonObjectsBench dataset (general object image retrieval)."""
@@ -68,18 +73,55 @@ class CommonObjectsBenchDataLoader(DataLoader):
                 json.dumps(confidence) if isinstance(confidence, dict) else str(confidence)
             )
 
-            image_stream = BytesIO()
-            image.save(image_stream, format="JPEG")
-            image_stream.seek(0)
-            buffered_stream = BufferedReader(image_stream)
-            encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
-
             caption = generate_index_caption(
                 self.model_provider,
                 image,
                 self.config,
                 fallback_caption=summary or "",
             )
+
+            if is_milvus(self.config):
+                caption_vector, image_vector, search_text, link = milvus_index_payload(
+                    self.model_provider, caption, image, image_id, self.config
+                )
+                return {
+                    "image_id": image_id or "",
+                    "query_text": query_text or "",
+                    "query_id": str(query_id or ""),
+                    "caption": caption or "",
+                    "relevance_label": relevance_label,
+                    "clip_score": clip_score,
+                    "license": license_ or "",
+                    "doi": doi or "",
+                    "summary": summary or "",
+                    "viewpoint": viewpoint or "",
+                    "lighting": lighting or "",
+                    "environment_type": environment_type or "",
+                    "urban_scene": urban_scene,
+                    "rural_scene": rural_scene,
+                    "outdoor_scene": outdoor_scene,
+                    "vehicle_present": vehicle_present,
+                    "person_present": person_present,
+                    "animal_present": animal_present,
+                    "food_present": food_present,
+                    "text_visible": text_visible,
+                    "multiple_objects": multiple_objects,
+                    "artificial_lighting": artificial_lighting,
+                    "occlusion_present": occlusion_present,
+                    "tags": tags_str,
+                    "confidence": confidence_str,
+                    "link": link,
+                    "caption_vector": caption_vector,
+                    "image_vector": image_vector,
+                    "search_text": search_text,
+                }
+
+            image_stream = BytesIO()
+            image.save(image_stream, format="JPEG")
+            image_stream.seek(0)
+            buffered_stream = BufferedReader(image_stream)
+            encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
+
             clip_embedding = get_index_embedding(
                 self.model_provider, caption, image, self.config
             )
@@ -128,15 +170,47 @@ class CommonObjectsBenchDataLoader(DataLoader):
 
     def get_schema_config(self) -> dict:
         """
-        Get Weaviate schema configuration for CommonObjectsBench collection.
-
-        Returns:
-            Dictionary containing schema configuration
+        Get schema configuration for CommonObjectsBench collection.
         """
+        COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "CommonObjectsBench")
+        if is_milvus(self.config):
+            from imsearch_eval.adapters.milvus import build_benchmark_schema
+
+            return build_benchmark_schema(
+                name=COLLECTION_NAME,
+                scalar_fields=[
+                    {"field_name": "image_id", "datatype": "VARCHAR"},
+                    {"field_name": "query_text", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "query_id", "datatype": "VARCHAR"},
+                    {"field_name": "caption", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "relevance_label", "datatype": "INT64"},
+                    {"field_name": "clip_score", "datatype": "FLOAT"},
+                    {"field_name": "license", "datatype": "VARCHAR"},
+                    {"field_name": "doi", "datatype": "VARCHAR"},
+                    {"field_name": "summary", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "viewpoint", "datatype": "VARCHAR"},
+                    {"field_name": "lighting", "datatype": "VARCHAR"},
+                    {"field_name": "environment_type", "datatype": "VARCHAR"},
+                    {"field_name": "urban_scene", "datatype": "BOOL"},
+                    {"field_name": "rural_scene", "datatype": "BOOL"},
+                    {"field_name": "outdoor_scene", "datatype": "BOOL"},
+                    {"field_name": "vehicle_present", "datatype": "BOOL"},
+                    {"field_name": "person_present", "datatype": "BOOL"},
+                    {"field_name": "animal_present", "datatype": "BOOL"},
+                    {"field_name": "food_present", "datatype": "BOOL"},
+                    {"field_name": "text_visible", "datatype": "BOOL"},
+                    {"field_name": "multiple_objects", "datatype": "BOOL"},
+                    {"field_name": "artificial_lighting", "datatype": "BOOL"},
+                    {"field_name": "occlusion_present", "datatype": "BOOL"},
+                    {"field_name": "tags", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "confidence", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "link", "datatype": "VARCHAR"},
+                ],
+            )
+
         from weaviate.classes.config import Configure, Property, DataType
 
         TARGET_VECTOR = os.environ.get("TARGET_VECTOR", "clip")
-        COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "CommonObjectsBench")
         return {
             "name": COLLECTION_NAME,
             "description": "CommonObjectsBench: general object image retrieval (sagecontinuum/CommonObjectsBench)",
