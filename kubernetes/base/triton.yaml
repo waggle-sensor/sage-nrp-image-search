@@ -17,6 +17,7 @@ spec:
       containers:
         - name: triton
           image: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/triton:latest
+          imagePullPolicy: Always #TODO: remove once done with dev
           env:
             - name: TRANSFORMERS_VERBOSITY
               value: "info"

@@ -21,6 +21,7 @@ spec:
       containers:
         - name: weavloader
           image: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavloader:latest
+          imagePullPolicy: Always #TODO: remove once done with dev
           ports:
             - containerPort: 8080
               name: metrics
@@ -28,7 +29,7 @@ spec:
             - name: MILVUS_DB
               value: "image_search_svc"
             - name: MILVUS_COLLECTION
-              value: "HybridSearchExample"
+              value: "SageImageSearch"
             - name: TRITON_HOST
               value: "$(TRITON_SERVICE)"
             - name: TRITON_PORT
@@ -45,6 +46,11 @@ spec:
               value: "gemma"
             - name: NRP_ENABLE_THINKING
               value: "false"
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: huggingface-secret
+                  key: token
           envFrom:
             - secretRef:
                 name: sage-user-secret
