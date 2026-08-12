@@ -45,8 +45,12 @@ analyzer_params = {
 }
 
 # ---------------------------------------------------------------------------
-# Dense vector index (HNSW on fused CLIP embeddings)
+# Dense vector indexes (HNSW on caption_vector and image_vector)
 # ---------------------------------------------------------------------------
+# Two CLIP FLOAT_VECTOR fields, both dim=vector_dim:
+#   caption_vector — CLIP text embedding of the generated caption
+#   image_vector   — CLIP image embedding
+# Query-time WeightedRanker blends them with clip_alpha (see app/HyperParameters.py).
 # Metric: COSINE is correct for L2-normalized CLIP embeddings (IP is equivalent).
 dense_metric_type = "COSINE"
 dense_index_type = "HNSW"

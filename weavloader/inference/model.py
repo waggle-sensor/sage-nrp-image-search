@@ -201,6 +201,39 @@ def get_allign_embeddings(triton_client, text, image=None):
 
     return embedding
 
+def get_clip_embedding_pair(triton_client, text, image):
+    """
+    Return (caption_embedding, image_embedding) from Triton CLIP without fusion.
+
+    ``fuse_embeddings`` is kept for later experiments; ingest stores the two
+    modalities as separate Milvus FLOAT_VECTOR fields.
+    """
+    text_bytes = text.encode("utf-8")
+    text_np = np.array([text_bytes], dtype="object")
+    image_np = np.array(image).astype(np.float32)
+
+    inputs = [
+        TritonClient.InferInput("text", [1], "BYTES"),
+        TritonClient.InferInput("image", list(image_np.shape), "FP32")
+    ]
+    inputs[0].set_data_from_numpy(text_np)
+    inputs[1].set_data_from_numpy(image_np)
+    outputs = [
+        TritonClient.InferRequestedOutput("text_embedding"),
+        TritonClient.InferRequestedOutput("image_embedding")
+    ]
+
+    try:
+        results = triton_client.infer(model_name="clip", inputs=inputs, outputs=outputs)
+        text_embedding = results.as_numpy("text_embedding")[0]
+        image_embedding = results.as_numpy("image_embedding")[0]
+    except Exception as e:
+        logging.error(f"[MODEL] Error during CLIP inference: {str(e)}")
+        return None, None
+
+    return text_embedding, image_embedding
+
+
 def get_clip_embeddings(triton_client, text, image=None):
     """
     Embed text and image using CLIP encoder served via Triton Inference Server.

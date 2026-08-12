@@ -46,10 +46,15 @@ download_clip() {
 download_gemma() {
   echo "Downloading Gemma model from ${GEMMA_HF_REPO} (revision: ${GEMMA_MODEL_VERSION}) to ${GEMMA_MODEL_PATH}..."
   mkdir -p "$GEMMA_MODEL_PATH"
-  huggingface-cli download \
+  # Gemma is optional when captioning runs on NRP LLM; do not fail the container.
+  if ! huggingface-cli download \
       --local-dir "$GEMMA_MODEL_PATH" \
       --revision "$GEMMA_MODEL_VERSION" \
-      "$GEMMA_HF_REPO"
+      "$GEMMA_HF_REPO"; then
+    echo "WARNING: huggingface-cli download for Gemma failed." >&2
+    return 1
+  fi
+  return 0
 }
 
 # --- CLIP ---
@@ -79,19 +84,21 @@ if [[ -n "$HF_TOKEN" ]]; then
       ls -la "$GEMMA_MODEL_PATH" || true
       rm -rf "${GEMMA_MODEL_PATH:?}/"*
     fi
-    download_gemma
-    if ! gemma_model_ready "$GEMMA_MODEL_PATH"; then
-      echo "ERROR: Gemma download finished but required processor/model files are missing in ${GEMMA_MODEL_PATH}" >&2
+    if ! download_gemma; then
+      echo "WARNING: Gemma download failed. Continuing without it (CLIP can still serve)." >&2
+    elif ! gemma_model_ready "$GEMMA_MODEL_PATH"; then
+      echo "WARNING: Gemma download finished but required processor/model files are missing in ${GEMMA_MODEL_PATH}" >&2
       echo "Ensure HF_TOKEN can access ${GEMMA_HF_REPO} (accept the model license on Hugging Face)." >&2
       ls -la "$GEMMA_MODEL_PATH" >&2 || true
-      exit 1
+      echo "WARNING: Continuing without Gemma (CLIP can still serve)." >&2
     fi
   fi
 else
   echo "HF_TOKEN not provided. Skipping Hugging Face Gemma download."
 fi
 
-# Keep serving healthy models (e.g. CLIP) even if optional ones fail to load.
+# Keep serving healthy models (e.g. CLIP) even if optional ones (Gemma) fail to load.
+# NRP caption mode only needs CLIP embeddings from this Triton instance.
 exec tritonserver \
   --model-repository="$MODEL_REPOSITORY" \
   --exit-on-error=false \

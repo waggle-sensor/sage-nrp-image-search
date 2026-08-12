@@ -20,7 +20,7 @@ flowchart LR
 1. **Celery Beat** runs `monitor_data_stream` on a configurable interval (default 60 seconds).
 2. The monitor queries the SAGE data stream for new `imagesampler` tasks since the last checkpoint.
 3. Each image is enqueued to the `image_processing` Celery queue.
-4. **process_image** downloads the image, generates a caption (Triton VLM or NRP AI Gateway), computes a CLIP embedding, and inserts the record into Milvus (`vector`, `search_text`, scalars — no image blob).
+4. **process_image** downloads the image, generates a caption (Triton VLM or NRP AI Gateway), computes separate CLIP caption and image embeddings, and inserts the record into Milvus (`caption_vector`, `image_vector`, `search_text`, scalars — no image blob).
 
 ## Query flow
 
@@ -31,7 +31,8 @@ flowchart LR
     User[Text_Query] --> Gradio[Gradio_UI]
     Gradio --> Triton[Triton_CLIP]
     Gradio --> Hybrid[Milvus_hybrid_search]
-    Hybrid --> Dense[Dense_CLIP_vector]
+    Hybrid --> DenseImg[Dense_image_vector]
+    Hybrid --> DenseCap[Dense_caption_vector]
     Hybrid --> Sparse[BM25_on_search_text]
     Hybrid --> Ranker[WeightedRanker]
     Ranker --> Rerank[Triton_CLIP_rerank]
@@ -42,7 +43,7 @@ flowchart LR
 
 1. The user enters text in the Gradio UI.
 2. Triton embeds the query text with CLIP.
-3. Milvus runs `hybrid_search` with dense + BM25 sparse requests and `WeightedRanker(query_alpha, 1 - query_alpha)` (default α=0.4).
+3. Milvus runs `hybrid_search` with three requests — `image_vector`, `caption_vector`, and BM25 `sparse` — fused by `WeightedRanker(query_alpha * clip_alpha, query_alpha * (1 - clip_alpha), 1 - query_alpha)` (defaults: query_alpha=0.4, clip_alpha=0.7).
 4. Triton CLIP (`DFN5B-CLIP-ViT-H-14-378`) re-scores each hit by query-text vs image similarity matching HF `logits_per_image` (L2-normalized cosine × `exp(logit_scale)` from the model).
 5. Results from deny-listed nodes are filtered out.
 6. Images are fetched from SAGE URLs and displayed in a gallery and map.
@@ -77,7 +78,7 @@ Model names and image tags change over time. Check the Kubernetes overlays for c
 
 Collections live in the NRP-provisioned database `MILVUS_DB=image_search_svc` (NRP admins create the DB; weavmanage only creates collections). Collection name via `MILVUS_COLLECTION` (defaults: prod/local `HybridSearchExample`, dev `HybridSearchExampleDev`), created by [`weavmanage/migrations/001_create_schema.py`](../weavmanage/migrations/001_create_schema.py):
 
-- **Dense vector:** `vector` FLOAT_VECTOR dim=1024 (fused CLIP; COSINE / HNSW)
+- **Dense vectors:** `caption_vector` and `image_vector` FLOAT_VECTOR dim=1024 (CLIP text of the caption and CLIP image; COSINE / HNSW). Modalities are stored separately; `clip_alpha` weights them at query time. `fuse_embeddings()` remains in code for later experiments but is not used for indexing.
 - **BM25:** `search_text` VARCHAR with analyzer → `sparse` via `FunctionType.BM25`
 - **Time:** `timestamp` TIMESTAMPTZ (ISO 8601 on insert; stored as UTC; STL_SORT index)
 - **Location:** `location` GEOMETRY (WKT `POINT(lon lat)`; RTREE index; `st_within` / `st_dwithin`)

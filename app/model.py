@@ -70,6 +70,10 @@ def get_clip_embeddings(triton_client, text, image=None):
     """
     Embed text and image using CLIP encoder served via Triton Inference Server.
     Returns one fused embedding created from both modalities.
+
+    Production ingest/query no longer fuse at index time; see
+    ``get_clip_embedding_pair`` in weavloader. This helper is kept for
+    experiments that still want a single combined vector.
     """
     text_embedding, image_embedding = _infer_clip(triton_client, text, image)
     if text_embedding is None:

@@ -7,7 +7,7 @@ Interactive learning materials for [Sage Grande: Summer of AI](https://sageconti
 After completing the lab, you will be able to:
 
 - Explain the Sage Image Search pipeline: captioning, embedding, indexing, hybrid search, reranking, and search UI
-- Build fused CLIP embeddings (image + caption) and index them with Milvus Lite BM25 hybrid search
+- Build fused CLIP embeddings (image + caption) and index them with Milvus Lite BM25 hybrid search. Production instead stores caption and image embeddings as **separate** Milvus fields and blends them at query time.
 - Run a simplified version of the stack locally using Milvus Lite, open_clip, [Florence-2-base](https://huggingface.co/microsoft/Florence-2-base), and a Gradio search UI
 - Map each lab component to the production system (NRP Milvus, Triton, NRP `run_nrp_model()`, weavloader, Gradio API, React portal)
 - Evaluate retrieval quality with MRR and Success@K on SageBench queries
@@ -123,8 +123,8 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 |------------|----------------|----------------|
 | NRP Milvus `HybridSearchExample` (+Dev) | Milvus Lite `sage_lab` (`sage_lab.db`) | Embedded DB, no cluster credentials |
 | NRP `gemma` → [gemma-4-31B-it-qat-w4a16-ct](https://huggingface.co/google/gemma-4-31B-it-qat-w4a16-ct) via `run_nrp_model()` | [Florence-2-base](https://huggingface.co/microsoft/Florence-2-base) via `transformers` | Smaller VLM (0.23B) for classroom GPUs; demonstrates the same caption → embed pipeline |
-| Triton `clip` (`DFN5B-CLIP-ViT-H-14-378`) + fused image+caption vector (`clip_alpha=0.7`) | `open_clip` ViT-B-32 + same fusion | Smaller CLIP for classroom GPUs; same `fuse_embeddings` math |
-| Milvus `hybrid_search` + `WeightedRanker(0.4, 0.6)` | Same API shape in the notebook | Lab uses Milvus Lite; production uses NRP-managed Milvus |
+| Triton `clip` (`DFN5B-CLIP-ViT-H-14-378`) + separate `caption_vector` / `image_vector` (`clip_alpha` at query time) | `open_clip` ViT-B-32 + fused vector | Lab still fuses for a simpler single-field index; production stores modalities separately |
+| Milvus `hybrid_search` + 3-way `WeightedRanker` (image, caption, BM25) | `WeightedRanker(0.4, 0.6)` dense+BM25 in the notebook | Lab uses Milvus Lite with one dense field; production uses NRP-managed Milvus |
 | Triton CLIP query–image rerank (`DFN5B-CLIP-ViT-H-14-378`) | CrossEncoder `ms-marco-MiniLM-L-6-v2` in notebook | Lab keeps a classic cross-encoder for teaching; production scores query vs image via Triton CLIP |
 | weavloader Celery ingestion | Notebook indexing loop | No distributed queues |
 | Gradio API (`app/main.py`) + [React portal](https://portal.sagecontinuum.org/labs/image-search) | Gradio UI in notebook (`lab_text_query`) | Lab combines UI and API; production splits React frontend from Gradio backend |

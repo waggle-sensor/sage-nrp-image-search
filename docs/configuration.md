@@ -74,8 +74,8 @@ These are set in [`app/HyperParameters.py`](../app/HyperParameters.py) and are n
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `response_limit` | `25` | Maximum number of results returned |
-| `query_alpha` | `0.4` | Hybrid blend for `WeightedRanker(alpha, 1-alpha)`: 0 = pure BM25, 1 = pure vector |
-| `clip_alpha` | `0.7` | Image vs caption fusion weight at embed time |
+| `query_alpha` | `0.4` | Dense vs BM25: 0 = pure BM25, 1 = pure dense (`image_vector` + `caption_vector`) |
+| `clip_alpha` | `0.7` | Within dense: 1 = `image_vector` only, 0 = `caption_vector` only. Combined as `WeightedRanker(query_alpha * clip_alpha, query_alpha * (1 - clip_alpha), 1 - query_alpha)` |
 
 The active query path uses `clip_hybrid_query` with Milvus `hybrid_search` + Triton CLIP query–image rerank.
 

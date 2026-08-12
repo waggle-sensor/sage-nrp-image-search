@@ -54,7 +54,7 @@ def parse_wkt_point(wkt) -> tuple[float, float]:
 
 class Milvus_query:
     """
-    Query Milvus with hybrid dense + BM25 search and Triton CLIP image-text rerank.
+    Query Milvus with hybrid caption/image dense + BM25 search and Triton CLIP rerank.
     """
 
     def __init__(self, milvus_client, triton_client=None, collection_name=None):
@@ -67,8 +67,12 @@ class Milvus_query:
 
     def clip_hybrid_query(self, nearText, collection_name=None):
         """
-        Hybrid CLIP dense + BM25 sparse search, then Triton CLIP rerank
-        (query text vs retrieved image), matching logits_per_image-style scoring.
+        Hybrid CLIP caption_vector + image_vector + BM25 sparse search,
+        then Triton CLIP rerank (query text vs retrieved image), matching
+        logits_per_image-style scoring.
+
+        Dense vs sparse uses ``query_alpha``. Within dense, ``clip_alpha``
+        weights ``image_vector`` vs ``caption_vector``.
         """
         collection = collection_name or self.collection_name
         clip_embedding = get_clip_embeddings(self.triton_client, nearText)
@@ -83,12 +87,20 @@ class Milvus_query:
         )
 
         limit = hp.response_limit
-        alpha = hp.query_alpha
+        query_alpha = hp.query_alpha
+        clip_alpha = hp.clip_alpha
+        dense_params = {"metric_type": "COSINE", "params": {"ef": 64}}
 
-        dense_req = AnnSearchRequest(
+        image_req = AnnSearchRequest(
             data=[vector],
-            anns_field="vector",
-            param={"metric_type": "COSINE", "params": {"ef": 64}},
+            anns_field="image_vector",
+            param=dense_params,
+            limit=limit,
+        )
+        caption_req = AnnSearchRequest(
+            data=[vector],
+            anns_field="caption_vector",
+            param=dense_params,
             limit=limit,
         )
         sparse_req = AnnSearchRequest(
@@ -100,8 +112,12 @@ class Milvus_query:
 
         hits = self.milvus_client.hybrid_search(
             collection_name=collection,
-            reqs=[dense_req, sparse_req],
-            ranker=WeightedRanker(alpha, 1.0 - alpha),
+            reqs=[image_req, caption_req, sparse_req],
+            ranker=WeightedRanker(
+                query_alpha * clip_alpha,
+                query_alpha * (1.0 - clip_alpha),
+                1.0 - query_alpha,
+            ),
             limit=limit,
             output_fields=OUTPUT_FIELDS,
         )

@@ -12,9 +12,9 @@ Sage Image Search indexes images from SAGE edge cameras and retrieves them using
 
 1. **Caption generation** — A vision-language model (VLM) writes a detailed caption for each indexed image.
 2. **Embedding** — CLIP produces vector embeddings from the image and caption.
-3. **Storage** — Captions, metadata, and fused CLIP embeddings are stored in NRP-managed Milvus (no image blob; UI loads via SAGE URL).
+3. **Storage** — Captions, metadata, and **separate** CLIP caption and image embeddings are stored in NRP-managed Milvus (no image blob; UI loads via SAGE URL). Modalities are blended at query time, not fused at index time.
 4. **Hybrid search** — When you query, the system combines:
-   - **Vector search** — semantic similarity between your query and CLIP embeddings
+   - **Vector search** — semantic similarity between your query and stored CLIP `caption_vector` + `image_vector`
    - **Keyword search** — BM25 text matching on `search_text` (caption + SAGE metadata)
 5. **Reranking** — Triton CLIP re-scores the top results by query–image embedding similarity.
 
@@ -25,7 +25,7 @@ Each image record in Milvus (`MILVUS_COLLECTION`, default `HybridSearchExample`)
 | Data | Description |
 |------|-------------|
 | Caption | AI-generated description of the image |
-| CLIP embedding | Dense `vector` (1024-d) for semantic search |
+| CLIP embeddings | Dense `caption_vector` and `image_vector` (1024-d each) for semantic search |
 | search_text | Caption + metadata blob for BM25 (`sparse` filled by Milvus) |
 | SAGE metadata | `vsn`, `camera`, `zone`, `job`, `host`, `plugin`, `project`, `task`, `address`, `timestamp`, `link` |
 | Location | `location` GEOMETRY (`POINT(lon lat)` WKT) when available |

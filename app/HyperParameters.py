@@ -10,9 +10,13 @@ done to find more hyper params that can be altered'''
 #  NOTE: instead of recreating the db just update the HPs when testing
 
 # 1) Hybrid Search Query hyperparameters
-response_limit=25 #Number of objects to return 
-query_alpha=0.4 #An alpha of 1 is a pure vector search, An alpha of 0 is a pure keyword search.
-# WeightedRanker(query_alpha, 1 - query_alpha) → dense weight, sparse/BM25 weight
+response_limit=25 #Number of objects to return
+query_alpha=0.4 # Dense vs BM25: 1 = pure dense (image+caption), 0 = pure keyword (BM25).
+# 2) CLIP modality mix at query time (not index-time fusion)
+clip_alpha = 0.7 # Within dense: 1 = image_vector only, 0 = caption_vector only.
+# WeightedRanker(
+#     query_alpha * clip_alpha,           # image_vector
+#     query_alpha * (1.0 - clip_alpha),   # caption_vector
+#     1.0 - query_alpha,                  # sparse BM25
+# )
 
-# 2) CLIP fusion at query/ingest time
-clip_alpha = 0.7

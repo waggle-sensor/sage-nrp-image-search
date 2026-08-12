@@ -5,7 +5,7 @@ nrp_enable_thinking = (
     os.environ.get("NRP_ENABLE_THINKING", "false").lower() in ("1", "true", "yes")
 )
 align_alpha = 0.7
-clip_alpha = 0.7
+clip_alpha = 0.7  # Used by fuse_embeddings() only; ingest stores caption/image vectors separately.
 default_prompt="""
 role:
 You are a world-class Scientific Image Captioning Expert.

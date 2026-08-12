@@ -10,7 +10,7 @@ import requests
 import logging
 from PIL import Image
 from io import BytesIO
-from inference import get_clip_embeddings, run_nrp_model, run_triton_model
+from inference import get_clip_embedding_pair, run_nrp_model, run_triton_model
 from urllib.parse import urljoin
 from metrics import metrics
 import numpy as np
@@ -209,8 +209,10 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
             lat = loc_df[loc_df['name'] == 'sys.gps.lat']['value'].values[0]
             lon = loc_df[loc_df['name'] == 'sys.gps.lon']['value'].values[0]
 
-        # Generate caption
+        # Generate caption. Never store node/plugin metadata in `caption`.
+        # On failure, raise so Celery retries and eventually archives to DLQ.
         start_time = time.perf_counter()
+        caption = None
         try:
             if LLM_RUN_MODE == 'TRITON':
                 caption = run_triton_model(triton_client, TRITON_LLM_MODEL, image)
@@ -220,16 +222,31 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
                 raise ValueError(f"Unsupported LLM mode: {LLM_RUN_MODE}")
 
             caption_duration = time.perf_counter() - start_time
-            metrics.record_model_inference(METRIC_REPORT_CAPTION_MODEL, "caption", caption_duration, "success")
+            if not caption:
+                metrics.record_model_inference(
+                    METRIC_REPORT_CAPTION_MODEL, "caption", caption_duration, "failure"
+                )
+                raise RuntimeError(
+                    f"Caption model returned empty result ({LLM_RUN_MODE})"
+                )
+            metrics.record_model_inference(
+                METRIC_REPORT_CAPTION_MODEL, "caption", caption_duration, "success"
+            )
         except Exception as e:
             caption_duration = time.perf_counter() - start_time
-            metrics.record_model_inference(METRIC_REPORT_CAPTION_MODEL, "caption", caption_duration, "failure")
+            metrics.record_model_inference(
+                METRIC_REPORT_CAPTION_MODEL, "caption", caption_duration, "failure"
+            )
             raise e
 
-        # Generate clip embedding
+        # Generate CLIP caption + image embeddings (stored separately; no fusion)
         start_time = time.perf_counter()
         try:
-            clip_embedding = get_clip_embeddings(triton_client, caption, image)
+            caption_embedding, image_embedding = get_clip_embedding_pair(
+                triton_client, caption, image
+            )
+            if caption_embedding is None or image_embedding is None:
+                raise RuntimeError("CLIP returned empty embeddings")
             embedding_duration = time.perf_counter() - start_time
             metrics.record_model_inference("clip", "embedding", embedding_duration, "success")
         except Exception as e:
@@ -240,7 +257,7 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
         # finite checks
         lat_sanitized = safe_coord(lat, default=0.0, label="lat", logger=logger)
         lon_sanitized = safe_coord(lon, default=0.0, label="lon", logger=logger)
-        if not np.all(np.isfinite(clip_embedding)):
+        if not np.all(np.isfinite(caption_embedding)) or not np.all(np.isfinite(image_embedding)):
             logger.error(f"[PROCESSING] Non-finite values in embedding vector for {url}")
             raise ValueError(f"Non-finite values in embedding vector for {url}")
 
@@ -260,14 +277,20 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
             f"{plugin_s} {zone_s} {project_s} {address_s}"
         )
 
-        vector = (
-            clip_embedding.tolist()
-            if hasattr(clip_embedding, "tolist")
-            else list(clip_embedding)
+        caption_vector = (
+            caption_embedding.tolist()
+            if hasattr(caption_embedding, "tolist")
+            else list(caption_embedding)
+        )
+        image_vector = (
+            image_embedding.tolist()
+            if hasattr(image_embedding, "tolist")
+            else list(image_embedding)
         )
 
         row = {
-            "vector": vector,
+            "caption_vector": caption_vector,
+            "image_vector": image_vector,
             "search_text": search_text[:65535],
             "filename": safe_str(filename),
             # TIMESTAMPTZ: ISO 8601 with offset; Milvus stores as UTC.
