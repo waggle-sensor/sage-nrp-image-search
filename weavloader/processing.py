@@ -18,7 +18,7 @@ from math import isfinite
 from openai import OpenAI
 
 MANIFEST_API = os.environ.get("MANIFEST_API", "https://auth.sagecontinuum.org/manifests/")
-MILVUS_COLLECTION = os.environ.get("MILVUS_COLLECTION", "HybridSearchExample")
+MILVUS_COLLECTION = os.environ.get("MILVUS_COLLECTION", "SageImageSearch")
 LLM_RUN_MODE = os.environ.get("LLM_RUN_MODE", "TRITON")
 METRIC_REPORT_CAPTION_MODEL = f"{LLM_RUN_MODE}_unknown".lower()
 if LLM_RUN_MODE == 'NRP':

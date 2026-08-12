@@ -91,7 +91,7 @@ For local development, use [Attu](https://milvus.io/docs/quickstart_with_attu.md
    - **Milvus Address:** `https://milvus.nrp-nautilus.io:50051`
    - **Authentication:** username and password from your NRP Milvus credentials (token is `username:password`)
    - Enable **secure gRPC** / TLS (same requirement as the app; do not use `http://`)
-3. Select database `image_search_svc` (`MILVUS_DB`), then open the collection for your env (`HybridSearchExample` or `HybridSearchExampleDev`).
+3. Select database `image_search_svc` (`MILVUS_DB`), then open the collection for your env (`SageImageSearch` or `SageImageSearchDev`).
 
 NRP also documents Attu under [NRP-managed vector database](https://nrp.ai/documentation/userdocs/ai/vector-database/).
 

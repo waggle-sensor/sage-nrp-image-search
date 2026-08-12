@@ -9,4 +9,4 @@ spec:
         - name: weavmanage
           env:
             - name: MILVUS_COLLECTION
-              value: "HybridSearchExampleDev"
+              value: "SageImageSearchDev"

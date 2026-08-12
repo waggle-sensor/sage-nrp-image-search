@@ -20,7 +20,7 @@ Sage Image Search indexes images from SAGE edge cameras and retrieves them using
 
 ## What gets indexed
 
-Each image record in Milvus (`MILVUS_COLLECTION`, default `HybridSearchExample`) includes:
+Each image record in Milvus (`MILVUS_COLLECTION`, default `SageImageSearch`) includes:
 
 | Data | Description |
 |------|-------------|

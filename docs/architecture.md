@@ -76,7 +76,7 @@ Model names and image tags change over time. Check the Kubernetes overlays for c
 
 ## Milvus schema
 
-Collections live in the NRP-provisioned database `MILVUS_DB=image_search_svc` (NRP admins create the DB; weavmanage only creates collections). Collection name via `MILVUS_COLLECTION` (defaults: prod/local `HybridSearchExample`, dev `HybridSearchExampleDev`), created by [`weavmanage/migrations/001_create_schema.py`](../weavmanage/migrations/001_create_schema.py):
+Collections live in the NRP-provisioned database `MILVUS_DB=image_search_svc` (NRP admins create the DB; weavmanage only creates collections). Collection name via `MILVUS_COLLECTION` (defaults: prod/local `SageImageSearch`, dev `SageImageSearchDev`), created by [`weavmanage/migrations/001_create_schema.py`](../weavmanage/migrations/001_create_schema.py):
 
 - **Dense vectors:** `caption_vector` and `image_vector` FLOAT_VECTOR dim=1024 (CLIP text of the caption and CLIP image; COSINE / HNSW). Modalities are stored separately; `clip_alpha` weights them at query time. `fuse_embeddings()` remains in code for later experiments but is not used for indexing.
 - **BM25:** `search_text` VARCHAR with analyzer → `sparse` via `FunctionType.BM25`
@@ -90,7 +90,7 @@ Collections live in the NRP-provisioned database `MILVUS_DB=image_search_svc` (N
 | Aspect | Docker Compose (local) | Kubernetes (NRP) |
 |--------|------------------------|------------------|
 | Vector DB | NRP managed Milvus (`MILVUS_URI` / `MILVUS_TOKEN` in `.env`) | Same NRP managed Milvus (`milvus-secret`) |
-| Collection | `HybridSearchExample` (default) | Dev: `HybridSearchExampleDev`; Prod: `HybridSearchExample` |
+| Collection | `SageImageSearch` (default) | Dev: `SageImageSearchDev`; Prod: `SageImageSearch` |
 | Active query path | `clip_hybrid_query` → hybrid_search + Triton CLIP rerank | Same |
 | Caption backend | `LLM_RUN_MODE=TRITON` (default in `.env.example`) | `LLM_RUN_MODE=NRP` in overlays |
 | GPU | Optional; Triton may need manual model download | GPU nodes for Triton |
@@ -101,8 +101,8 @@ Collections live in the NRP-provisioned database `MILVUS_DB=image_search_svc` (N
 ```
 kubernetes/
 ├── base/          # Core stack (Triton, Gradio, weavloader, weavmanage, secrets)
-├── nrp-dev/       # Dev overlay (namePrefix: dev-, HybridSearchExampleDev)
-├── nrp-prod/      # Prod overlay (namePrefix: prod-, HybridSearchExample)
+├── nrp-dev/       # Dev overlay (namePrefix: dev-, SageImageSearchDev)
+├── nrp-prod/      # Prod overlay (namePrefix: prod-, SageImageSearch)
 └── prs/           # PR preview overlay
 ```
 

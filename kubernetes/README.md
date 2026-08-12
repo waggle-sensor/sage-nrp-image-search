@@ -24,8 +24,8 @@ Collection names per env:
 
 | Overlay | `MILVUS_COLLECTION` |
 |---------|---------------------|
-| nrp-prod | `HybridSearchExample` |
-| nrp-dev / prs | `HybridSearchExampleDev` |
+| nrp-prod | `SageImageSearch` |
+| nrp-dev / prs | `SageImageSearchDev` |
 
 ## Setting Up Secrets
 

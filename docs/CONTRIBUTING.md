@@ -74,7 +74,7 @@ Planned improvements and research directions. Items are not guaranteed or ordere
 
 ### Developer tooling
 
-- [ ] Stand up an MCP server that interacts with the image search Milvus database (`image_search_svc` / `HybridSearchExample` + Dev)
+- [ ] Stand up an MCP server that interacts with the image search Milvus database (`image_search_svc` / `SageImageSearch` / `SageImageSearchDev`)
    - so agents (Cursor, Claude, etc.) can list collections, inspect schema, query, and hybrid-search without one-off scripts
    - https://milvus.io/docs/milvus_and_mcp.md
    - related: [zilliztech/mcp-server-milvus](https://github.com/zilliztech/mcp-server-milvus), [Milvus development tools](authentication.md#milvus-development-tools)

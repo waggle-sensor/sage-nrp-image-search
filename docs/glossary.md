@@ -24,7 +24,7 @@ Terms used throughout Sage Image Search documentation.
 | **Gemma** | Google's open vision-language model family. Production captioning on NRP uses `gemma-4-31B-it-qat-w4a16-ct` via the NRP AI Gateway. |
 | **Gradio** | Python library for web UIs. In production, the Gradio app in `app/` is the **search API backend** (hybrid search, image fetch, metadata). The primary user-facing UI is the React portal; Gradio can also be opened directly for local dev. |
 | **Hybrid search** | Search that combines dense semantic retrieval (`caption_vector` + `image_vector`) and keyword (BM25) retrieval, fused into a single ranked result set. |
-| **HybridSearchExample** | Default Milvus collection name for production/local. Dev uses `HybridSearchExampleDev`. |
+| **SageImageSearch** | Default Milvus collection name for production/local. Dev uses `SageImageSearchDev`. |
 | **imagesampler** | SAGE Waggle plugin that produces camera image samples. Weavloader polls the data stream for new `imagesampler` tasks. |
 | **imsearch_eval** | Python benchmarking framework ([waggle-sensor/imsearch_eval](https://github.com/waggle-sensor/imsearch_eval)) used to index datasets, run queries, and compute MRR and Success@K across Sagebench, Firebench, and other benchmarks. |
 | **Ingestion** | The pipeline stage that downloads SAGE images, generates captions, computes embeddings, and writes records to the vector database. Handled by weavloader. |
