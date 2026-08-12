@@ -70,7 +70,7 @@ The following environment variables are set in `nrp-dev/env.yaml` and `nrp-prod/
 **S3 Configuration:**
 - `S3_PREFIX`: S3 prefix for uploaded results (dev: `dev-metrics/inquire`, prod: `prod-metrics/inquire`)
 
-Additional environment variables (S3 endpoint, bucket, credentials, HuggingFace token) are configured in the base Kubernetes resources and loaded from secrets.
+Additional environment variables (S3 endpoint, bucket, credentials, HuggingFace token, NRP API key, Milvus URI/token) are configured in the base Kubernetes resources and loaded from secrets (`s3-secret`, `huggingface-secret`, `nrp-secret`, `milvus-secret`).
 
 ## Image Registry
 

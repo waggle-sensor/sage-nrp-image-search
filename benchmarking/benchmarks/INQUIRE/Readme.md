@@ -200,7 +200,12 @@ All environment variables are loaded through the `INQUIREConfig` class in `confi
 - `INQUIRE_DATASET`: HuggingFace dataset name (default: `sagecontinuum/INQUIRE-Benchmark-small`)
 - `SAMPLE_SIZE`: Number of samples to use (0 = all, default: 0)
 - `SEED`: Random seed for sampling (default: 42)
-- `HF_TOKEN`: HuggingFace token (from secret, optional)
+- `HF_TOKEN`: HuggingFace token (from `huggingface-secret`, optional)
+
+**Model provider:**
+- `LLM_MODEL_PROVIDER`: `nrp` or `triton` (default: `triton`)
+- `NRP_API_KEY`: NRP Envoy AI Gateway API key (from `nrp-secret`; required when `LLM_MODEL_PROVIDER=nrp`)
+- `NRP_ENABLE_THINKING`: Enable thinking on NRP caption models (default: false)
 
 **Vector DB Parameters:**
 - `VECTOR_DB`: `milvus` (default) or `weaviate`

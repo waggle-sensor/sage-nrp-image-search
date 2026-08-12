@@ -289,6 +289,7 @@ Results can be automatically uploaded to S3-compatible storage (MinIO). Configur
 
 - **Base Kubernetes config**: S3 endpoint, bucket, and secure flag are set in `benchmarking/kubernetes/base/benchmark-job.yaml`
 - **S3 Secret**: Access key and secret key are stored in `benchmarking/kubernetes/base/._s3-secret.yaml`
+- **NRP Secret**: `NRP_API_KEY` is stored in `benchmarking/kubernetes/base/._nrp-secret.yaml` (copy from `nrp-secret.template.yaml`; required when `LLM_MODEL_PROVIDER=nrp`)
 - **Benchmark-specific**: Override `S3_PREFIX` in your benchmark's `nrp-dev/env.yaml` or `nrp-prod/env.yaml` if needed
 
 To enable S3 upload, set `UPLOAD_TO_S3=true` in the base config (already enabled by default). Results are uploaded with timestamps: `{S3_PREFIX}/{timestamp}/{filename}`.

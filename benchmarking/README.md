@@ -354,6 +354,8 @@ Located in `kubernetes/base/`, these provide common Kubernetes resources:
 - `benchmark-job.yaml` - Combined job template (loads data and evaluates)
 - `._s3-secret.yaml` - S3 credentials secret (use the template file as a guide)
 - `._huggingface-secret.yaml` - HuggingFace token secret (use the template file as a guide)
+- `._nrp-secret.yaml` - NRP Envoy AI Gateway API key (`NRP_API_KEY`; use the template file as a guide)
+- `._milvus-secret.yaml` - NRP Milvus URI and token (use the template file as a guide)
 - `kustomization.yaml` - Base kustomization config
 
 > **Important:** 

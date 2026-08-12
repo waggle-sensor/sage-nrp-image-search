@@ -9,7 +9,11 @@ benchmarking/kubernetes/
 ├── base/                    # Base kustomization (shared across all benchmarks)
 │   ├── kustomization.yaml
 │   ├── benchmark-job.yaml   # Combined job (loads data and evaluates)
-│   └── ._s3-secret.yaml       # S3 credentials secret
+│   ├── s3-secret.template.yaml
+│   ├── huggingface-secret.template.yaml
+│   ├── nrp-secret.template.yaml
+│   ├── milvus-secret.template.yaml
+│   └── ._*-secret.yaml      # Local copies of secrets (gitignored)
 │
 └── INQUIRE/                 # INQUIRE benchmark overlay
     ├── nrp-dev/             # Dev environment overlay
@@ -27,6 +31,7 @@ The `base/` directory contains generic resources that can be reused by any bench
 - **benchmark-job.yaml**: Job that runs the combined benchmark script (loads data and evaluates)
 - **._s3-secret.yaml**: Secret for S3 credentials (access key and secret key)
 - **._huggingface-secret.yaml**: Secret for HuggingFace token (for accessing private datasets)
+- **._nrp-secret.yaml**: Secret for the NRP Envoy AI Gateway API key (`NRP_API_KEY`). Copy from `nrp-secret.template.yaml`. Required when `LLM_MODEL_PROVIDER=nrp`.
 - **._milvus-secret.yaml**: Secret for NRP Milvus (`MILVUS_URI`, `MILVUS_TOKEN`). Copy from `milvus-secret.template.yaml`.
 
 The job is **vector database and inference server agnostic**:
@@ -35,6 +40,8 @@ The job is **vector database and inference server agnostic**:
 - Includes S3 configuration (endpoint, bucket, secure flag) with defaults
 - S3 credentials are loaded from the `s3-secret` secret
 - HuggingFace token is loaded from the `huggingface-secret` secret (for accessing private datasets)
+- NRP API key is loaded from the `nrp-secret` secret (for NRP caption models)
+- Milvus URI/token are loaded from the `milvus-secret` secret
 - Vector DB and inference server environment variables should be added via patches in benchmark-specific overlays (env.yaml)
 
 ## Creating a New Benchmark Overlay
@@ -133,7 +140,7 @@ The `ENV` variable controls which kustomize overlay is used:
 - `kubectl` configured with access to cluster
 - `kustomize` (or `kubectl` with kustomize support)
 - Images built and pushed to registry
-- S3 secret configured with credentials (if using S3 upload)
+- Secrets configured from the templates in `kubernetes/base/` (`._s3-secret.yaml`, `._huggingface-secret.yaml`, `._nrp-secret.yaml`, `._milvus-secret.yaml`)
 
 ### Run Benchmark
 
@@ -182,6 +189,11 @@ Secrets are loaded from Kubernetes secrets:
   - `S3_SECRET_KEY`: From secret
 - **HuggingFace token** from `huggingface-secret`:
   - `HF_TOKEN`: From secret (for accessing private datasets)
+- **NRP API key** from `nrp-secret`:
+  - `NRP_API_KEY`: From secret (required when `LLM_MODEL_PROVIDER=nrp`)
+- **Milvus** from `milvus-secret`:
+  - `MILVUS_URI`: From secret
+  - `MILVUS_TOKEN`: From secret
 
 ## Secrets Configuration
 
@@ -208,6 +220,33 @@ cp benchmarking/kubernetes/base/huggingface-secret.template.yaml benchmarking/ku
 To generate base64 value for HuggingFace token:
 ```bash
 echo -n "your-huggingface-token" | base64
+```
+
+### Setting Up NRP Secret
+
+Create `kubernetes/base/._nrp-secret.yaml` using the template file:
+```bash
+cp benchmarking/kubernetes/base/nrp-secret.template.yaml benchmarking/kubernetes/base/._nrp-secret.yaml
+```
+
+To generate the base64 value for the NRP Envoy AI Gateway API key:
+```bash
+echo -n "your-nrp-api-key" | base64
+```
+
+This secret provides `NRP_API_KEY` to the benchmark job. It is required when captioning uses the NRP gateway (`LLM_MODEL_PROVIDER=nrp`).
+
+### Setting Up Milvus Secret
+
+Create `kubernetes/base/._milvus-secret.yaml` using the template file:
+```bash
+cp benchmarking/kubernetes/base/milvus-secret.template.yaml benchmarking/kubernetes/base/._milvus-secret.yaml
+```
+
+To generate base64 values:
+```bash
+echo -n "https://milvus.nrp-nautilus.io:50051" | base64
+echo -n "username:password" | base64
 ```
 
 > **Important:** 
