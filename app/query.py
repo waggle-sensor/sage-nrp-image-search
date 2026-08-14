@@ -5,7 +5,7 @@
 #   sage-data-client python lib to include these new queries.
 
 import HyperParameters as hp
-from model import get_clip_embeddings, clip_image_text_score
+from model import get_clip_query_embedding, clip_logits_per_image
 import logging
 import requests
 import os
@@ -13,6 +13,7 @@ import re
 from PIL import Image
 from io import BytesIO
 import pandas as pd
+import numpy as np
 from pymilvus import AnnSearchRequest, WeightedRanker
 
 OUTPUT_FIELDS = [
@@ -31,6 +32,7 @@ OUTPUT_FIELDS = [
     "node",
     "address",
     "location",
+    "image_vector",
 ]
 
 # WKT POINT(lon lat) — x=longitude, y=latitude
@@ -68,15 +70,16 @@ class Milvus_query:
     def clip_hybrid_query(self, nearText, collection_name=None):
         """
         Hybrid CLIP caption_vector + image_vector + BM25 sparse search,
-        then Triton CLIP rerank (query text vs retrieved image), matching
-        logits_per_image-style scoring.
+        then CLIP rerank of query text vs stored ``image_vector`` (logits_per_image).
 
-        Dense vs sparse uses ``query_alpha``. Within dense, ``clip_alpha``
-        weights ``image_vector`` vs ``caption_vector``.
+        The query text tower runs once. Dense vs sparse uses ``query_alpha``.
+        Within dense, ``clip_alpha`` weights ``image_vector`` vs ``caption_vector``.
         """
         collection = collection_name or self.collection_name
-        clip_embedding = get_clip_embeddings(self.triton_client, nearText)
-        if clip_embedding is None:
+        clip_embedding, logit_scale = get_clip_query_embedding(
+            self.triton_client, nearText
+        )
+        if clip_embedding is None or logit_scale is None:
             logging.error("Failed to get CLIP embedding for query")
             return pd.DataFrame()
 
@@ -149,17 +152,20 @@ class Milvus_query:
                 "node": entity.get("node", "") or "",
                 "address": entity.get("address", "") or "",
                 "location": location,
+                "image_vector": entity.get("image_vector"),
             })
             logging.debug("----------------%s----------------", objects[-1]["uuid"])
-            logging.debug(f"Properties: {objects[-1]}")
+            logging.debug(
+                "Properties: %s",
+                {k: v for k, v in objects[-1].items() if k != "image_vector"},
+            )
             logging.debug(f"Score: {objects[-1]['score']}")
 
         if not objects:
             logging.debug("==============END========================")
             return pd.DataFrame()
 
-        # Drop denied VSNs before rerank so we do not fetch images or call Triton
-        # for nodes the caller cannot see. TODO: replace UNALLOWED_NODES with
+        # Drop denied VSNs before rerank. TODO: replace UNALLOWED_NODES with
         # per-user Sage authorization.
         allowed = [obj for obj in objects if self.sage_query.authorize(obj["vsn"])]
         skipped = len(objects) - len(allowed)
@@ -172,15 +178,20 @@ class Milvus_query:
             logging.debug("==============END========================")
             return pd.DataFrame()
 
-        # Rerank: Triton CLIP query-text vs image (same idea as HF logits_per_image)
-        for obj in objects:
-            image = self.sage_query.getImage(obj["link"]) if obj["link"] else None
-            if image is None:
-                obj["rerank_score"] = 0.0
-            else:
-                obj["rerank_score"] = clip_image_text_score(
-                    self.triton_client, nearText, image
-                )
+        # Rerank: stored CLIP image_vector vs the one query text embedding
+        dim = int(np.asarray(clip_embedding, dtype=np.float32).reshape(-1).shape[0])
+        image_mat = np.zeros((len(objects), dim), dtype=np.float32)
+        for i, obj in enumerate(objects):
+            vec = obj.pop("image_vector", None)
+            if vec is None:
+                continue
+            arr = np.asarray(vec, dtype=np.float32).reshape(-1)
+            if arr.shape[0] == dim and np.all(np.isfinite(arr)):
+                image_mat[i] = arr
+
+        scores = clip_logits_per_image(clip_embedding, image_mat, logit_scale)
+        for obj, score in zip(objects, scores):
+            obj["rerank_score"] = float(score)
             logging.debug(
                 f"Rerank Score for {obj['uuid']}: {obj['rerank_score']}"
             )

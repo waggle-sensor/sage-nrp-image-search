@@ -154,7 +154,7 @@ def text_query(description):
     map_fig = filter_map(location)
 
     #drop columns that I dont want to show
-    meta = df.drop(columns=["link", "node"])
+    meta = df.drop(columns=["link", "node", "image_vector"], errors="ignore")
 
     # Return the images, DataFrame, and map
     return images, meta, map_fig
@@ -172,7 +172,7 @@ def search(query):
         return {"headers": [], "data": [], "metadata": None}
 
     #drop columns that I dont want
-    results = df.drop(columns=["uuid"])
+    results = df.drop(columns=["uuid", "image_vector"], errors="ignore")
     cols = results.columns.tolist()
 
     logging.debug("============FINAL RESULTS==================")
