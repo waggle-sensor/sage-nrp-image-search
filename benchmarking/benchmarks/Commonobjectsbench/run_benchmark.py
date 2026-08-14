@@ -149,7 +149,7 @@ def main():
         split="train",
         sample_size=config.sample_size,
         seed=config.seed,
-        token=config._hf_token,
+        token=(config._hf_token or None),
     )
 
     logging.info("Creating data loader...")
