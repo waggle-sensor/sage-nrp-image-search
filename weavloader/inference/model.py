@@ -137,6 +137,22 @@ def get_colbert_embedding(triton_client, text):
 
     return token_embeddings
 
+def _clip_infer_inputs(text, image=None):
+    """Build CLIP InferInputs with a leading batch dim of 1 (max_batch_size > 0)."""
+    text_np = np.array([[text.encode("utf-8")]], dtype=object)
+    if image is not None:
+        image_np = np.expand_dims(np.asarray(image, dtype=np.float32), 0)
+    else:
+        image_np = np.zeros((1, 1, 1, 3), dtype=np.float32)
+    inputs = [
+        TritonClient.InferInput("text", list(text_np.shape), "BYTES"),
+        TritonClient.InferInput("image", list(image_np.shape), "FP32"),
+    ]
+    inputs[0].set_data_from_numpy(text_np)
+    inputs[1].set_data_from_numpy(image_np)
+    return inputs
+
+
 def fuse_embeddings( img_emb: np.ndarray, txt_emb: np.ndarray, alpha: float = 0.5) -> np.ndarray:
     """
     Given two L2-normalized vectors img_emb and txt_emb (shape (D,)), 
@@ -208,16 +224,7 @@ def get_clip_embedding_pair(triton_client, text, image):
     ``fuse_embeddings`` is kept for later experiments; ingest stores the two
     modalities as separate Milvus FLOAT_VECTOR fields.
     """
-    text_bytes = text.encode("utf-8")
-    text_np = np.array([text_bytes], dtype="object")
-    image_np = np.array(image).astype(np.float32)
-
-    inputs = [
-        TritonClient.InferInput("text", [1], "BYTES"),
-        TritonClient.InferInput("image", list(image_np.shape), "FP32")
-    ]
-    inputs[0].set_data_from_numpy(text_np)
-    inputs[1].set_data_from_numpy(image_np)
+    inputs = _clip_infer_inputs(text, image)
     outputs = [
         TritonClient.InferRequestedOutput("text_embedding"),
         TritonClient.InferRequestedOutput("image_embedding")
@@ -239,25 +246,7 @@ def get_clip_embeddings(triton_client, text, image=None):
     Embed text and image using CLIP encoder served via Triton Inference Server.
     Returns one fused embedding created from both modalities.
     """
-    # --- 1. Prepare Inputs ---
-    text_bytes = text.encode("utf-8")
-    text_np = np.array([text_bytes], dtype="object")
-
-    # Fallback image shape (e.g., placeholder 1x1 RGB)
-    if image is not None:
-        image_np = np.array(image).astype(np.float32)
-    else:
-        image_np = np.zeros((1, 1, 3), dtype=np.float32)
-
-    # Create Triton input objects
-    inputs = [
-        TritonClient.InferInput("text", [1], "BYTES"),
-        TritonClient.InferInput("image", list(image_np.shape), "FP32")
-    ]
-
-    inputs[0].set_data_from_numpy(text_np)
-    inputs[1].set_data_from_numpy(image_np)
-
+    inputs = _clip_infer_inputs(text, image)
     outputs = [
         TritonClient.InferRequestedOutput("text_embedding"),
         TritonClient.InferRequestedOutput("image_embedding")
@@ -321,32 +310,26 @@ def gemma3_run_model(triton_client, image, task_prompt=hp.caption_model_prompt):
     """
     takes in a task prompt and image, returns an answer using gemma3 model
     """
-    # Prepare inputs for Triton
-    image_width, image_height = image.size
-    image_np = np.array(image).astype(np.uint8)
-    task_prompt_bytes = task_prompt.encode("utf-8")
+    image_np = np.expand_dims(np.asarray(image, dtype=np.uint8), 0)
+    prompt_np = np.array([[task_prompt.encode("utf-8")]], dtype=object)
 
-    # Prepare inputs & outputs for Triton
-    # NOTE: if you enable max_batch_size, leading number is batch size, example [1,1] 1 is batch size
     inputs = [
-        TritonClient.InferInput("image", [image_height, image_width, 3], "UINT8"),
-        TritonClient.InferInput("prompt", [1], "BYTES"),
+        TritonClient.InferInput("image", list(image_np.shape), "UINT8"),
+        TritonClient.InferInput("prompt", list(prompt_np.shape), "BYTES"),
     ]
     outputs = [
         TritonClient.InferRequestedOutput("answer")
     ]
-
-    # Add tensors
     inputs[0].set_data_from_numpy(image_np)
-    inputs[1].set_data_from_numpy(np.array([task_prompt_bytes], dtype="object"))
+    inputs[1].set_data_from_numpy(prompt_np)
 
-    # Perform inference
     try:
         response = triton_client.infer(model_name="gemma3", inputs=inputs, outputs=outputs)
 
-        # Get the result
-        answer = response.as_numpy("answer")[0]
-        answer_str = answer.decode("utf-8")
+        answer = response.as_numpy("answer").reshape(-1)[0]
+        answer_str = (
+            answer.decode("utf-8") if isinstance(answer, (bytes, np.bytes_)) else str(answer)
+        )
 
         logging.info(f'[MODEL] Final Generated Description: {answer_str}')
         return answer_str

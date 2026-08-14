@@ -55,6 +55,15 @@ To inspect collections during development, use [Attu](https://milvus.io/docs/qui
 
 Active Triton models: `clip`, `gemma3`. Model download logic is in [`triton/entrypoint.sh`](../triton/entrypoint.sh).
 
+Dynamic batching (NVIDIA default `dynamic_batching { }`, no preferred sizes, no queue delay):
+
+| Model | `max_batch_size` | Notes |
+|-------|------------------|-------|
+| `clip` | 8 | Ragged `image` (`allow_ragged_batch`) so different `H×W` can share a GPU forward. Clients must send a leading batch dim (`text` `[1,1]`, `image` `[1,H,W,3]`). |
+| `gemma3` | 2 | Same ragged-image rule; clients send `image` `[1,H,W,3]` and `prompt` `[1,1]`. |
+
+Celery still submits one image per task. Concurrent weavloader workers are combined by Triton when CLIP is busy. Optional later: `max_queue_delay_microseconds` if batch-size histograms stay at 1 under load.
+
 ## Weavloader (ingestion)
 
 | Variable | Default | Description |

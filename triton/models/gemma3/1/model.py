@@ -40,6 +40,47 @@ def _missing_model_files(model_path: str):
     return missing
 
 
+def _as_str(value):
+    if isinstance(value, bytes):
+        return value.decode("utf-8")
+    return str(value)
+
+
+def _decode_prompts(raw):
+    return [_as_str(value) for value in np.asarray(raw).reshape(-1)]
+
+
+def _images_from_tensor(image_np, batch_size):
+    array = np.asarray(image_np)
+    if array.ndim == 3:
+        array = array[None, ...]
+    if array.shape[0] == 1 and batch_size > 1:
+        return [Image.fromarray(array[0], mode="RGB") for _ in range(batch_size)]
+    return [
+        Image.fromarray(array[i], mode="RGB") for i in range(batch_size)
+    ]
+
+
+def _answer_tensor(texts):
+    """``answer`` is STRING dims [1], so batched shape is [B, 1]."""
+    return pb_utils.Tensor(
+        "answer",
+        np.array([[text.encode("utf-8")] for text in texts], dtype=object),
+    )
+
+
+def _user_message(image, prompt_text):
+    return [
+        {
+            "role": "user",
+            "content": [
+                {"type": "image", "image": image},
+                {"type": "text", "text": prompt_text},
+            ],
+        }
+    ]
+
+
 class TritonPythonModel:
     def initialize(self, args):
         if not MODEL_PATH:
@@ -60,6 +101,8 @@ class TritonPythonModel:
             trust_remote_code=True,
             clean_up_tokenization_spaces=True,
         )
+        if getattr(self.processor, "tokenizer", None) is not None:
+            self.processor.tokenizer.padding_side = "left"
 
         # load the GEMMA3 model
         if torch.cuda.is_available():
@@ -78,79 +121,99 @@ class TritonPythonModel:
                 torch_dtype="auto",
             ).eval()
 
-        # choose device
-        self.device = torch.device(f"cuda:{gpu_card}" if torch.cuda.is_available() else "cpu")
+        self.device = next(self.model.parameters()).device
+
+    def _generate_conversations(self, conversations):
+        inputs = self.processor.apply_chat_template(
+            conversations,
+            add_generation_prompt=True,
+            tokenize=True,
+            padding=True,
+            return_dict=True,
+            return_tensors="pt",
+        ).to(self.model.device, dtype=torch.bfloat16)
+        prompt_len = inputs["input_ids"].shape[-1]
+        with torch.inference_mode():
+            generated = self.model.generate(
+                **inputs,
+                max_new_tokens=hp.max_new_tokens,
+                early_stopping=hp.early_stopping,
+                do_sample=hp.do_sample,
+                num_beams=hp.num_beams,
+            )
+        new_tokens = generated[:, prompt_len:]
+        return [
+            self.processor.decode(row, skip_special_tokens=True)
+            for row in new_tokens
+        ]
+
+    def _generate_one(self, conversation):
+        try:
+            return self._generate_conversations([conversation])[0]
+        except Exception as e:
+            print("Error during model.generate or decode:", e)
+            return f"ERROR in generate/decode: {e}"
 
     def execute(self, requests):
-        responses = []
+        """
+        Collate samples across ``requests`` and run one padded generate when
+        possible. A failed batch falls back to per-sample generate so one bad
+        image does not fail the whole dynamic batch.
+        """
+        request_sizes = []
+        conversations = []
+        parse_errors = []
+
         for request in requests:
             try:
-                # pull in image + prompt
-                image_arr = pb_utils.get_input_tensor_by_name(request, "image").as_numpy()
-                image = Image.fromarray(image_arr, mode='RGB')
-
-                prompt_bytes = pb_utils.get_input_tensor_by_name(request, "prompt").as_numpy()[0]
-                prompt_text = prompt_bytes.decode("utf-8")
-
-                # build message list for chat template
-                messages = [
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "image", "image": image},
-                            {"type": "text", "text": prompt_text},
-                        ],
-                    },
-                ]
-
-                # apply GEMMA’s chat template
-                try:
-                    inputs = self.processor.apply_chat_template(
-                        messages,
-                        add_generation_prompt=True,
-                        tokenize=True,
-                        return_dict=True,
-                        return_tensors="pt",
-                    ).to(self.model.device, dtype=torch.bfloat16)
-                except Exception as e:
-                    print("Error in apply_chat_template:", e)
-                    responses.append(pb_utils.InferenceResponse(
-                        output_tensors=[pb_utils.Tensor("answer", np.array([f"ERROR in apply_chat_template: {e}"], dtype=object))]
-                    ))
-                    continue
-
-                input_len = inputs["input_ids"].shape[-1]
-
-                # generate
-                try:
-                    with torch.inference_mode():
-                        generated = self.model.generate(
-                            **inputs,
-                            max_new_tokens=hp.max_new_tokens,
-                            early_stopping=hp.early_stopping,
-                            do_sample=hp.do_sample,
-                            num_beams=hp.num_beams,
-                        )
-                        generation = generated[0][input_len:]
-                        output_text = self.processor.decode(generation, skip_special_tokens=True)
-                except Exception as e:
-                    print("Error during model.generate or decode:", e)
-                    responses.append(pb_utils.InferenceResponse(
-                        output_tensors=[pb_utils.Tensor("answer", np.array([f"ERROR in generate/decode: {e}"], dtype=object))]
-                    ))
-                    continue
-
-                # build Triton tensor
-                answer_bytes = output_text.encode("utf-8")
-                out_tensor = pb_utils.Tensor("answer", np.array([answer_bytes], dtype=object))
-                responses.append(pb_utils.InferenceResponse(output_tensors=[out_tensor]))
-
+                prompts = _decode_prompts(
+                    pb_utils.get_input_tensor_by_name(request, "prompt").as_numpy()
+                )
+                images = _images_from_tensor(
+                    pb_utils.get_input_tensor_by_name(request, "image").as_numpy(),
+                    len(prompts),
+                )
             except Exception as e:
-                print("Unexpected error in execute:", e)
-                responses.append(pb_utils.InferenceResponse(
-                    output_tensors=[pb_utils.Tensor("answer", np.array([f"UNEXPECTED ERROR: {e}"], dtype=object))]
-                ))
+                print("Unexpected error parsing Gemma request:", e)
+                request_sizes.append(1)
+                conversations.append(None)
+                parse_errors.append(f"UNEXPECTED ERROR: {e}")
+                continue
 
+            request_sizes.append(len(prompts))
+            for image, prompt_text in zip(images, prompts):
+                try:
+                    conversations.append(_user_message(image, prompt_text))
+                    parse_errors.append(None)
+                except Exception as e:
+                    print("Error building Gemma chat message:", e)
+                    conversations.append(None)
+                    parse_errors.append(f"UNEXPECTED ERROR: {e}")
+
+        valid_idx = [i for i, conv in enumerate(conversations) if conv is not None]
+        answers = list(parse_errors)
+
+        if valid_idx:
+            valid_conversations = [conversations[i] for i in valid_idx]
+            try:
+                generated = self._generate_conversations(valid_conversations)
+                for i, text in zip(valid_idx, generated):
+                    answers[i] = text
+            except Exception as e:
+                print("Error in batched apply_chat_template/generate:", e)
+                for i in valid_idx:
+                    answers[i] = self._generate_one(conversations[i])
+
+        responses = []
+        offset = 0
+        for batch_size in request_sizes:
+            end = offset + batch_size
+            responses.append(
+                pb_utils.InferenceResponse(
+                    output_tensors=[_answer_tensor(answers[offset:end])]
+                )
+            )
+            offset = end
         return responses
 
     def finalize(self):

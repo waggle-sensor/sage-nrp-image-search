@@ -69,7 +69,7 @@ Planned improvements and research directions. Items are not guaranteed or ordere
 
 ### Benchmarking and evaluation
 
-- [ ] Benchmark Milvus@NRP
+- [ ] Benchmark Milvus@NRP <Mark as done when you finish with milvus branch>
    - using the [benchmarking suite](../benchmarking/README.md)
 
 ### Developer tooling
@@ -82,21 +82,6 @@ Planned improvements and research directions. Items are not guaranteed or ordere
 ### Caption generation
 
 - [ ] Improve the caption that is generated to be more accurate. Measure "accurate" by using the [benchmarking suite](../benchmarking/README.md)
-   - [ ] try prompt repitition to see if it can improve the caption generation performance
-      - https://arxiv.org/pdf/2512.14982
-         - Paper Insights:
-            * Repeating the full prompt (`<QUERY><QUERY>`) improves accuracy in many non-reasoning settings.
-            * Gains were consistent across multiple major models.
-            * It does **not** increase output length or generation latency (only input length).
-            * Benefits shrink when explicit reasoning ("think step by step") is enabled.
-            * repitition x3 showed that it did even better than x2
-            * Repeating a **long, structured prompt** (like our scientific captioning) is more likely to experience gains vs a short simmple instruction.
-         - Repetition may improve:
-            * Format compliance
-            * Keyword count accuracy
-            * Constraint adherence
-            * It will double input tokens, so cost matters at scale.
-      - Remember to add the paper to references section, if you decide to implement this.
    - [ ] try using structured output with the caption generation model to better format the output
    - [ ] Try a Multi-Agent system with a Master agent and expert agents to improve the caption generation performance
       - for example, all images pass through a Master agent that passes the images to the correct expert agent based on the objects in the image.
@@ -112,11 +97,10 @@ Planned improvements and research directions. Items are not guaranteed or ordere
 - [ ] try out https://github.com/microsoft/SkillOpt to improve the prompt and skills
 
 ### Reranking and retrieval
-
+- [ ] switch to reranking with Clip DFN5B-CLIP-ViT-H-14-378 <Mark as done when you finish with milvus branch>
+   - before making the switch permanent run the benchmarking suite to see if there are any regressions
+   - firebench results show that it is better than the current reranker model (ms-marco-MiniLM-L6-v2)
 - [ ] Improve the reranker model to be more accurate. Measure "accurate" by using the [benchmarking suite](../benchmarking/README.md)
-   - [ ] switch to reranking with Clip DFN5B-CLIP-ViT-H-14-378
-      - before making the switch permanent run the benchmarking suite to see if there are any regressions
-      - firebench results show that it is better than the current reranker model (ms-marco-MiniLM-L6-v2)
    - [ ] try an LLM to rerank the results instead of a reranker model.
       - The prompt to the LLM will ask it to rank the results based on the relevance to the query and return a score for each result. Weaviate can then use the scores to rank the results.
    - [ ] look into other reranker models to see if they can improve the reranking performance
@@ -189,4 +173,4 @@ What if we build a massive knowledge graph of images and use it to answer scient
 
 ### Performance
 
-- [ ] Utilize batching for Triton for Weavloader to use it
+- [x] Utilize batching for Triton for Weavloader to use it

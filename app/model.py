@@ -6,6 +6,22 @@ import numpy as np
 import HyperParameters as hp
 
 
+def _clip_infer_inputs(text, image=None):
+    """Build CLIP InferInputs with a leading batch dim of 1 (max_batch_size > 0)."""
+    text_np = np.array([[text.encode("utf-8")]], dtype=object)
+    if image is not None:
+        image_np = np.expand_dims(np.asarray(image, dtype=np.float32), 0)
+    else:
+        image_np = np.zeros((1, 1, 1, 3), dtype=np.float32)
+    inputs = [
+        TritonClient.InferInput("text", list(text_np.shape), "BYTES"),
+        TritonClient.InferInput("image", list(image_np.shape), "FP32"),
+    ]
+    inputs[0].set_data_from_numpy(text_np)
+    inputs[1].set_data_from_numpy(image_np)
+    return inputs
+
+
 def fuse_embeddings( img_emb: np.ndarray, txt_emb: np.ndarray, alpha: float = 0.5) -> np.ndarray:
     """
     Given two L2-normalized vectors img_emb and txt_emb (shape (D,)), 
@@ -29,20 +45,7 @@ def _infer_clip(triton_client, text, image=None, request_logit_scale: bool = Fal
     Run Triton CLIP and return (text_embedding, image_embedding[, logit_scale]).
     On failure returns (None, None) or (None, None, None) if request_logit_scale.
     """
-    text_bytes = text.encode("utf-8")
-    text_np = np.array([text_bytes], dtype="object")
-
-    if image is not None:
-        image_np = np.array(image).astype(np.float32)
-    else:
-        image_np = np.zeros((1, 1, 3), dtype=np.float32)
-
-    inputs = [
-        TritonClient.InferInput("text", [1], "BYTES"),
-        TritonClient.InferInput("image", list(image_np.shape), "FP32"),
-    ]
-    inputs[0].set_data_from_numpy(text_np)
-    inputs[1].set_data_from_numpy(image_np)
+    inputs = _clip_infer_inputs(text, image)
 
     outputs = [
         TritonClient.InferRequestedOutput("text_embedding"),
