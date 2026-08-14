@@ -151,7 +151,10 @@ def build_search_text(
 
 
 def cache_index_image(image: Image.Image, image_id: Any, cache_dir: str) -> str:
-    """Write a JPEG under cache_dir and return the path for Milvus `link`."""
+    """Write a JPEG under cache_dir and return the path for Milvus `link`.
+
+    Query-time CLIP rerank uses stored ``image_vector``s, not this file.
+    """
     os.makedirs(cache_dir, exist_ok=True)
     safe_id = re.sub(r"[^A-Za-z0-9._-]+", "_", str(image_id) or "image")
     path = os.path.join(cache_dir, f"{safe_id}.jpg")

@@ -157,7 +157,7 @@ The script uses a `config` object (instance of `INQUIREConfig`) to access all co
 
 **MilvusAdapter and MilvusQuery** (default):
 - Provided by `imsearch_eval.adapters.milvus`
-- Dual-dense hybrid (`image_vector` + `caption_vector` + BM25) plus CLIP image-text rerank
+- Dual-dense hybrid (`image_vector` + `caption_vector` + BM25) plus CLIP rerank of the query text embedding against stored `image_vector`s
 - Import: `from imsearch_eval.adapters import MilvusAdapter, MilvusQuery`
 - Selected via `helpers.backend.init_vector_db` when `VECTOR_DB=milvus`
 

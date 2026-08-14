@@ -15,6 +15,8 @@ The framework code itself (interfaces, adapters, evaluator) is in the separate [
 
 New runs default to **Milvus** on the NRP-managed cluster (`VECTOR_DB=milvus`, `MILVUS_DB=image_search_svc`) with per-benchmark collection names. Set `VECTOR_DB=weaviate` to use the in-cluster Weaviate path. Historical Weaviate result folders are unchanged.
 
+CLIP rerank matches production: the query text tower runs once, then hits are scored with vectorized `cosine(image_vector, query_text) * logit_scale`. There is no per-hit image download or extra Triton CLIP call.
+
 The existing benchmarks are in the [imsearch_benchmarks](https://github.com/waggle-sensor/imsearch_benchmarks) repository. Some of them have been implemented here in this repository.
 
 ## Quick Start: Creating a New Benchmark
@@ -107,7 +109,7 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 | `ENABLE_BM25` | `true` | When `false`, omits the BM25/keyword leg (Milvus) or sets hybrid `alpha=1.0` (Weaviate) |
 | `QUERY_ALPHA` | `0.4` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality |
 
-`ENABLE_BM25=false` disables the BM25 keyword leg of hybrid search. The reranker still runs unless you change `QUERY_METHOD` or disable rerank.
+`ENABLE_BM25=false` disables the BM25 keyword leg of hybrid search. CLIP rerank still runs against stored `image_vector`s (same `logits_per_image` math as production) unless you change `QUERY_METHOD` or set `rerank` to false.
 
 Use a distinct `COLLECTION_NAME` for each ablation condition so indexed vectors do not mix across experiments. New Milvus result folders should use a new version name (e.g. `v13`) so leaderboards can compare against historical Weaviate runs.
 

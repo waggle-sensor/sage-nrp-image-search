@@ -232,7 +232,7 @@ The `imsearch-eval` package provides shared adapters you can use:
 
 **Milvus adapters** (default):
 - **MilvusAdapter**: For Milvus vector database (implements `VectorDBAdapter`)
-- **MilvusQuery**: Dual-dense + BM25 hybrid with CLIP rerank
+- **MilvusQuery**: Dual-dense + BM25 hybrid with CLIP rerank on stored `image_vector`s
 
 **Weaviate adapters**:
 - **WeaviateAdapter**: For Weaviate vector database (implements `VectorDBAdapter`)

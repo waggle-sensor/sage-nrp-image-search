@@ -53,6 +53,7 @@ def apply_vector_db_config(config, ablation: dict, query_properties=None):
             "enable_image_vector": ablation["embed_image"],
             "enable_caption_vector": ablation["embed_caption"],
             "enable_bm25": ablation["enable_bm25"],
+            # CLIP rerank: query text embedding vs stored image_vector (no image I/O)
             "rerank": True,
         }
     else:
