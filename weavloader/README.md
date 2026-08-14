@@ -38,6 +38,7 @@ weavloader/
 │   ├── server.py        # HTTP metrics server (unified endpoint)
 │   └── artifacts/       # Prometheus configuration files
 ├── processing.py        # SAGE data stream processing
+├── seed.py              # Optional Hub → Milvus init seed (INIT_DATASET)
 ├── client.py            # Milvus client initialization
 ├── main.py              # Application entry point
 └── supervisord.conf     # Process management
@@ -101,6 +102,13 @@ weavloader/
 export MILVUS_URI="https://milvus.nrp-nautilus.io:50051"
 export MILVUS_DB="image_search_svc"
 
+# Optional: seed empty collection from portable Hub parquet
+# (private dataset; requires HF_TOKEN). Skipped if collection already has rows.
+# export INIT_DATASET="sagecontinuum/init_img_search"
+# export INIT_DATASET_REVISION="main"
+# export INIT_DATASET_BATCH_SIZE="256"
+# export HF_TOKEN="hf_..."
+
 # Celery Configuration
    export CELERY_BROKER_URL="redis://localhost:6379/0"
    export CELERY_RESULT_BACKEND="redis://localhost:6379/0"
@@ -152,6 +160,7 @@ docker-compose logs weavloader
    - This port is exposed externally
 - **Flower**: Celery monitoring UI (port 5555)
 - **Supervisor**: Manages all processes
+- **init-dataset-seed** (oneshot): When `INIT_DATASET` is set, streams the Hub parquet into Milvus once, then exits. Idempotent if the collection is non-empty.
 
 ## **Worker Types**
 

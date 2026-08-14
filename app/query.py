@@ -61,7 +61,7 @@ class Milvus_query:
         self.milvus_client = milvus_client
         self.triton_client = triton_client
         self.collection_name = collection_name or os.getenv(
-            "MILVUS_COLLECTION", "HybridSearchExample"
+            "MILVUS_COLLECTION", "SageImageSearch"
         )
         self.sage_query = Sage_query()
 

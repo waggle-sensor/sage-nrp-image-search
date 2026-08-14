@@ -23,7 +23,18 @@ See [Authentication](authentication.md) for setup instructions.
 | `MILVUS_URI` | `https://milvus.nrp-nautilus.io:50051` | NRP-managed Milvus gRPC endpoint (use `https://` — TLS required, same as Attu “secure gRPC”) |
 | `MILVUS_TOKEN` | — | Auth token `user:password` |
 | `MILVUS_DB` | `image_search_svc` | NRP-provisioned database (do not create) |
-| `MILVUS_COLLECTION` | `HybridSearchExample` | Collection name; use `HybridSearchExampleDev` on nrp-dev |
+| `MILVUS_COLLECTION` | `SageImageSearch` | Collection name; use `SageImageSearchDev` on nrp-dev |
+
+### Optional Hub seed (weavloader)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `INIT_DATASET` | empty (off) | Hugging Face dataset id to bulk-load into an **empty** collection, e.g. `sagecontinuum/init_img_search`. Unset to skip. |
+| `INIT_DATASET_REVISION` | `main` | Hub revision/tag |
+| `INIT_DATASET_BATCH_SIZE` | `256` | Rows per Milvus insert batch |
+| `HF_TOKEN` | — | Required for the private init dataset (weavloader reads `huggingface-secret` on Kubernetes) |
+
+Seeding runs once at weavloader startup via a supervisord oneshot (`seed.py`). It is idempotent: if the collection already has entities, seed is skipped. Do **not** enable on prod by default; nrp-dev sets `INIT_DATASET=sagecontinuum/init_img_search`.
 
 Schema is managed by weavmanage migrations in [`weavmanage/migrations/`](../weavmanage/migrations/). Compose and Kubernetes both use NRP-managed Milvus (no Milvus service in this repo).
 
@@ -56,6 +67,7 @@ Active Triton models: `clip`, `gemma3`. Model download logic is in [`triton/entr
 | `CELERY_BROKER_URL` | `redis://localhost:6379/0` | Celery Redis broker |
 | `CELERY_RESULT_BACKEND` | `redis://localhost:6379/0` | Celery result backend |
 | `LOG_LEVEL` | `INFO` | Logging level |
+| `INIT_DATASET` | empty | Optional Hub dataset id for empty-collection seed (see Milvus section) |
 
 Caption prompt and VLM tuning: [`weavloader/inference/model_config.py`](../weavloader/inference/model_config.py)
 
@@ -95,8 +107,8 @@ After changing models, run the [benchmarking suite](benchmarking.md) to check fo
 
 Kubernetes overlays patch environment variables per deployment:
 
-- Dev: [`kubernetes/nrp-dev/`](../kubernetes/nrp-dev/) — `MILVUS_COLLECTION=HybridSearchExampleDev`
-- Prod: [`kubernetes/nrp-prod/`](../kubernetes/nrp-prod/) — `MILVUS_COLLECTION=HybridSearchExample`
+- Dev: [`kubernetes/nrp-dev/`](../kubernetes/nrp-dev/) — `MILVUS_COLLECTION=SageImageSearchDev`
+- Prod: [`kubernetes/nrp-prod/`](../kubernetes/nrp-prod/) — `MILVUS_COLLECTION=SageImageSearch`
 
 Milvus URI/token come from `milvus-secret` (`kubernetes/base/milvus-secret.template.yaml`).
 

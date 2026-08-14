@@ -1,5 +1,9 @@
-1. Migrate the production and dev environments to milvus: /Users/franciscolozano/.cursor/plans/weaviate_to_milvus_f84dca0c.plan.md
-2. Migrate the benchmarking suite to milvus
-    - this will be done by adding the milvus vector db adapter to imsearch_eval and switching the benchmark suite to use the milvus vector db adapter.
-3. Migrate the init weaviate dataset (hosted in HF Hub) to be a general dataset that can be used for all vector databases.
-    - TODO: First I have to open the dataset folder in this workspace
+- [X] 1. Migrate the production and dev environments to milvus: /Users/franciscolozano/.cursor/plans/weaviate_to_milvus_f84dca0c.plan.md
+- [X] 2. Migrate the init weaviate dataset (hosted in HF Hub) to be a general dataset that can be used for all vector databases.
+- [ ] 3. Upgrade the benchmarking suite to support milvus
+    - Rebuilt the imsearch_eval Milvus adapter (dual-dense + BM25 hybrid + CLIP rerank) and switched the benchmark suite to `VECTOR_DB=milvus` by default, with a Weaviate fallback.
+    - [X] implement the plan .cursor/plans/milvus_benchmark_adapter_204cc098.plan.md
+    - [ ] try out the changes utilizing the pre-release milvus branch
+    - [ ] release imsearch_eval 0.2.0
+    - [ ] change the requirement files to use that new version
+- [ ] 4. do all the TODOs or changes you marked that were done only for dev and need to change back now that you are done with dev work

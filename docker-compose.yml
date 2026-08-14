@@ -55,6 +55,10 @@ services:
     - NRP_API_KEY
     - NRP_API_ENDPOINT
     - NRP_LLM_MODEL
+    - INIT_DATASET
+    - INIT_DATASET_REVISION
+    - INIT_DATASET_BATCH_SIZE
+    - HF_TOKEN
     depends_on:
       - weavmanage
       - triton
