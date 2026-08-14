@@ -9,11 +9,17 @@ spec:
         - name: weavloader
           env:
             - name: MILVUS_COLLECTION
-              value: "HybridSearchExampleDev"
+              value: "SageImageSearchDev"
+            - name: INIT_DATASET
+              value: "sagecontinuum/init_img_search"
+            - name: INIT_DATASET_REVISION
+              value: "main"
+            - name: INIT_DATASET_BATCH_SIZE
+              value: "256"
             - name: UNALLOWED_NODES
               value: "W042,N001,V012,W015,W01C,W01E,W024,W026,W02C,W02D,W02E,W02F,W031,W040,W046,W047,W048,W049,W04A,W051,W055,W059,W05A,W05B,W05C,W05D,W05E,W05F,W060,W061,W062,W063,W064,W065,W066,W06E,W072,W073,W074,W075,W076,W077,W078,W079,W07A,W07B,W07D,W07E,W07F,W080,W081,W086,W088,W089,W08A,W08B,W08D,W08E,W08F,W090,W091,W092,W094,W096,W099,W09B,W09E,W0A0,W0A1,W0BB,W0BC"
             - name: LLM_RUN_MODE
-              value: "NRP"
+              value: "TRITON"
             - name: NRP_LLM_MODEL
               value: "gemma"
             - name: NRP_ENABLE_THINKING
