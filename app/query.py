@@ -158,6 +158,20 @@ class Milvus_query:
             logging.debug("==============END========================")
             return pd.DataFrame()
 
+        # Drop denied VSNs before rerank so we do not fetch images or call Triton
+        # for nodes the caller cannot see. TODO: replace UNALLOWED_NODES with
+        # per-user Sage authorization.
+        allowed = [obj for obj in objects if self.sage_query.authorize(obj["vsn"])]
+        skipped = len(objects) - len(allowed)
+        if skipped:
+            logging.debug(
+                "Skipped %s unallowed-node hit(s) before rerank", skipped
+            )
+        objects = allowed
+        if not objects:
+            logging.debug("==============END========================")
+            return pd.DataFrame()
+
         # Rerank: Triton CLIP query-text vs image (same idea as HF logits_per_image)
         for obj in objects:
             image = self.sage_query.getImage(obj["link"]) if obj["link"] else None

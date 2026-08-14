@@ -140,13 +140,6 @@ def text_query(description):
     if df is None or df.empty:
         return [], gr.DataFrame(value=None), gr.Plot(value=None)
 
-    # authorize results based on allowed nodes
-    # TODO: implement auth using username and key from sage user
-    df = df[df['vsn'].apply(lambda x: sq.authorize(x))]
-
-    if df.empty:
-        return [], gr.DataFrame(value=None), gr.Plot(value=None)
-
     # Extract the image links and captions from the DataFrame
     images = []
     for _, row in df.iterrows():  # Iterate through the DataFrame rows
@@ -182,12 +175,7 @@ def search(query):
     results = df.drop(columns=["uuid"])
     cols = results.columns.tolist()
 
-    # authorize results based on allowed nodes
-    # TODO: implement auth using username and key from sage user
-    results = results[results['vsn'].apply(lambda x: sq.authorize(x))]
-
     logging.debug("============FINAL RESULTS==================")
-    logging.debug("auth filtering was completed.")
     logging.debug(results)
     logging.debug("===================END=====================")
 
