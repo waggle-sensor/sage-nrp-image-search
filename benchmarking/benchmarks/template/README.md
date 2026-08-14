@@ -141,12 +141,22 @@ def load_data(data_loader, vector_db: VectorDBAdapter, hf_dataset):
     schema_config = data_loader.get_schema_config()
     vector_db.create_collection(schema_config)
     
-    # Process and insert data
-    results = data_loader.process_batch(batch_size=config._image_batch_size, 
-                                        dataset=hf_dataset, 
-                                        workers=config._workers)
-    inserted = vector_db.insert_data(config._collection_name, results, 
-                                     batch_size=config._image_batch_size)
+    # Process and stream-insert data (worker pool stays full; inserts as chunks complete)
+    inserted = 0
+    def on_batch(chunk):
+        nonlocal inserted
+        inserted += vector_db.insert_data(
+            config._collection_name, chunk, batch_size=len(chunk), flush=False
+        )
+    data_loader.process_batch(
+        batch_size=config._image_batch_size,
+        dataset=hf_dataset,
+        workers=config._workers,
+        on_batch=on_batch,
+    )
+    flush = getattr(vector_db, "flush_collection", None)
+    if callable(flush):
+        flush(config._collection_name)
 
 def run_evaluation(evaluator: BenchmarkEvaluator, hf_dataset):
     """Run the benchmark evaluation."""

@@ -222,9 +222,9 @@ All environment variables are loaded through the `INQUIREConfig` class in `confi
 - `TRITON_PORT`: Triton port (default: 8001)
 
 **Processing Parameters:**
-- `WORKERS`: Number of parallel workers (default: 5)
-- `IMAGE_BATCH_SIZE`: Batch size for processing images (default: 25)
-- `QUERY_BATCH_SIZE`: Batch size for parallel queries (default: 5)
+- `WORKERS`: Number of parallel workers (default: 16). Keeps the pool full for index + eval and fills Triton’s CLIP dynamic batcher.
+- `IMAGE_BATCH_SIZE`: Streamed insert chunk size during indexing (default: 32)
+- `QUERY_BATCH_SIZE`: Kept for API compatibility; in-flight query concurrency is `WORKERS` (default: 16)
 
 **Query Parameters:**
 - `QUERY_METHOD`: Query method (Milvus default: `clip_hybrid_query_dual_index`)

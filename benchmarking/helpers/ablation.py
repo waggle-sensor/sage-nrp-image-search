@@ -153,7 +153,8 @@ def build_search_text(
 def cache_index_image(image: Image.Image, image_id: Any, cache_dir: str) -> str:
     """Write a JPEG under cache_dir and return the path for Milvus `link`.
 
-    Query-time CLIP rerank uses stored ``image_vector``s, not this file.
+    Unused by Milvus query-time CLIP rerank (stored ``image_vector``s). Kept for
+    callers that still want a local file path.
     """
     os.makedirs(cache_dir, exist_ok=True)
     safe_id = re.sub(r"[^A-Za-z0-9._-]+", "_", str(image_id) or "image")
@@ -173,6 +174,9 @@ def milvus_index_payload(
     """
     Build Milvus index fields: caption_vector, image_vector, search_text, link.
 
+    ``link`` is left empty: CLIP rerank uses stored ``image_vector``s, so JPEG
+    caching under IMAGE_CACHE_DIR is skipped to save ephemeral disk I/O.
+
     Raises ValueError if embeddings cannot be generated.
     """
     caption_vector, image_vector = get_index_embedding_pair(
@@ -180,6 +184,7 @@ def milvus_index_payload(
     )
     if caption_vector is None or image_vector is None:
         raise ValueError("Failed to generate CLIP embedding pair")
-    link = cache_index_image(image, image_id, config._image_cache_dir)
+    _ = image_id  # reserved; link left empty (rerank uses image_vector)
+    link = ""
     search_text = build_search_text(caption, extra_search_fields)
     return caption_vector, image_vector, search_text, link

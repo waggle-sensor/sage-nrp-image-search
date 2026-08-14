@@ -26,10 +26,28 @@ def load_data(data_loader: INQUIREDataLoader, vector_db: VectorDBAdapter, hf_dat
         schema_config = data_loader.get_schema_config()
         vector_db.create_collection(schema_config)
 
-        # Process and insert data
+        # Process and stream-insert data (keeps worker pool full; inserts as chunks complete)
         logging.info("Processing and inserting data...")
-        results = data_loader.process_batch(batch_size=config._image_batch_size, dataset=hf_dataset, workers=config._workers)
-        inserted = vector_db.insert_data(config._collection_name, results, batch_size=config._image_batch_size)
+        inserted = 0
+
+        def on_batch(chunk):
+            nonlocal inserted
+            inserted += vector_db.insert_data(
+                config._collection_name,
+                chunk,
+                batch_size=len(chunk),
+                flush=False,
+            )
+
+        data_loader.process_batch(
+            batch_size=config._image_batch_size,
+            dataset=hf_dataset,
+            workers=config._workers,
+            on_batch=on_batch,
+        )
+        flush = getattr(vector_db, "flush_collection", None)
+        if callable(flush):
+            flush(config._collection_name)
         logging.info(f"Inserted {inserted} items.")        
         logging.info(f"Successfully loaded {config.inquire_dataset} into {config.vector_db} collection '{config._collection_name}'")
     except Exception as e:

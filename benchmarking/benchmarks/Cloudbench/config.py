@@ -56,9 +56,9 @@ class CloudBenchConfig(Config):
         self._triton_port = os.environ.get("TRITON_PORT", "8001")
 
         # Workers parameters
-        self._workers = int(os.environ.get("WORKERS", 5))
-        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 25))
-        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 5))
+        self._workers = int(os.environ.get("WORKERS", 16))
+        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 32))
+        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 16))
 
         # Logging parameters
         self._log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
