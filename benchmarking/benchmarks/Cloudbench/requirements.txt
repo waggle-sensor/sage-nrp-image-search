@@ -23,3 +23,7 @@ python-dateutil>=2.8.0
 
 # S3 upload support (MinIO)
 minio>=7.2.0
+
+
+# Plotting
+matplotlib

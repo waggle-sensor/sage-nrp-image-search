@@ -11,6 +11,9 @@ imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.
 # S3 upload support (MinIO)
 minio>=7.2.0
 
+# Plotting
+matplotlib
+
 # Add other dependencies as needed
 # Example:
 # datasets>=2.14.0
