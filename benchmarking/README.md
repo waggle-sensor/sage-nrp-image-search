@@ -126,7 +126,7 @@ Hard failures (`process_item` returns `None` / raises) and soft caption failures
 
 | Variable | Default | Effect |
 |----------|---------|--------|
-| `DLQ_MAX_RETRIES` | `3` | Retry rounds after the first failure |
+| `DLQ_MAX_RETRIES` | `8` | Retry rounds after the first failure |
 | `DLQ_RETRY_BASE_SECONDS` | `60` | Backoff base; delay = `base * 2^attempt` (60s → 120s → 240s) |
 | `DLQ_FILE` | `dlq_records.csv` | Local/S3 filename for terminal DLQ outcomes |
 

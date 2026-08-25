@@ -47,7 +47,7 @@ class DlqConfig:
     @classmethod
     def from_env(cls) -> "DlqConfig":
         return cls(
-            max_retries=int(os.environ.get("DLQ_MAX_RETRIES", "3")),
+            max_retries=int(os.environ.get("DLQ_MAX_RETRIES", "8")),
             retry_base_seconds=int(os.environ.get("DLQ_RETRY_BASE_SECONDS", "60")),
             file_name=os.environ.get("DLQ_FILE", "dlq_records.csv"),
         )
