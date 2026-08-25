@@ -40,7 +40,7 @@ def soft_caption_dlq(
 class DlqConfig:
     """DLQ retry / output settings from environment variables."""
 
-    max_retries: int = 3
+    max_retries: int = 8
     retry_base_seconds: int = 60
     file_name: str = "dlq_records.csv"
 
