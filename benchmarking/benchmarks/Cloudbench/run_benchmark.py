@@ -41,12 +41,34 @@ def load_data(
                 flush=False,
             )
 
-        data_loader.process_batch(
+        _, failures = data_loader.process_batch(
             batch_size=config._image_batch_size,
             dataset=hf_dataset,
             workers=config._workers,
             on_batch=on_batch,
         )
+
+        def on_dlq_success(payload):
+            nonlocal inserted
+            inserted += vector_db.insert_data(
+                config._collection_name,
+                [payload],
+                batch_size=1,
+                flush=False,
+            )
+
+        from helpers.dlq import DlqConfig, retry_dlq_failures, log_dlq_summary
+
+        dlq_cfg = DlqConfig.from_env()
+        dlq_records = retry_dlq_failures(
+            data_loader,
+            failures,
+            on_dlq_success,
+            workers=config._workers,
+            config=dlq_cfg,
+        )
+        log_dlq_summary(dlq_records)
+
         flush = getattr(vector_db, "flush_collection", None)
         if callable(flush):
             flush(config._collection_name)
@@ -54,6 +76,7 @@ def load_data(
         logging.info(
             f"Successfully loaded {config.cloudbench_dataset} into {config.vector_db} collection '{config._collection_name}'"
         )
+        return dlq_records
     except Exception as e:
         logging.error(f"Error loading data: {e}")
         vector_db.close()
@@ -176,7 +199,7 @@ def main():
     logging.info("Step 1: Loading data into vector database")
     logging.info("=" * 80)
     try:
-        load_data(data_loader, vector_db, hf_dataset)
+        dlq_records = load_data(data_loader, vector_db, hf_dataset)
         logging.info("Data loading completed successfully.")
     except Exception as e:
         logging.error(f"Error loading data: {e}")
@@ -217,6 +240,12 @@ def main():
     logging.info(f"  - {query_evaluation_path}")
     logging.info(f"  - {config_csv_path}")
 
+    from helpers.dlq import DlqConfig, write_dlq_csv
+    dlq_cfg = DlqConfig.from_env()
+    dlq_path = results_dir / dlq_cfg.file_name
+    write_dlq_csv(dlq_path, dlq_records)
+    logging.info(f"  - {dlq_path}")
+
     if config._upload_to_s3:
         if not config._s3_bucket:
             logging.warning(
@@ -243,10 +272,12 @@ def main():
                 s3_key_config = (
                     f"{config._s3_prefix}/{timestamp}/{config._config_values_file}"
                 )
+                s3_key_dlq = f"{config._s3_prefix}/{timestamp}/{dlq_cfg.file_name}"
 
                 upload_to_s3(str(image_results_path), s3_key_image)
                 upload_to_s3(str(query_evaluation_path), s3_key_query)
                 upload_to_s3(str(config_csv_path), s3_key_config)
+                upload_to_s3(str(dlq_path), s3_key_dlq)
 
                 logging.info("S3 upload completed successfully.")
             except Exception as e:

@@ -13,12 +13,13 @@ from helpers.ablation import (
     get_index_embedding,
     milvus_index_payload,
 )
+from helpers.dlq import soft_caption_dlq
 from helpers.backend import is_milvus
 
 class SagebenchDataLoader(DataLoader):
     """Data loader for Sagebench dataset rows into Weaviate."""
 
-    def process_item(self, item: dict) -> dict | None:
+    def process_item(self, item: dict, *, force_insert: bool = False) -> dict | None:
         """
         Process a single Sagebench dataset item.
 
@@ -88,12 +89,13 @@ class SagebenchDataLoader(DataLoader):
                 else str(confidence)
             )
 
-            caption = generate_index_caption(
+            caption, caption_failed = generate_index_caption(
                 self.model_provider,
                 image,
                 self.config,
-                fallback_caption=summary or "",
             )
+            if caption_failed and not force_insert:
+                return soft_caption_dlq(image_id)
 
             if is_milvus(self.config):
                 caption_vector, image_vector, search_text, link = milvus_index_payload(

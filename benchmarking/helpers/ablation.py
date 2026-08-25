@@ -61,13 +61,17 @@ def generate_index_caption(
     model_provider,
     image: Any,
     config,
-    fallback_caption: str = "",
-) -> str:
+) -> tuple[str, bool]:
     """
-    Generate a caption for indexing, or return empty string when captioning is disabled.
+    Generate a caption for indexing.
+
+    Returns:
+        (caption, caption_failed). When caption generation is disabled, returns
+        ("", False). When the provider returns empty/None, returns ("", True)
+        with no dataset-summary fallback.
     """
     if not config.enable_caption_generation:
-        return ""
+        return "", False
 
     caption = model_provider.generate_caption(
         image,
@@ -76,8 +80,8 @@ def generate_index_caption(
         enable_thinking=config.nrp_enable_thinking,
     )
     if not caption:
-        return fallback_caption
-    return caption
+        return "", True
+    return caption, False
 
 
 def get_triton_model_utils(model_provider):

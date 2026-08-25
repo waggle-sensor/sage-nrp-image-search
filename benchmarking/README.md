@@ -120,6 +120,22 @@ Keep `IMAGE_BATCH_SIZE` and `QUERY_BATCH_SIZE` ≥ `WORKERS` so batch knobs do n
 
 Use a distinct `COLLECTION_NAME` for each ablation condition so indexed vectors do not mix across experiments. New Milvus result folders should use a new version name (e.g. `v13`) so leaderboards can compare against historical Weaviate runs.
 
+### Indexing DLQ
+
+Hard failures (`process_item` returns `None` / raises) and soft caption failures (LLM returned empty; **no** dataset-summary fallback) are held in an in-memory DLQ, retried with production-style exponential backoff, then written to CSV and uploaded with other metrics when `UPLOAD_TO_S3=true`.
+
+| Variable | Default | Effect |
+|----------|---------|--------|
+| `DLQ_MAX_RETRIES` | `3` | Retry rounds after the first failure |
+| `DLQ_RETRY_BASE_SECONDS` | `60` | Backoff base; delay = `base * 2^attempt` (60s → 120s → 240s) |
+| `DLQ_FILE` | `dlq_records.csv` | Local/S3 filename for terminal DLQ outcomes |
+
+Semantics:
+
+- Soft caption failure: do **not** insert on first empty caption; retry captioning; after retries are exhausted, force-insert with an empty caption (`final_status=inserted_degraded`).
+- Hard failure: never insert unless a retry succeeds (`retried_ok`); otherwise `abandoned`.
+- CSV columns: `item_id`, `reason`, `error`, `attempts`, `final_status`, `last_error` (no image bytes).
+
 ### Example Ablation Runs
 
 ```bash

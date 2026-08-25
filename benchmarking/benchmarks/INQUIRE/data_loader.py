@@ -13,13 +13,14 @@ from helpers.ablation import (
     get_index_embedding,
     milvus_index_payload,
 )
+from helpers.dlq import soft_caption_dlq
 from helpers.backend import is_milvus
 
 
 class INQUIREDataLoader(DataLoader):
     """Data loader for INQUIRE dataset."""
 
-    def process_item(self, item: dict) -> dict:
+    def process_item(self, item: dict, *, force_insert: bool = False) -> dict:
         """Process a single INQUIRE dataset item."""
         try:
             if not isinstance(item, dict):
@@ -64,7 +65,11 @@ class INQUIREDataLoader(DataLoader):
                 logging.error(f"Error parsing date for image {filename}: {e}")
                 date_rfc3339 = raw_date.replace(" ", "T") if raw_date else ""
 
-            caption = generate_index_caption(self.model_provider, image, self.config)
+            caption, caption_failed = generate_index_caption(
+                self.model_provider, image, self.config
+            )
+            if caption_failed and not force_insert:
+                return soft_caption_dlq(filename or inat_id)
 
             if is_milvus(self.config):
                 from imsearch_eval.adapters.milvus import (

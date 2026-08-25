@@ -12,18 +12,20 @@ from helpers.ablation import (
     get_index_embedding,
     milvus_index_payload,
 )
+from helpers.dlq import soft_caption_dlq
 from helpers.backend import is_milvus
 
 class CommonObjectsBenchDataLoader(DataLoader):
     """Data loader for CommonObjectsBench dataset (general object image retrieval)."""
 
-    def process_item(self, item: dict) -> dict:
+    def process_item(self, item: dict, *, force_insert: bool = False) -> dict:
         """
         Process a single CommonObjectsBench dataset item.
 
         Args:
             item: Dictionary containing CommonObjectsBench dataset item with query_text,
                   query_id, image_id, relevance_label, image, and metadata.
+            force_insert: Insert with empty caption after DLQ retries are exhausted.
         Returns:
             Dictionary with 'properties' and 'vector' keys for Weaviate insertion
         """
@@ -73,12 +75,13 @@ class CommonObjectsBenchDataLoader(DataLoader):
                 json.dumps(confidence) if isinstance(confidence, dict) else str(confidence)
             )
 
-            caption = generate_index_caption(
+            caption, caption_failed = generate_index_caption(
                 self.model_provider,
                 image,
                 self.config,
-                fallback_caption=summary or "",
             )
+            if caption_failed and not force_insert:
+                return soft_caption_dlq(image_id)
 
             if is_milvus(self.config):
                 caption_vector, image_vector, search_text, link = milvus_index_payload(
