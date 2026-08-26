@@ -7,6 +7,7 @@ from weaviate.collections.classes.config_vector_index import VectorFilterStrateg
 from imsearch_eval.framework.interfaces import Config
 from helpers.ablation import load_ablation_config
 from helpers.backend import apply_vector_db_config
+from helpers.nrp import resolve_workers
 
 
 class FireBenchConfig(Config):
@@ -56,7 +57,7 @@ class FireBenchConfig(Config):
         self._triton_port = os.environ.get("TRITON_PORT", "8001")
 
         # Workers parameters
-        self._workers = int(os.environ.get("WORKERS", 16))
+        self._workers = resolve_workers(self.llm_model_provider, self.caption_model_name)
         self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 32))
         self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 16))
 

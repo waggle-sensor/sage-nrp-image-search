@@ -4,6 +4,7 @@ import os
 from imsearch_eval.framework.interfaces import Config
 from helpers.ablation import load_ablation_config
 from helpers.backend import apply_vector_db_config
+from helpers.nrp import resolve_workers
 
 
 class MyConfig(Config):
@@ -32,15 +33,25 @@ class MyConfig(Config):
         
         # Collection
         self._collection_name = os.environ.get("COLLECTION_NAME", "MYBENCHMARK")
+
+        # model provider parameters
+        self.llm_model_provider = os.environ.get(
+            "LLM_MODEL_PROVIDER", "triton"
+        ).lower()
+        self.caption_model_name = os.environ.get("CAPTION_MODEL_NAME", "gemma")
+        self.nrp_enable_thinking = (
+            os.environ.get("NRP_ENABLE_THINKING", "false").lower()
+            in ("1", "true", "yes")
+        )
         
         # Triton parameters
         self._triton_host = os.environ.get("TRITON_HOST", "triton")
         self._triton_port = os.environ.get("TRITON_PORT", "8001")
         
-        # Workers parameters
-        self._workers = int(os.environ.get("WORKERS", 16))
+        # Workers parameters (NRP gemma fair-use max concurrency is 8)
+        self._workers = resolve_workers(self.llm_model_provider, self.caption_model_name)
         self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 32))
-        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 16))
+        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", self._workers))
         
         # Logging parameters
         self._log_level = os.environ.get("LOG_LEVEL", "INFO").upper()

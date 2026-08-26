@@ -17,7 +17,7 @@ New runs default to **Milvus** on the NRP-managed cluster (`VECTOR_DB=milvus`, `
 
 CLIP rerank matches production: the query text tower runs once, then hits are scored with vectorized `cosine(image_vector, query_text) * logit_scale`. There is no per-hit image download or extra Triton CLIP call.
 
-Index and query workers stay continuously filled (`WORKERS`, default 16). Concurrent CLIP calls are combined by Triton’s dynamic batcher when the server has `max_batch_size > 0`. Set `QUERY_BATCH_SIZE` / `IMAGE_BATCH_SIZE` at least as large as `WORKERS` (defaults 16 / 32); `IMAGE_BATCH_SIZE` is the streamed insert chunk size.
+Index and query workers stay continuously filled (`WORKERS`). For Triton captioning the default is 16; for NRP `gemma` it is capped at **8** ([fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/)). Concurrent CLIP calls are combined by Triton’s dynamic batcher when the server has `max_batch_size > 0`. Set `QUERY_BATCH_SIZE` / `IMAGE_BATCH_SIZE` at least as large as `WORKERS`.
 
 The existing benchmarks are in the [imsearch_benchmarks](https://github.com/waggle-sensor/imsearch_benchmarks) repository. Some of them have been implemented here in this repository.
 
@@ -103,9 +103,12 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 | Variable | Default | Effect |
 |----------|---------|--------|
 | `VECTOR_DB` | `milvus` | Backend: `milvus` (default) or `weaviate` |
-| `WORKERS` | `16` | Thread-pool size for indexing and query eval (keep the pool full; fills Triton’s CLIP dynamic-batcher queue) |
+| `WORKERS` | `16` (Triton) / NRP fair-use cap | Thread-pool size for indexing and query eval. When `LLM_MODEL_PROVIDER=nrp` and `CAPTION_MODEL_NAME=gemma`, clamped to **8** per [NRP fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) |
 | `IMAGE_BATCH_SIZE` | `32` | Streamed Milvus/Weaviate insert chunk size during indexing |
 | `QUERY_BATCH_SIZE` | `16` | Kept for API compatibility; in-flight query concurrency is `WORKERS` |
+| `LLM_MODEL_PROVIDER` | `triton` | Caption LLM: `nrp` (Envoy gateway) or `triton` |
+| `CAPTION_MODEL_NAME` | `gemma` | NRP model id (see [available models](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)); Triton uses its own model names |
+| `NRP_ENABLE_THINKING` | `false` | Keep `false` for captioning latency; Gemma reasoning is on by default on NRP unless disabled |
 | `ENABLE_CAPTION_GENERATION` | `true` | When `false`, skips the caption LLM entirely and stores an empty caption |
 | `EMBED_IMAGE` | `true` | Milvus: omit the `image_vector` hybrid leg. Weaviate: index-time CLIP fusion uses image only when caption is also disabled |
 | `EMBED_CAPTION` | `false` when caption generation is disabled | Milvus: omit the `caption_vector` hybrid leg. Weaviate: index-time CLIP fusion |
@@ -118,6 +121,8 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 
 Keep `IMAGE_BATCH_SIZE` and `QUERY_BATCH_SIZE` ≥ `WORKERS` so batch knobs do not under-subscribe the pool. Indexing streams inserts as items complete (no “process all → insert all” barrier).
 
+**NRP fair use:** for `gemma` / `gemma-small`, max per-user concurrency is 8 (short requests). K8s `nrp-dev` / `nrp-prod` overlays set `WORKERS=8` and `QUERY_BATCH_SIZE=8`. `resolve_workers()` also clamps if `WORKERS` is set higher. Leave `NRP_ENABLE_THINKING=false` so captions do not pay for reasoning tokens. DLQ exponential backoff matches NRP’s guidance to retry with increasing intervals.
+
 Use a distinct `COLLECTION_NAME` for each ablation condition so indexed vectors do not mix across experiments. New Milvus result folders should use a new version name (e.g. `v13`) so leaderboards can compare against historical Weaviate runs.
 
 ### Indexing DLQ
@@ -126,7 +131,7 @@ Hard failures (`process_item` returns `None` / raises) and soft caption failures
 
 | Variable | Default | Effect |
 |----------|---------|--------|
-| `DLQ_MAX_RETRIES` | `8` | Retry rounds after the first failure |
+| `DLQ_MAX_RETRIES` | `6` | Retry rounds after the first failure |
 | `DLQ_RETRY_BASE_SECONDS` | `60` | Backoff base; delay = `base * 2^attempt` (60s → 120s → 240s) |
 | `DLQ_FILE` | `dlq_records.csv` | Local/S3 filename for terminal DLQ outcomes |
 
