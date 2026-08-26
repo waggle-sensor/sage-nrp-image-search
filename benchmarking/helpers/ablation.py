@@ -61,14 +61,16 @@ def generate_index_caption(
     model_provider,
     image: Any,
     config,
+    fallback_caption: str = "",
 ) -> tuple[str, bool]:
     """
     Generate a caption for indexing.
 
     Returns:
         (caption, caption_failed). When caption generation is disabled, returns
-        ("", False). When the provider returns empty/None, returns ("", True)
-        with no dataset-summary fallback.
+        ("", False). When the provider returns empty/None, returns
+        (fallback_caption or "", True) so callers can soft-DLQ and still insert
+        the dataset summary (or "") after retries are exhausted.
     """
     if not config.enable_caption_generation:
         return "", False
@@ -80,7 +82,7 @@ def generate_index_caption(
         enable_thinking=config.nrp_enable_thinking,
     )
     if not caption:
-        return "", True
+        return fallback_caption or "", True
     return caption, False
 
 

@@ -25,7 +25,7 @@ class CommonObjectsBenchDataLoader(DataLoader):
         Args:
             item: Dictionary containing CommonObjectsBench dataset item with query_text,
                   query_id, image_id, relevance_label, image, and metadata.
-            force_insert: Insert with empty caption after DLQ retries are exhausted.
+            force_insert: Insert with summary/empty caption after DLQ retries are exhausted.
         Returns:
             Dictionary with 'properties' and 'vector' keys for Weaviate insertion
         """
@@ -79,6 +79,7 @@ class CommonObjectsBenchDataLoader(DataLoader):
                 self.model_provider,
                 image,
                 self.config,
+                fallback_caption=summary or "",
             )
             if caption_failed and not force_insert:
                 return soft_caption_dlq(image_id)

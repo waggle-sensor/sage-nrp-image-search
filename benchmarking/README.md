@@ -122,7 +122,7 @@ Use a distinct `COLLECTION_NAME` for each ablation condition so indexed vectors 
 
 ### Indexing DLQ
 
-Hard failures (`process_item` returns `None` / raises) and soft caption failures (LLM returned empty; **no** dataset-summary fallback) are held in an in-memory DLQ, retried with production-style exponential backoff, then written to CSV and uploaded with other metrics when `UPLOAD_TO_S3=true`.
+Hard failures (`process_item` returns `None` / raises) and soft caption failures (LLM returned empty) are held in an in-memory DLQ, retried with production-style exponential backoff, then written to CSV and uploaded with other metrics when `UPLOAD_TO_S3=true`. On exhausted soft retries, the dataset `summary` is used as the caption fallback (or `""` when no summary exists, e.g. INQUIRE).
 
 | Variable | Default | Effect |
 |----------|---------|--------|
@@ -132,7 +132,7 @@ Hard failures (`process_item` returns `None` / raises) and soft caption failures
 
 Semantics:
 
-- Soft caption failure: do **not** insert on first empty caption; retry captioning; after retries are exhausted, force-insert with an empty caption (`final_status=inserted_degraded`).
+- Soft caption failure: do **not** insert on first empty caption; retry captioning; after retries are exhausted, force-insert with `summary` or `""` (`final_status=inserted_degraded`).
 - Hard failure: never insert unless a retry succeeds (`retried_ok`); otherwise `abandoned`.
 - CSV columns: `item_id`, `reason`, `error`, `attempts`, `final_status`, `last_error` (no image bytes).
 

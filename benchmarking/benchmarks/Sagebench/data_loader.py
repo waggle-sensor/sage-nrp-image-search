@@ -93,6 +93,7 @@ class SagebenchDataLoader(DataLoader):
                 self.model_provider,
                 image,
                 self.config,
+                fallback_caption=summary or "",
             )
             if caption_failed and not force_insert:
                 return soft_caption_dlq(image_id)

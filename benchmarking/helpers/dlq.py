@@ -88,8 +88,8 @@ def retry_dlq_failures(
     (default 60s, 120s, 240s).
 
     Soft caption failures that still fail after retries are force-inserted
-    with an empty caption (``force_insert=True``). Hard failures that never
-    succeed are abandoned (not inserted).
+    with the dataset summary fallback or ``""`` (``force_insert=True``). Hard
+    failures that never succeed are abandoned (not inserted).
     """
     cfg = config or DlqConfig.from_env()
     if not failures:
