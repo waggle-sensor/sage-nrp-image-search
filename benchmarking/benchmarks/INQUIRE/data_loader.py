@@ -69,7 +69,7 @@ class INQUIREDataLoader(DataLoader):
                 self.model_provider, image, self.config
             )
             if caption_failed and not force_insert:
-                return soft_caption_dlq(filename or inat_id)
+                return soft_caption_dlq(inat_id, query_id)
 
             if is_milvus(self.config):
                 from imsearch_eval.adapters.milvus import (

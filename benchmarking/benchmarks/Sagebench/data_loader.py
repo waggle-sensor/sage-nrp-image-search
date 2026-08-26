@@ -96,7 +96,7 @@ class SagebenchDataLoader(DataLoader):
                 fallback_caption=summary or "",
             )
             if caption_failed and not force_insert:
-                return soft_caption_dlq(image_id)
+                return soft_caption_dlq(image_id, query_id)
 
             if is_milvus(self.config):
                 caption_vector, image_vector, search_text, link = milvus_index_payload(

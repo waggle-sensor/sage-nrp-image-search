@@ -134,7 +134,7 @@ Semantics:
 
 - Soft caption failure: do **not** insert on first empty caption; retry captioning; after retries are exhausted, force-insert with `summary` or `""` (`final_status=inserted_degraded`).
 - Hard failure: never insert unless a retry succeeds (`retried_ok`); otherwise `abandoned`.
-- CSV columns: `item_id`, `reason`, `error`, `attempts`, `final_status`, `last_error` (no image bytes).
+- CSV columns: `image_id`, `query_id`, `reason`, `error`, `attempts`, `final_status`, `last_error` (no image bytes).
 
 ### Example Ablation Runs
 

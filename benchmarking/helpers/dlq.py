@@ -14,7 +14,8 @@ from typing import Any, Callable, Dict, List, Optional
 from imsearch_eval.framework.interfaces import DLQ_SOFT_KEY
 
 DLQ_CSV_COLUMNS = [
-    "item_id",
+    "image_id",
+    "query_id",
     "reason",
     "error",
     "attempts",
@@ -24,7 +25,8 @@ DLQ_CSV_COLUMNS = [
 
 
 def soft_caption_dlq(
-    item_id: Any = "",
+    image_id: Any = "",
+    query_id: Any = "",
     error: str = "empty caption from provider",
 ) -> dict:
     """Return a soft-DLQ sentinel (not inserted until retries succeed or force_insert)."""
@@ -32,7 +34,8 @@ def soft_caption_dlq(
         DLQ_SOFT_KEY: True,
         "reason": "caption_failed",
         "error": error,
-        "item_id": "" if item_id is None else str(item_id),
+        "image_id": "" if image_id is None else str(image_id),
+        "query_id": "" if query_id is None else str(query_id),
     }
 
 
@@ -57,7 +60,8 @@ class DlqConfig:
 class DlqTerminalRecord:
     """One terminal DLQ outcome for CSV export."""
 
-    item_id: str
+    image_id: str
+    query_id: str
     reason: str
     error: str
     attempts: int
@@ -71,6 +75,24 @@ def _is_soft_sentinel(result: Any) -> bool:
 
 def _is_success(result: Any) -> bool:
     return result is not None and not _is_soft_sentinel(result)
+
+
+def _terminal_from_entry(
+    entry: Dict[str, Any],
+    *,
+    final_status: str,
+    attempts: int,
+    last_error: str = "",
+) -> DlqTerminalRecord:
+    return DlqTerminalRecord(
+        image_id=str(entry.get("image_id") or ""),
+        query_id=str(entry.get("query_id") or ""),
+        reason=str(entry.get("reason") or "hard_fail"),
+        error=str(entry.get("error") or ""),
+        attempts=attempts,
+        final_status=final_status,
+        last_error=last_error,
+    )
 
 
 def retry_dlq_failures(
@@ -134,12 +156,10 @@ def retry_dlq_failures(
                 if _is_success(result):
                     on_success(result)
                     terminal.append(
-                        DlqTerminalRecord(
-                            item_id=str(entry.get("item_id") or ""),
-                            reason=str(entry.get("reason") or "hard_fail"),
-                            error=str(entry.get("error") or ""),
-                            attempts=attempt + 1,
+                        _terminal_from_entry(
+                            entry,
                             final_status="retried_ok",
+                            attempts=attempt + 1,
                             last_error="",
                         )
                     )
@@ -148,8 +168,10 @@ def retry_dlq_failures(
                     entry["error"] = result.get(
                         "error", "empty caption from provider"
                     )
-                    if result.get("item_id"):
-                        entry["item_id"] = str(result["item_id"])
+                    if result.get("image_id"):
+                        entry["image_id"] = str(result["image_id"])
+                    if result.get("query_id"):
+                        entry["query_id"] = str(result["query_id"])
                     still_pending.append(entry)
                 else:
                     entry["reason"] = "hard_fail"
@@ -176,16 +198,14 @@ def retry_dlq_failures(
             except Exception as exc:
                 logging.error(
                     "DLQ: force_insert failed for %s: %s",
-                    entry.get("item_id"),
+                    entry.get("image_id"),
                     exc,
                 )
                 terminal.append(
-                    DlqTerminalRecord(
-                        item_id=str(entry.get("item_id") or ""),
-                        reason=reason,
-                        error=last_error,
-                        attempts=attempts,
+                    _terminal_from_entry(
+                        entry,
                         final_status="abandoned",
+                        attempts=attempts,
                         last_error=str(exc),
                     )
                 )
@@ -194,34 +214,28 @@ def retry_dlq_failures(
             if _is_success(result):
                 on_success(result)
                 terminal.append(
-                    DlqTerminalRecord(
-                        item_id=str(entry.get("item_id") or ""),
-                        reason=reason,
-                        error=last_error,
-                        attempts=attempts,
+                    _terminal_from_entry(
+                        entry,
                         final_status="inserted_degraded",
+                        attempts=attempts,
                         last_error=last_error,
                     )
                 )
             else:
                 terminal.append(
-                    DlqTerminalRecord(
-                        item_id=str(entry.get("item_id") or ""),
-                        reason=reason,
-                        error=last_error,
-                        attempts=attempts,
+                    _terminal_from_entry(
+                        entry,
                         final_status="abandoned",
+                        attempts=attempts,
                         last_error=last_error or "force_insert returned None",
                     )
                 )
         else:
             terminal.append(
-                DlqTerminalRecord(
-                    item_id=str(entry.get("item_id") or ""),
-                    reason=reason,
-                    error=last_error,
-                    attempts=attempts,
+                _terminal_from_entry(
+                    entry,
                     final_status="abandoned",
+                    attempts=attempts,
                     last_error=last_error,
                 )
             )
@@ -242,7 +256,8 @@ def write_dlq_csv(
         for rec in records:
             writer.writerow(
                 {
-                    "item_id": rec.item_id,
+                    "image_id": rec.image_id,
+                    "query_id": rec.query_id,
                     "reason": rec.reason,
                     "error": rec.error,
                     "attempts": rec.attempts,
