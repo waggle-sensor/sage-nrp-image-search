@@ -122,7 +122,7 @@ Use a distinct `COLLECTION_NAME` for each ablation condition so indexed vectors 
 
 ### Indexing DLQ
 
-Hard failures (`process_item` returns `None` / raises) and soft caption failures (LLM returned empty) are held in an in-memory DLQ, retried with production-style exponential backoff, then written to CSV and uploaded with other metrics when `UPLOAD_TO_S3=true`. On exhausted soft retries, the dataset `summary` is used as the caption fallback (or `""` when no summary exists, e.g. INQUIRE).
+Hard failures (`process_item` returns `None` / raises) and soft caption failures (LLM returned empty) are held in an in-memory DLQ, retried with production-style exponential backoff, then written to CSV and uploaded with other metrics when `UPLOAD_TO_S3=true`. On exhausted soft retries, the dataset `summary` is used as the caption fallback (or `""` when no summary exists, e.g. INQUIRE). The DLQ stores only `dataset_idx` / ids (no images); retries reload rows from the HuggingFace dataset on disk.
 
 | Variable | Default | Effect |
 |----------|---------|--------|

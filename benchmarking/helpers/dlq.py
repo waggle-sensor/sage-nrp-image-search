@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from imsearch_eval.framework.interfaces import DLQ_SOFT_KEY
+from imsearch_eval.framework.interfaces import DLQ_SOFT_KEY, load_dlq_item
 
 DLQ_CSV_COLUMNS = [
     "image_id",
@@ -95,11 +95,21 @@ def _terminal_from_entry(
     )
 
 
+def _resolve_item(dataset: Any, entry: Dict[str, Any]) -> Dict[str, Any]:
+    """Reload the HF dataset row for a DLQ entry (by dataset_idx)."""
+    if "dataset_idx" not in entry:
+        raise KeyError(
+            "DLQ entry missing dataset_idx; cannot reload item from dataset"
+        )
+    return load_dlq_item(dataset, entry["dataset_idx"])
+
+
 def retry_dlq_failures(
     data_loader,
     failures: List[Dict[str, Any]],
     on_success: Callable[[Dict[str, Any]], None],
     *,
+    dataset: Any,
     workers: int = 1,
     config: Optional[DlqConfig] = None,
 ) -> List[DlqTerminalRecord]:
@@ -109,13 +119,17 @@ def retry_dlq_failures(
     Backoff matches production weavloader: ``base * 2**attempt``
     (default 60s, 120s, 240s).
 
-    Soft caption failures that still fail after retries are force-inserted
-    with the dataset summary fallback or ``""`` (``force_insert=True``). Hard
-    failures that never succeed are abandoned (not inserted).
+    Failures must include ``dataset_idx``; images are reloaded from ``dataset``
+    on each attempt (not kept decoded in the DLQ). Soft caption failures that
+    still fail after retries are force-inserted with the dataset summary
+    fallback or ``""`` (``force_insert=True``). Hard failures that never
+    succeed are abandoned (not inserted).
     """
     cfg = config or DlqConfig.from_env()
     if not failures:
         return []
+    if dataset is None:
+        raise ValueError("dataset is required to reload DLQ items by index")
 
     pending = [dict(f) for f in failures]
     terminal: List[DlqTerminalRecord] = []
@@ -144,7 +158,7 @@ def retry_dlq_failures(
         still_pending: List[Dict[str, Any]] = []
 
         def _retry_one(entry: Dict[str, Any]):
-            item = entry["item"]
+            item = _resolve_item(dataset, entry)
             result = data_loader.process_item(item, force_insert=False)
             return entry, result
 
@@ -193,7 +207,7 @@ def retry_dlq_failures(
         if reason == "caption_failed":
             try:
                 result = data_loader.process_item(
-                    entry["item"], force_insert=True
+                    _resolve_item(dataset, entry), force_insert=True
                 )
             except Exception as exc:
                 logging.error(

@@ -63,6 +63,7 @@ def load_data(
             data_loader,
             failures,
             on_dlq_success,
+            dataset=hf_dataset,
             workers=config._workers,
             config=dlq_cfg,
         )

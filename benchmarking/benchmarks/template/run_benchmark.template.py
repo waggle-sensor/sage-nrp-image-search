@@ -57,6 +57,7 @@ def load_data(data_loader, vector_db: VectorDBAdapter, hf_dataset: Dataset):
         # from helpers.dlq import DlqConfig, retry_dlq_failures, log_dlq_summary
         # dlq_records = retry_dlq_failures(
         #     data_loader, failures, on_dlq_success,
+        #     dataset=hf_dataset,
         #     workers=config._workers, config=DlqConfig.from_env(),
         # )
         # log_dlq_summary(dlq_records)
