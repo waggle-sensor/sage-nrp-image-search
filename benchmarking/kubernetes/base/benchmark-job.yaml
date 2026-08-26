@@ -18,6 +18,7 @@ spec:
       containers:
         - name: benchmark-job
           image: PLACEHOLDER_BENCHMARK_JOB_IMAGE:latest
+          imagePullPolicy: Always # TODO: remove once you're done with development
           # Note: Vector DB and inference server environment variables should be
           # added via patches in benchmark-specific overlays (e.g., env.yaml)
           command: ["python", "run_benchmark.py"]
@@ -51,12 +52,12 @@ spec:
                 name: milvus-secret
           resources:
             limits:
-              cpu: 6  # maximum allowed ratio of 1.2x of requests (5 * 1.2 = 6)
-              memory: 21Gi  # maximum allowed ratio of 1.2x of requests (14Gi * 1.2 = 16.8Gi)
+              cpu: 9  # maximum allowed ratio of 1.2x of requests (8 * 1.2 = 9.6)
+              memory: 28Gi  # maximum allowed ratio of 1.2x of requests (24Gi * 1.2 = 28.8Gi)
               ephemeral-storage: 30Gi
             requests:
-              cpu: 5
-              memory: 18Gi
+              cpu: 8
+              memory: 24Gi
               ephemeral-storage: 25Gi
           volumeMounts:
             - name: huggingface-cache
