@@ -64,8 +64,9 @@ weavloader/
 - **Dead Letter Queue**: Failed jobs archived for manual inspection
 
 ### **AI Inference:**
-- **Multi-Model Support**: Gemma3, CLIP, Florence2, ColBERT, ALIGN
-- **Triton Integration**: High-performance model serving
+- **Multi-Model Support**: Gemma (NRP gateway or Triton), CLIP, Florence2, ColBERT
+- **Triton / NRP Integration**: CLIP via Triton; captions via Triton VLM or NRP AI Gateway (`LLM_RUN_MODE`)
+- **NRP Fair Use**: Cap total NRP caption concurrency when using the gateway (see [NRP Fair Use](#nrp-fair-use-captioning-via-ai-gateway))
 - **Configurable Hyperparameters**: Easy model tuning and optimization
 
 ### **Monitoring & Observability:**
@@ -112,6 +113,13 @@ export MILVUS_DB="image_search_svc"
 # Celery Configuration
    export CELERY_BROKER_URL="redis://localhost:6379/0"
    export CELERY_RESULT_BACKEND="redis://localhost:6379/0"
+
+# Caption backend: TRITON (local/Compose) or NRP (K8s default)
+# export LLM_RUN_MODE="NRP"
+# export NRP_LLM_MODEL="gemma"
+# export NRP_ENABLE_THINKING="false"   # keep false for fair-use / latency
+# export NRP_API_KEY="..."
+# export NRP_API_ENDPOINT="..."
 
 # Node Filtering (Optional)
 export UNALLOWED_NODES="node1,node2,node3"  # Comma-separated list of nodes to exclude
@@ -169,7 +177,7 @@ Weavloader uses specialized Celery workers for different tasks:
 ### **Celery Processor**
 - **Role**: Processes individual image jobs
 - **Queue**: `image_processing`
-- **Concurrency**: 3 workers
+- **Concurrency**: 6 workers (`weavloader/main.py`; keep ≤ NRP fair-use cap when `LLM_RUN_MODE=NRP`)
 - **Node Name**: `processor@%h`
 - **Purpose**: AI model inference, image captioning, embedding generation
 
@@ -183,7 +191,7 @@ Weavloader uses specialized Celery workers for different tasks:
 ### **Celery Cleaner**
 - **Role**: Manages cleanup and maintenance tasks
 - **Queue**: `cleanup`
-- **Concurrency**: 2 workers
+- **Concurrency**: 3 workers
 - **Node Name**: `cleaner@%h`
 - **Purpose**: DLQ management, task cleanup, system maintenance
 
@@ -201,6 +209,21 @@ Weavloader uses specialized Celery workers for different tasks:
 - **Initial Delay**: 60 seconds
 - **Backoff**: Exponential (60s → 120s → 240s)
 - **Max Delay**: 10 minutes
+
+### **NRP Fair Use (captioning via AI Gateway)**
+
+When `LLM_RUN_MODE=NRP`, captions use the [NRP managed LLM](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) (default model [`gemma`](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)). Stay within per-user limits:
+
+| Rule | Weavloader practice |
+|------|---------------------|
+| Max concurrent requests (`gemma` / `gemma-small`) | **8** per user. Default processor concurrency is **6** with **1** deployment replica → **6 ≤ 8**. |
+| Combined context of concurrent requests | Stay under **35%** of model context (~92k tokens for gemma’s 262k window). Single-image caption jobs are typically only hundreds–low thousands of tokens each (Gemma 4 soft-token budget, default **280** vision tokens/image). |
+| Reasoning / thinking | Keep `NRP_ENABLE_THINKING=false` unless you need it (lower latency and token use). |
+| Retries under load | Celery exponential backoff (60s → 120s → 240s) matches NRP guidance to retry with increasing intervals. |
+
+**Do not** scale `replicas × processor_concurrency` above **8** while on NRP `gemma` without raising the fair-use allowance or switching caption backends. The NRP API key is shared with any other clients (e.g. benchmark jobs) — concurrent NRP caption load is summed per user.
+
+Env knobs: `LLM_RUN_MODE`, `NRP_LLM_MODEL`, `NRP_ENABLE_THINKING`, `NRP_API_KEY`, `NRP_API_ENDPOINT` (see [docs/configuration.md](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp) and [docs/authentication.md](../docs/authentication.md#nrp-ai-gateway-credentials)).
 
 ### **Queue Configuration**:
 - **`image_processing`**: Individual image processing tasks (handled by Processor workers)
@@ -323,6 +346,8 @@ celery -A tasks worker --loglevel=info --concurrency=2 --hostname=worker3@%h
 - **Workers**: Scale based on image processing load
 - **Redis**: Use Redis Cluster for high availability
 - **Milvus**: Scale Milvus collection/cluster for storage
+
+When `LLM_RUN_MODE=NRP`, treat **total** caption concurrency (`replicas × processor concurrency`) as subject to [NRP fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) (max **8** for `gemma`). Prefer scaling Triton CLIP capacity over exceeding that cap; see [NRP Fair Use](#nrp-fair-use-captioning-via-ai-gateway) above.
 
 ## **Troubleshooting**
 
@@ -535,3 +560,5 @@ Flower metrics are automatically integrated into the unified Prometheus endpoint
 - [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)
    - [Multiprocess Mode](https://prometheus.github.io/client_python/multiprocess/)
 - [Sage Documentation](https://sagecontinuum.org/docs/about/overview)
+- [NRP Managed LLM — Fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/)
+- [NRP Managed LLM — Models (gemma)](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)

@@ -69,6 +69,8 @@ Celery still submits one image per task. Concurrent weavloader workers are combi
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `LLM_RUN_MODE` | `TRITON` (Compose), `NRP` (K8s) | Caption backend: `TRITON` or `NRP` |
+| `NRP_LLM_MODEL` | `gemma` | NRP gateway model id when `LLM_RUN_MODE=NRP` (see [available models](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)) |
+| `NRP_ENABLE_THINKING` | `false` | Keep `false` for caption latency; Gemma reasoning is on by default unless disabled |
 | `TRITON_LLM_MODEL` | `gemma3` | Triton model name for captioning |
 | `MONITOR_DATA_STREAM_INTERVAL` | `60` | Seconds between SAGE stream polls |
 | `MONITOR_DATA_STREAM_QUERY_DELAY_MINUTE` | `5` | Lookback window on first run (minutes) |
@@ -77,6 +79,21 @@ Celery still submits one image per task. Concurrent weavloader workers are combi
 | `CELERY_RESULT_BACKEND` | `redis://localhost:6379/0` | Celery result backend |
 | `LOG_LEVEL` | `INFO` | Logging level |
 | `INIT_DATASET` | empty | Optional Hub dataset id for empty-collection seed (see Milvus section) |
+
+### NRP fair use (when `LLM_RUN_MODE=NRP`)
+
+Caption calls go through the [NRP managed LLM](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) gateway and must stay within per-user limits:
+
+| Limit | Guidance for weavloader |
+|-------|-------------------------|
+| Max concurrent requests | For `gemma` / `gemma-small`: **8** per user. Processor Celery concurrency is **6** (`weavloader/main.py`) with **1** replica by default → **6 ≤ 8**. |
+| Combined context | Concurrent requests together should stay under **35%** of model context (~92k tokens for gemma’s 262k window). Single-image captions are far below this; do not treat large camera JPEGs as “millions of tokens” — Gemma 4 uses a soft-token budget (default **280** vision tokens/image). |
+| Thinking / reasoning | Keep `NRP_ENABLE_THINKING=false` unless you need reasoning (adds latency and tokens). |
+| Retries | Celery uses exponential backoff (60s → 120s → 240s), matching NRP’s advice to retry with increasing intervals. |
+
+**Scaling rule:** total in-flight NRP captions ≈ `replicas × processor_concurrency`. Raising either so the product exceeds **8** (for gemma) violates fair use. The same NRP API key is shared across weavloader and any benchmark jobs — do not run both at high concurrency against NRP at once.
+
+Policy: [Fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) · Models: [gemma](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)
 
 Caption prompt and VLM tuning: [`weavloader/inference/model_config.py`](../weavloader/inference/model_config.py)
 

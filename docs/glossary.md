@@ -35,7 +35,7 @@ Terms used throughout Sage Image Search documentation.
 | **MRR** | Mean Reciprocal Rank. Benchmark metric measuring how quickly the first relevant result appears in the ranked list. |
 | **NDP** | National Data Platform. Cloud JupyterHub environment used for the Summer AI learning lab and hackathon workspaces. |
 | **NRP** | National Research Platform. The compute infrastructure where Sage Image Search is deployed. |
-| **NRP AI Gateway** | External API for running LLM inference. Used for caption generation when `LLM_RUN_MODE=NRP` (default on Kubernetes). |
+| **NRP AI Gateway** | External API for running LLM inference. Used for caption generation when `LLM_RUN_MODE=NRP` (default on Kubernetes). Subject to [fair use concurrency limits](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/). |
 | **Portal (Image Search)** | Production React web UI at [portal.sagecontinuum.org/labs/image-search](https://portal.sagecontinuum.org/labs/image-search). Calls the Gradio API backend for search and image retrieval. |
 | **Redis** | In-memory data store used as the Celery broker, result backend, ingestion cursor, and DLQ inside the weavloader pod. |
 | **Reranker** | Re-scores top hybrid-search hits. Production uses Triton CLIP (`DFN5B-CLIP-ViT-H-14-378`) query-text vs image `logits_per_image` (cosine × `exp(logit_scale)`). |

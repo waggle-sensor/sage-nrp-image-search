@@ -20,7 +20,7 @@ flowchart LR
 1. **Celery Beat** runs `monitor_data_stream` on a configurable interval (default 60 seconds).
 2. The monitor queries the SAGE data stream for new `imagesampler` tasks since the last checkpoint.
 3. Each image is enqueued to the `image_processing` Celery queue.
-4. **process_image** downloads the image, generates a caption (Triton VLM or NRP AI Gateway), computes separate CLIP caption and image embeddings, and inserts the record into Milvus (`caption_vector`, `image_vector`, `search_text`, scalars — no image blob).
+4. **process_image** downloads the image, generates a caption (Triton VLM or NRP AI Gateway), computes separate CLIP caption and image embeddings, and inserts the record into Milvus (`caption_vector`, `image_vector`, `search_text`, scalars — no image blob). When using NRP for captions, respect [NRP fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) (see [Configuration → NRP fair use](configuration.md#nrp-fair-use-when-llm_run_modenrp)).
 
 ## Query flow
 
