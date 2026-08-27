@@ -7,6 +7,12 @@ from pathlib import Path
 import pandas as pd
 import re
 
+try:
+    from IPython.display import display
+except ImportError:  # non-notebook environments
+    def display(obj):
+        print(obj)
+
 # Cross-version leaderboard helpers
 LEADERBOARD_METRIC_COLUMNS = {
     "MRR": "rerank_score_reciprocal_rank",
@@ -878,3 +884,85 @@ def render_single_benchmark_leaderboard(
         title=f"{benchmark} {mode_label} Leaderboard",
     )
     return part
+
+def render_dlq_analysis(base_path: Path) -> None:
+    """
+    Render a DLQ analysis, the results will be printed to the console.
+    :param base_path: the base path to the benchmarks directory.
+    :return: None.
+    """
+    dlq_path = base_path / "dlq_records.csv"
+    if not dlq_path.exists():
+        print("No dlq_records.csv in this results folder — indexing had no DLQ outcomes (or the file was not uploaded).")
+        dlq = pd.DataFrame(
+            columns=["image_id", "query_id", "reason", "error", "attempts", "final_status", "last_error"]
+        )
+    else:
+        dlq = pd.read_csv(dlq_path)
+        # Older CSVs used item_id before image_id/query_id were added.
+        if "image_id" not in dlq.columns and "item_id" in dlq.columns:
+            dlq = dlq.rename(columns={"item_id": "image_id"})
+        if "query_id" not in dlq.columns:
+            dlq["query_id"] = ""
+
+    print(
+        f"DLQ rows: {len(dlq)}  |  unique image_ids: "
+        f"{dlq['image_id'].nunique() if len(dlq) else 0} | unique query_ids: "
+        f"{dlq['query_id'].nunique() if len(dlq) else 0}"
+    )
+
+    if len(dlq):
+        by_status = (
+            dlq.groupby("final_status", dropna=False)
+            .size()
+            .rename("count")
+            .reset_index()
+            .sort_values("count", ascending=False)
+        )
+        by_reason = (
+            dlq.groupby("reason", dropna=False)
+            .size()
+            .rename("count")
+            .reset_index()
+            .sort_values("count", ascending=False)
+        )
+        by_reason_status = (
+            dlq.groupby(["reason", "final_status"], dropna=False)
+            .size()
+            .rename("count")
+            .reset_index()
+            .sort_values("count", ascending=False)
+        )
+
+        # Soft = caption_failed; hard = everything else (typically hard_fail).
+        by_query = (
+            dlq.assign(
+                soft=(dlq["reason"] == "caption_failed").astype(int),
+                hard=(dlq["reason"] != "caption_failed").astype(int),
+            )
+            .groupby("query_id", dropna=False)
+            .agg(soft=("soft", "sum"), hard=("hard", "sum"), total=("reason", "size"))
+            .reset_index()
+            .sort_values(["total", "query_id"], ascending=[False, True])
+        )
+
+        fallback_used = int((dlq["final_status"] == "inserted_degraded").sum())
+        recovered = int((dlq["final_status"] == "retried_ok").sum())
+        abandoned = int((dlq["final_status"] == "abandoned").sum())
+
+        print("\nRundown:")
+        print(f"  force-insert, fallback used (inserted_degraded): {fallback_used}")
+        print(f"  recovered on retry (retried_ok): {recovered}")
+        print(f"  never indexed (abandoned): {abandoned}")
+        if "attempts" in dlq.columns:
+            print(f"  attempts — mean={dlq['attempts'].mean():.1f}, max={dlq['attempts'].max()}")
+
+        display(by_status)
+        display(by_reason)
+        display(by_reason_status)
+        print("\nFailures by query_id (soft=caption_failed, hard=other):")
+        display(by_query)
+    else:
+        print("Nothing to summarize.")
+    
+    return None
