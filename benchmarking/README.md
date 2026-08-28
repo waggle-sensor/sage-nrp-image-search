@@ -109,6 +109,9 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 | `LLM_MODEL_PROVIDER` | `triton` | Caption LLM: `nrp` (Envoy gateway) or `triton` |
 | `CAPTION_MODEL_NAME` | `gemma` | NRP model id (see [available models](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)); Triton uses its own model names |
 | `NRP_ENABLE_THINKING` | `false` | Keep `false` for captioning latency; Gemma reasoning is on by default on NRP unless disabled |
+| `LLM_IMAGE_BYTE_LIMITING` | `false` | When `true`, apply side cap, downscale, and JPEG quality stepping for all caption LLM providers |
+| `LLM_MAX_IMAGE_BYTES` | `12582912` (12 MiB) | Max caption image payload when byte limiting is enabled |
+| `LLM_MAX_IMAGE_SIDE` | `6144` | Longest-side cap when byte limiting is enabled |
 | `ENABLE_CAPTION_GENERATION` | `true` | When `false`, skips the caption LLM entirely and stores an empty caption |
 | `EMBED_IMAGE` | `true` | Milvus: omit the `image_vector` hybrid leg. Weaviate: index-time CLIP fusion uses image only when caption is also disabled |
 | `EMBED_CAPTION` | `false` when caption generation is disabled | Milvus: omit the `caption_vector` hybrid leg. Weaviate: index-time CLIP fusion |
