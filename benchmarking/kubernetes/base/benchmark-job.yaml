@@ -41,6 +41,12 @@ spec:
             # model provider configuration
             - name: LLM_MODEL_PROVIDER
               value: "nrp" #or triton
+            - name: LLM_IMAGE_BYTE_LIMITING
+              value: "false"
+            - name: LLM_MAX_IMAGE_BYTES
+              value: "12582912" # 12MB
+            - name: LLM_MAX_IMAGE_SIDE
+              value: "6144"
           envFrom:
             - secretRef:
                 name: s3-secret

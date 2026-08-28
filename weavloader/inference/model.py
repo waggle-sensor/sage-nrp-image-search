@@ -9,6 +9,10 @@ import json
 import base64
 from openai import OpenAI
 from io import BytesIO
+from PIL import Image
+
+
+from .image_utils import ensure_rgb, prepare_llm_image, prepare_llm_image_bytes
 
 def florence2_run_model(triton_client, task_prompt, image, text_input=""):
     """
@@ -141,7 +145,7 @@ def _clip_infer_inputs(text, image=None):
     """Build CLIP InferInputs with a leading batch dim of 1 (max_batch_size > 0)."""
     text_np = np.array([[text.encode("utf-8")]], dtype=object)
     if image is not None:
-        image_np = np.expand_dims(np.asarray(image, dtype=np.float32), 0)
+        image_np = np.expand_dims(np.asarray(ensure_rgb(image), dtype=np.float32), 0)
     else:
         image_np = np.zeros((1, 1, 1, 3), dtype=np.float32)
     inputs = [
@@ -273,7 +277,7 @@ def qwen2_5_run_model(triton_client, image, task_prompt=hp.caption_model_prompt)
     """
     takes in a task prompt and image, returns an answer using Qwen2.5-VL model
     """
-    # Prepare inputs for Triton
+    image = prepare_llm_image(image)
     image_width, image_height = image.size
     image_np = np.array(image).astype(np.uint8)
     task_prompt_bytes = task_prompt.encode("utf-8")
@@ -310,6 +314,7 @@ def gemma3_run_model(triton_client, image, task_prompt=hp.caption_model_prompt):
     """
     takes in a task prompt and image, returns an answer using gemma3 model
     """
+    image = prepare_llm_image(image)
     image_np = np.expand_dims(np.asarray(image, dtype=np.uint8), 0)
     prompt_np = np.array([[task_prompt.encode("utf-8")]], dtype=object)
 
@@ -359,9 +364,8 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.caption_model_pro
     if model not in NRP_MODELS:
         raise ValueError(f"Unsupported NRP LLM Model: {model}")
 
-    buffer = BytesIO()
-    image.save(buffer, format="PNG")
-    image_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    image_bytes, mime = prepare_llm_image_bytes(image)
+    image_b64 = base64.b64encode(image_bytes).decode("utf-8")
 
     try:
         create_kwargs = {
@@ -374,7 +378,7 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.caption_model_pro
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/png;base64,{image_b64}"
+                                "url": f"data:image/{mime};base64,{image_b64}"
                             },
                         },
                     ],

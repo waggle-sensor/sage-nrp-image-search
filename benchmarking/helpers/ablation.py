@@ -7,6 +7,8 @@ from typing import Any, Iterable, Optional
 import numpy as np
 from PIL import Image
 
+from imsearch_eval.framework.image_utils import prepare_llm_image
+
 def parse_bool_env(name: str, default: bool = True) -> bool:
     """Parse a boolean environment variable."""
     value = os.environ.get(name)
@@ -76,7 +78,7 @@ def generate_index_caption(
         return "", False
 
     caption = model_provider.generate_caption(
-        image,
+        prepare_llm_image(image),
         config.caption_model_prompt,
         model_name=config.caption_model_name,
         enable_thinking=config.nrp_enable_thinking,

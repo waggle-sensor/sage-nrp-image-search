@@ -51,6 +51,10 @@ spec:
                 secretKeyRef:
                   name: huggingface-secret
                   key: token
+            - name: LLM_MAX_IMAGE_BYTES
+              value: "12582912"
+            - name: LLM_MAX_IMAGE_SIDE
+              value: "6144"
           envFrom:
             - secretRef:
                 name: sage-user-secret

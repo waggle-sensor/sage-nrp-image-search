@@ -1,9 +1,11 @@
 import os
 '''This file contains the hyper parameters that can be changed to fine tune
 the system. '''
+
 nrp_enable_thinking = (
     os.environ.get("NRP_ENABLE_THINKING", "false").lower() in ("1", "true", "yes")
 )
+# Caption LLM image caps: LLM_MAX_IMAGE_* / LLM_IMAGE_BYTE_LIMITING (see inference/image_utils.py)
 align_alpha = 0.7
 clip_alpha = 0.7  # Used by fuse_embeddings() only; ingest stores caption/image vectors separately.
 default_prompt="""

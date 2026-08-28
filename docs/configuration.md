@@ -71,9 +71,9 @@ Celery still submits one image per task. Concurrent weavloader workers are combi
 | `LLM_RUN_MODE` | `TRITON` (Compose), `NRP` (K8s) | Caption backend: `TRITON` or `NRP` |
 | `NRP_LLM_MODEL` | `gemma` | NRP gateway model id when `LLM_RUN_MODE=NRP` (see [available models](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)) |
 | `NRP_ENABLE_THINKING` | `false` | Keep `false` for caption latency; Gemma reasoning is on by default unless disabled |
-| `LLM_IMAGE_BYTE_LIMIT` | `true` | When `false`, skip JPEG quality stepping and extra downscale for byte caps (all caption LLM providers) |
-| `LLM_MAX_IMAGE_BYTES` | `12582912` (12 MiB) | Max caption image payload before quality/downscale reduction (`NRP_MAX_IMAGE_BYTES` legacy alias) |
-| `LLM_MAX_IMAGE_SIDE` | `6144` | Longest-side pixel cap before caption encode (`NRP_MAX_IMAGE_SIDE` legacy alias) |
+| `LLM_IMAGE_BYTE_LIMITING` | `false` | When `true`, apply `LLM_MAX_IMAGE_SIDE`, downscale, and JPEG quality caps for caption LLMs |
+| `LLM_MAX_IMAGE_BYTES` | `12582912` (12 MiB) | Max caption image payload when byte limiting is enabled |
+| `LLM_MAX_IMAGE_SIDE` | `6144` | Longest-side pixel cap when byte limiting is enabled |
 | `TRITON_LLM_MODEL` | `gemma3` | Triton model name for captioning |
 | `MONITOR_DATA_STREAM_INTERVAL` | `60` | Seconds between SAGE stream polls |
 | `MONITOR_DATA_STREAM_QUERY_DELAY_MINUTE` | `5` | Lookback window on first run (minutes) |
@@ -111,7 +111,7 @@ Policy: [Fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use
 
 Caption prompt and VLM tuning: [`weavloader/inference/model_config.py`](../weavloader/inference/model_config.py)
 
-Caption LLM image prep (NRP gateway, Triton gemma3/qwen2_5, benchmarks): [`weavloader/inference/llm_image.py`](../weavloader/inference/llm_image.py) and `imsearch_eval.framework.image_utils` — always applies RGB + `LLM_MAX_IMAGE_SIDE`; byte limiting is optional via `LLM_IMAGE_BYTE_LIMIT`.
+Caption LLM image prep (NRP gateway, Triton gemma3/qwen2_5, benchmarks): [`weavloader/inference/image_utils.py`](../weavloader/inference/image_utils.py) and `imsearch_eval.framework.image_utils` — always converts to RGB; side cap and byte limits apply only when `LLM_IMAGE_BYTE_LIMITING=true`.
 
 Supported models: [`weavloader/inference/model.py`](../weavloader/inference/model.py)
 

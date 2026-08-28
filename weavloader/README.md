@@ -241,7 +241,7 @@ kubectl -n sage exec deploy/prod-weavloader -- redis-cli LLEN weavloader:caption
 
 Pause **both** `dev-weavloader` and `prod-weavloader` if both are on NRP — fair use is per API key, not per pod. Confirm via `/health` (`caption_paused`, `caption_wait_size`) or the `weavloader_caption_paused` / `weavloader_queue_size{queue_name="caption_wait"}` metrics.
 
-Env knobs: `LLM_RUN_MODE`, `NRP_LLM_MODEL`, `NRP_ENABLE_THINKING`, `NRP_MAX_IMAGE_BYTES`, `NRP_MAX_IMAGE_SIDE`, `NRP_API_KEY`, `NRP_API_ENDPOINT`, `CAPTION_WAIT_DRAIN_INTERVAL`, `CAPTION_WAIT_DRAIN_BATCH` (see [docs/configuration.md](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp) and [docs/authentication.md](../docs/authentication.md#nrp-ai-gateway-credentials)).
+Env knobs: `LLM_RUN_MODE`, `NRP_LLM_MODEL`, `NRP_ENABLE_THINKING`, `LLM_IMAGE_BYTE_LIMITING`, `LLM_MAX_IMAGE_BYTES`, `LLM_MAX_IMAGE_SIDE`, `NRP_API_KEY`, `NRP_API_ENDPOINT`, `CAPTION_WAIT_DRAIN_INTERVAL`, `CAPTION_WAIT_DRAIN_BATCH` (see [docs/configuration.md](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp) and [docs/authentication.md](../docs/authentication.md#nrp-ai-gateway-credentials)).
 
 ### **Queue Configuration**:
 - **`image_processing`**: Individual image processing tasks (handled by Processor workers)
