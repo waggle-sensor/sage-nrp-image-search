@@ -120,6 +120,7 @@ For detailed weavloader troubleshooting (DLQ, queue lengths, scaling), see the [
 - `LLM_RUN_MODE=TRITON` but Gemma model not loaded in Triton
 - `LLM_RUN_MODE=NRP` but missing `NRP_API_KEY` or `NRP_API_ENDPOINT`
 - VLM timeout or OOM
+- NRP gemma overloaded by full-resolution images — see [NRP caption 500 errors on large images](#nrp-caption-500-errors-on-large-images) below
 
 **Fixes:**
 
@@ -127,6 +128,39 @@ For detailed weavloader troubleshooting (DLQ, queue lengths, scaling), see the [
 2. For TRITON mode: verify Gemma is loaded in Triton (`kubectl logs -l app=triton`).
 3. For NRP mode: verify NRP secrets are configured (see [Authentication](authentication.md)).
 4. Check [NRP LLM status](https://nrp.ai/llm-status/) and the [Envoy LLMs Grafana dashboard](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) (see [Configuration → NRP fair use](configuration.md#nrp-fair-use-when-llm_run_modenrp) for the token-filter note).
+5. For large SAGE camera JPEGs or multi-megapixel benchmark datasets, enable `LLM_IMAGE_BYTE_LIMITING` (see section below).
+
+---
+
+## NRP caption 500 errors on large images
+
+**Symptoms:** NRP gemma caption requests fail with HTTP **500 Internal Server Error** (often intermittent). Weavloader DLQ or benchmark `dlq_records.csv` shows `caption_failed` with `empty caption from provider`. Large-image benchmarks (FireBench, SageBench, CloudBench) may fail on most rows; INQUIRE (images capped at 500px) typically completes cleanly.
+
+**Causes:**
+- `LLM_IMAGE_BYTE_LIMITING` defaults to `false`, so caption requests send full-resolution JPEGs from SAGE or Hugging Face datasets
+- FireBench and SageBench images are often multi-megapixel (common sizes include 3072×2048 and 6144×2048); oversized multimodal payloads can overload the NRP gemma backend
+- High worker concurrency (`WORKERS=8` on benchmarks, or weavloader processor concurrency at the gemma fair-use cap of 8) plus client SDK retries can amplify transient 500s into retry storms
+- Related: HTTP **413 Payload Too Large** when raw/base64 image exceeds gateway limits — byte limiting fixes this as well
+- Related: CLIP failures on RGBA images (`got [1,H,W,4]`) — caption/CLIP prep always converts to RGB before encode
+
+**Fixes:**
+
+1. Enable caption image byte limiting in weavloader or benchmark Job env:
+
+```yaml
+LLM_IMAGE_BYTE_LIMITING: "true"
+LLM_MAX_IMAGE_SIDE: "6144"
+LLM_MAX_IMAGE_BYTES: "12582912"   # 12 MiB
+```
+
+Image prep runs in [`weavloader/inference/image_utils.py`](../weavloader/inference/image_utils.py) and `imsearch_eval.framework.image_utils` — RGB conversion always applies; side cap, downscale, and JPEG quality stepping apply only when byte limiting is enabled. See [Configuration → Weavloader](configuration.md#weavloader-ingestion).
+
+2. For Kubernetes benchmark jobs, set the same variables in the Job env overlay (`benchmarking/kubernetes/base/benchmark-job.yaml` or per-bench `env.yaml`).
+3. Optionally reduce concurrency — e.g. `WORKERS=4` on benchmarks; keep total in-flight NRP captions within [fair-use limits](configuration.md#nrp-fair-use-when-llm_run_modenrp) (≤ 8 concurrent for gemma).
+4. Re-run failed items via DLQ retry after enabling byte limiting; retries reload images from the dataset with fresh prep.
+5. Check [NRP LLM status](https://nrp.ai/llm-status/) to rule out gateway outages unrelated to payload size.
+
+**Validated fix:** FireBench (4,082 images) indexed successfully with byte limiting enabled — zero DLQ failures, all captions generated.
 
 ---
 
