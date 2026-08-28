@@ -96,6 +96,13 @@ Caption calls go through the [NRP managed LLM](https://nrp.ai/documentation/user
 | Thinking / reasoning | Keep `NRP_ENABLE_THINKING=false` unless you need reasoning (adds latency and tokens). |
 | Retries | Celery uses exponential backoff (60s → 120s → 240s), matching NRP’s advice to retry with increasing intervals. |
 
+**Monitoring:** Check gateway health and usage analytics while tuning concurrency or debugging caption failures:
+
+- [NRP LLM status](https://nrp.ai/llm-status/) — public endpoint availability
+- [Envoy LLMs (Grafana)](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) — request volume, latency, and errors by model
+
+The Grafana dashboard is filtered by the API token used by Image Search (`var-token=Francisco`). Remove the **token** filter to see usage across all services on NRP’s hosted LLMs.
+
 **Scaling rule:** total in-flight NRP captions ≈ `replicas × processor_concurrency`. Raising either so the product exceeds **8** (for gemma) violates fair use. The same NRP API key is shared across weavloader and any benchmark jobs — do not run both at high concurrency against NRP at once.
 
 **Pause ingest during benches:** set Redis `weavloader:caption_paused` to `1` on each weavloader pod that uses this key (typically both `dev-weavloader` and `prod-weavloader`). The moderator still polls SAGE and checkpoints `weavloader:last_processed_timestamp`, but image metadata goes onto `weavloader:caption_wait` instead of calling NRP. Processor tasks already in `image_processing` are parked onto the same list. Clear the flag (`0` or delete the key) to resume; `drain_caption_wait` (every `CAPTION_WAIT_DRAIN_INTERVAL` seconds, batch `CAPTION_WAIT_DRAIN_BATCH`) moves wait items onto `image_processing`. CLIP and SAGE image download wait as well — only metadata is stored while paused.

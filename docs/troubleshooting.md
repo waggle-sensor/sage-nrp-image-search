@@ -126,6 +126,7 @@ For detailed weavloader troubleshooting (DLQ, queue lengths, scaling), see the [
 1. Check which mode is active: `LLM_RUN_MODE` in your environment (TRITON for Compose, NRP for K8s).
 2. For TRITON mode: verify Gemma is loaded in Triton (`kubectl logs -l app=triton`).
 3. For NRP mode: verify NRP secrets are configured (see [Authentication](authentication.md)).
+4. Check [NRP LLM status](https://nrp.ai/llm-status/) and the [Envoy LLMs Grafana dashboard](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) (see [Configuration → NRP fair use](configuration.md#nrp-fair-use-when-llm_run_modenrp) for the token-filter note).
 
 ---
 

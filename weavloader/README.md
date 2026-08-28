@@ -223,6 +223,8 @@ When `LLM_RUN_MODE=NRP`, captions use the [NRP managed LLM](https://nrp.ai/docum
 
 **Do not** scale `replicas × processor_concurrency` above **8** while on NRP `gemma` without raising the fair-use allowance or switching caption backends. The NRP API key is shared with any other clients (e.g. benchmark jobs) — concurrent NRP caption load is summed per user.
 
+**Monitoring:** [NRP LLM status](https://nrp.ai/llm-status/) · [Envoy LLMs (Grafana)](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) — filtered to the Image Search API token; remove the **token** filter to see all NRP LLM consumers. Details: [Configuration → NRP fair use](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp).
+
 To keep weavloader from competing with a bench run, raise the Redis pause flag. SAGE ingest still records image metadata onto a wait list; captioning (and therefore CLIP / SAGE download) stays off until you clear the flag. Up to ~6 in-flight NRP calls may finish after you pause.
 
 ```bash
@@ -583,3 +585,5 @@ Flower metrics are automatically integrated into the unified Prometheus endpoint
 - [Sage Documentation](https://sagecontinuum.org/docs/about/overview)
 - [NRP Managed LLM — Fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/)
 - [NRP Managed LLM — Models (gemma)](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)
+- [NRP LLM status](https://nrp.ai/llm-status/)
+- [Envoy LLMs Grafana dashboard](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) (Image Search token filter — remove **token** for all consumers)

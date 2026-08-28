@@ -124,7 +124,7 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 
 Keep `IMAGE_BATCH_SIZE` and `QUERY_BATCH_SIZE` ≥ `WORKERS` so batch knobs do not under-subscribe the pool. Indexing streams inserts as items complete (no “process all → insert all” barrier).
 
-**NRP fair use:** for `gemma` / `gemma-small`, max per-user concurrency is 8 (short requests). K8s `nrp-dev` / `nrp-prod` overlays set `WORKERS=8` and `QUERY_BATCH_SIZE=8`. `resolve_workers()` also clamps if `WORKERS` is set higher. Leave `NRP_ENABLE_THINKING=false` so captions do not pay for reasoning tokens. DLQ exponential backoff matches NRP’s guidance to retry with increasing intervals.
+**NRP fair use:** for `gemma` / `gemma-small`, max per-user concurrency is 8 (short requests). K8s `nrp-dev` / `nrp-prod` overlays set `WORKERS=8` and `QUERY_BATCH_SIZE=8`. `resolve_workers()` also clamps if `WORKERS` is set higher. Leave `NRP_ENABLE_THINKING=false` so captions do not pay for reasoning tokens. DLQ exponential backoff matches NRP’s guidance to retry with increasing intervals. Monitor gateway load via [NRP LLM status](https://nrp.ai/llm-status/) and [Envoy LLMs (Grafana)](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) (Image Search token filter — remove **token** to see all consumers; see [docs/configuration.md](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp)).
 
 Use a distinct `COLLECTION_NAME` for each ablation condition so indexed vectors do not mix across experiments. New Milvus result folders should use a new version name (e.g. `v13`) so leaderboards can compare against historical Weaviate runs.
 
