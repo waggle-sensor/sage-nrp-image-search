@@ -71,12 +71,17 @@ Celery still submits one image per task. Concurrent weavloader workers are combi
 | `LLM_RUN_MODE` | `TRITON` (Compose), `NRP` (K8s) | Caption backend: `TRITON` or `NRP` |
 | `NRP_LLM_MODEL` | `gemma` | NRP gateway model id when `LLM_RUN_MODE=NRP` (see [available models](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)) |
 | `NRP_ENABLE_THINKING` | `false` | Keep `false` for caption latency; Gemma reasoning is on by default unless disabled |
+| `LLM_IMAGE_BYTE_LIMIT` | `true` | When `false`, skip JPEG quality stepping and extra downscale for byte caps (all caption LLM providers) |
+| `LLM_MAX_IMAGE_BYTES` | `12582912` (12 MiB) | Max caption image payload before quality/downscale reduction (`NRP_MAX_IMAGE_BYTES` legacy alias) |
+| `LLM_MAX_IMAGE_SIDE` | `6144` | Longest-side pixel cap before caption encode (`NRP_MAX_IMAGE_SIDE` legacy alias) |
 | `TRITON_LLM_MODEL` | `gemma3` | Triton model name for captioning |
 | `MONITOR_DATA_STREAM_INTERVAL` | `60` | Seconds between SAGE stream polls |
 | `MONITOR_DATA_STREAM_QUERY_DELAY_MINUTE` | `5` | Lookback window on first run (minutes) |
 | `UNALLOWED_NODES` | (long list) | Comma-separated VSN deny list |
 | `CELERY_BROKER_URL` | `redis://localhost:6379/0` | Celery Redis broker |
 | `CELERY_RESULT_BACKEND` | `redis://localhost:6379/0` | Celery result backend |
+| `CAPTION_WAIT_DRAIN_INTERVAL` | `15` | Seconds between caption wait-queue drain ticks |
+| `CAPTION_WAIT_DRAIN_BATCH` | `200` | Max wait-list items moved onto `image_processing` per drain tick |
 | `LOG_LEVEL` | `INFO` | Logging level |
 | `INIT_DATASET` | empty | Optional Hub dataset id for empty-collection seed (see Milvus section) |
 
@@ -93,9 +98,20 @@ Caption calls go through the [NRP managed LLM](https://nrp.ai/documentation/user
 
 **Scaling rule:** total in-flight NRP captions ≈ `replicas × processor_concurrency`. Raising either so the product exceeds **8** (for gemma) violates fair use. The same NRP API key is shared across weavloader and any benchmark jobs — do not run both at high concurrency against NRP at once.
 
+**Pause ingest during benches:** set Redis `weavloader:caption_paused` to `1` on each weavloader pod that uses this key (typically both `dev-weavloader` and `prod-weavloader`). The moderator still polls SAGE and checkpoints `weavloader:last_processed_timestamp`, but image metadata goes onto `weavloader:caption_wait` instead of calling NRP. Processor tasks already in `image_processing` are parked onto the same list. Clear the flag (`0` or delete the key) to resume; `drain_caption_wait` (every `CAPTION_WAIT_DRAIN_INTERVAL` seconds, batch `CAPTION_WAIT_DRAIN_BATCH`) moves wait items onto `image_processing`. CLIP and SAGE image download wait as well — only metadata is stored while paused.
+
+```bash
+kubectl -n sage exec deploy/prod-weavloader -- redis-cli SET weavloader:caption_paused 1
+kubectl -n sage exec deploy/prod-weavloader -- redis-cli SET weavloader:caption_paused 0
+```
+
+Do not add unauthenticated HTTP pause endpoints — weavloader metrics is ingress-exposed. Inspect state via `/health` (`caption_paused`, `caption_wait_size`) or Prometheus `weavloader_caption_paused`.
+
 Policy: [Fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) · Models: [gemma](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)
 
 Caption prompt and VLM tuning: [`weavloader/inference/model_config.py`](../weavloader/inference/model_config.py)
+
+Caption LLM image prep (NRP gateway, Triton gemma3/qwen2_5, benchmarks): [`weavloader/inference/llm_image.py`](../weavloader/inference/llm_image.py) and `imsearch_eval.framework.image_utils` — always applies RGB + `LLM_MAX_IMAGE_SIDE`; byte limiting is optional via `LLM_IMAGE_BYTE_LIMIT`.
 
 Supported models: [`weavloader/inference/model.py`](../weavloader/inference/model.py)
 

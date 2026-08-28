@@ -27,6 +27,12 @@ queue_size = Gauge(
     multiprocess_mode='mostrecent'
 )
 
+caption_paused = Gauge(
+    'weavloader_caption_paused',
+    'Caption processing paused (1=paused, 0=running)',
+    multiprocess_mode='mostrecent'
+)
+
 # DLQ metrics
 dlq_size = Gauge(
     'weavloader_dlq_size',
@@ -125,6 +131,11 @@ class MetricsCollector:
         """Update queue size"""
         queue_size.labels(queue_name=queue_name).set(size)
         logging.debug(f"[METRICS] Queue size: {queue_name} - {size}")
+
+    def update_caption_paused(self, paused: bool):
+        """Update caption-pause flag (1=paused, 0=running)"""
+        caption_paused.set(1 if paused else 0)
+        logging.debug(f"[METRICS] Caption paused: {paused}")
     
     def update_dlq_size(self, size: int):
         """Update DLQ size"""

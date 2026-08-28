@@ -98,6 +98,7 @@ Triton is started with `--exit-on-error=false --strict-readiness=false` so CLIP 
 - Redis connection failure
 - Celery workers not running
 - All nodes filtered by `UNALLOWED_NODES`
+- Caption pause flag is set (`weavloader:caption_paused=1`) — ingest metadata queues, but no captions run
 
 **Fixes:**
 
@@ -105,6 +106,7 @@ Triton is started with `--exit-on-error=false --strict-readiness=false` so CLIP 
 2. Check Redis: `redis-cli ping` should return `PONG`.
 3. Check Celery worker status via Flower (port 5555) or logs.
 4. Review the DLQ for failed tasks — see [weavloader/README.md](../weavloader/README.md#dead-letter-queue-dlq).
+5. If you paused captioning for a bench, confirm `/health` (`caption_paused`, `caption_wait_size`) and clear the flag when done — see [Configuration → NRP fair use](configuration.md#nrp-fair-use-when-llm_run_modenrp).
 
 For detailed weavloader troubleshooting (DLQ, queue lengths, scaling), see the [weavloader troubleshooting section](../weavloader/README.md#troubleshooting).
 

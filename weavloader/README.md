@@ -223,17 +223,36 @@ When `LLM_RUN_MODE=NRP`, captions use the [NRP managed LLM](https://nrp.ai/docum
 
 **Do not** scale `replicas × processor_concurrency` above **8** while on NRP `gemma` without raising the fair-use allowance or switching caption backends. The NRP API key is shared with any other clients (e.g. benchmark jobs) — concurrent NRP caption load is summed per user.
 
-Env knobs: `LLM_RUN_MODE`, `NRP_LLM_MODEL`, `NRP_ENABLE_THINKING`, `NRP_API_KEY`, `NRP_API_ENDPOINT` (see [docs/configuration.md](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp) and [docs/authentication.md](../docs/authentication.md#nrp-ai-gateway-credentials)).
+To keep weavloader from competing with a bench run, raise the Redis pause flag. SAGE ingest still records image metadata onto a wait list; captioning (and therefore CLIP / SAGE download) stays off until you clear the flag. Up to ~6 in-flight NRP calls may finish after you pause.
+
+```bash
+# Raise flag (stop sending NRP captions; metadata queues on weavloader:caption_wait)
+kubectl -n sage exec deploy/prod-weavloader -- redis-cli SET weavloader:caption_paused 1
+kubectl -n sage exec deploy/dev-weavloader -- redis-cli SET weavloader:caption_paused 1
+
+# Lower flag (drain wait queue onto image_processing; captioning resumes)
+kubectl -n sage exec deploy/prod-weavloader -- redis-cli SET weavloader:caption_paused 0
+kubectl -n sage exec deploy/dev-weavloader -- redis-cli SET weavloader:caption_paused 0
+
+# Inspect
+kubectl -n sage exec deploy/prod-weavloader -- redis-cli GET weavloader:caption_paused
+kubectl -n sage exec deploy/prod-weavloader -- redis-cli LLEN weavloader:caption_wait
+```
+
+Pause **both** `dev-weavloader` and `prod-weavloader` if both are on NRP — fair use is per API key, not per pod. Confirm via `/health` (`caption_paused`, `caption_wait_size`) or the `weavloader_caption_paused` / `weavloader_queue_size{queue_name="caption_wait"}` metrics.
+
+Env knobs: `LLM_RUN_MODE`, `NRP_LLM_MODEL`, `NRP_ENABLE_THINKING`, `NRP_MAX_IMAGE_BYTES`, `NRP_MAX_IMAGE_SIDE`, `NRP_API_KEY`, `NRP_API_ENDPOINT`, `CAPTION_WAIT_DRAIN_INTERVAL`, `CAPTION_WAIT_DRAIN_BATCH` (see [docs/configuration.md](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp) and [docs/authentication.md](../docs/authentication.md#nrp-ai-gateway-credentials)).
 
 ### **Queue Configuration**:
 - **`image_processing`**: Individual image processing tasks (handled by Processor workers)
 - **`data_monitoring`**: Data monitoring and health check tasks (handled by Moderator workers)
 - **`cleanup`**: Cleanup and maintenance tasks (handled by Cleaner workers)
+- **`weavloader:caption_wait`**: Redis LIST of parked image metadata while `weavloader:caption_paused` is set (not a Celery queue; drained onto `image_processing` when the flag is cleared)
 
 ### **Scheduled Tasks**:
-- **Every 30 minutes**: Health check and monitoring
-- **Every hour**: Archive failed tasks to DLQ
-- **Daily**: Reprocess archived tasks
+- **Every 60 seconds** (default): Monitor SAGE data stream
+- **Every 15 seconds** (default): Drain caption wait list onto `image_processing` (no-op while paused)
+- **Daily**: Reprocess archived DLQ tasks
 
 ## **Manual Deployment**
 
@@ -289,6 +308,8 @@ redis-cli
 > LLEN image_processing
 > LLEN data_monitoring
 > LLEN cleanup
+> GET weavloader:caption_paused
+> LLEN weavloader:caption_wait
 > KEYS dlq:*
 
 # View health metrics
@@ -427,7 +448,7 @@ export CELERY_RESULT_BACKEND="redis://redis-cluster:6379/0"
 Weavloader exposes comprehensive metrics on port 8080 with a **unified endpoint** that includes both custom weavloader metrics and Flower Celery metrics:
 
 - **Task Metrics**: Processing rates, success rates, duration
-- **Queue Metrics**: Queue sizes, DLQ status
+- **Queue Metrics**: Queue sizes, DLQ status, caption wait list, caption-pause flag
 - **System Metrics**: Memory usage, worker count, health status
 - **SAGE Metrics**: Stream health, image reception rates
 - **Model Metrics**: Inference duration, error rates

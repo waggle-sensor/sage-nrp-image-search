@@ -8,6 +8,7 @@ from metrics import metrics
 import time
 import psutil
 from . import app, celery_logger
+from .caption_pause import drain_wait, enqueue_wait, is_paused
 from celery import Task
 import redis
 import json
@@ -36,6 +37,7 @@ DLQ_TTL_SECONDS = int(os.environ.get("DLQ_TTL_SECONDS", str(60*24*3600))) # defa
 DLQ_REPROCESS_MAX_PER_RUN = int(os.environ.get("DLQ_REPROCESS_MAX_PER_RUN", str(500))) # default 500 tasks
 DLQ_MAX_REPROCESS_AGE = int(os.environ.get("DLQ_MAX_REPROCESS_AGE", str(50*24*3600))) # default 50 days
 MONITOR_DATA_STREAM_QUERY_DELAY_MINUTE = int(os.environ.get("MONITOR_DATA_STREAM_QUERY_DELAY_MINUTE", str(5)))
+CAPTION_WAIT_DRAIN_BATCH = int(os.environ.get("CAPTION_WAIT_DRAIN_BATCH", "200"))
 
 class DLQTask(Task):
     '''
@@ -162,6 +164,14 @@ def process_image_task(self, image_data, **meta):
     dlq_attempt = meta.get('_dlq_attempt', 0)
     
     try:
+        r = get_redis_client()
+        if is_paused(r):
+            enqueue_wait(r, image_data)
+            celery_logger.info(
+                f"[PROCESSOR] Caption paused; parked image: {image_data.get('url', 'unknown')}"
+            )
+            return {"status": "paused", "url": image_data.get("url")}
+
         celery_logger.info(f"[PROCESSOR] Processing image: {image_data.get('url', 'unknown')}")
         
         # Get shared clients (reused across tasks)
@@ -268,9 +278,14 @@ def monitor_data_stream():
         
         celery_logger.info(f'[MODERATOR] Processing {len(df)} images for nodes: {vsns}')
         celery_logger.info(f'[MODERATOR] Time range: {start_time} to {end_time}')
+
+        paused = is_paused(r)
+        if paused:
+            celery_logger.info("[MODERATOR] Caption paused; parking images on wait queue")
         
-        # Submit each image as a separate task
+        # Submit each image as a separate task, or park while captioning is paused
         images_submitted = 0
+        images_parked = 0
         for i in df.index:
             image_data = {
                 'url': df.value[i],
@@ -294,10 +309,14 @@ def monitor_data_stream():
                 image_data['camera']
             )
             
-            # Submit task to Celery queue
-            process_image_task.apply_async(args=[image_data], queue="image_processing")
-            celery_logger.debug(f"[MODERATOR] Submitted image task: {image_data['url']}")
-            images_submitted += 1
+            if paused:
+                enqueue_wait(r, image_data)
+                celery_logger.debug(f"[MODERATOR] Parked image on wait queue: {image_data['url']}")
+                images_parked += 1
+            else:
+                process_image_task.apply_async(args=[image_data], queue="image_processing")
+                celery_logger.debug(f"[MODERATOR] Submitted image task: {image_data['url']}")
+                images_submitted += 1
         
         # Update last processed timestamp to the maximum timestamp in this batch
         new_last_timestamp = df.timestamp.max()
@@ -309,8 +328,9 @@ def monitor_data_stream():
         metrics.update_memory_usage('moderator', process.memory_info().rss)
         
         return {
-            "status": "success",
+            "status": "paused" if paused else "success",
             "images_submitted": images_submitted,
+            "images_parked": images_parked,
             "last_timestamp": new_last_timestamp.isoformat()
         }
         
@@ -349,6 +369,14 @@ def process_dlq_message(failed_task_name, args, kwargs):
     kwargs['_dlq_attempt'] = kwargs.get('_dlq_attempt', 0) + 1
 
     if failed_task_name == 'job_system.tasks.process_image_task':
+        r = get_redis_client()
+        if is_paused(r):
+            image_data = args[0] if args and isinstance(args[0], dict) else {}
+            enqueue_wait(r, image_data)
+            celery_logger.info(
+                f"[CLEANER] Caption paused; parked DLQ image: {image_data.get('url', 'unknown')}"
+            )
+            return "paused"
         res = process_image_task.apply_async(
             args=args, kwargs=kwargs, queue='image_processing', countdown=30
         )
@@ -419,3 +447,27 @@ def process_dlq_tasks():
     process = psutil.Process()
     metrics.update_memory_usage('cleaner', process.memory_info().rss)
     celery_logger.info(f"[CLEANER] Reprocess summary: {reprocessed} requeued, {failed} failed, {skipped} skipped")
+
+@app.task
+def drain_caption_wait():
+    """
+    Move parked image metadata from the caption wait list onto image_processing.
+    No-op while weavloader:caption_paused is set.
+    """
+    r = get_redis_client()
+    if is_paused(r):
+        celery_logger.debug("[CLEANER] Caption paused; skip wait-queue drain")
+        return {"status": "paused", "drained": 0}
+
+    items = drain_wait(r, CAPTION_WAIT_DRAIN_BATCH)
+    for image_data in items:
+        process_image_task.apply_async(args=[image_data], queue="image_processing")
+
+    if items:
+        celery_logger.info(f"[CLEANER] Drained {len(items)} images from caption wait queue")
+    else:
+        celery_logger.debug("[CLEANER] Caption wait queue empty")
+
+    process = psutil.Process()
+    metrics.update_memory_usage('cleaner', process.memory_info().rss)
+    return {"status": "success", "drained": len(items)}
