@@ -1,0 +1,9 @@
+image_id,query_id,reason,error,attempts,final_status,last_error
+3599447,6,caption_failed,empty caption from provider,1,retried_ok,
+4399151,6,caption_failed,empty caption from provider,1,retried_ok,
+570374,6,caption_failed,empty caption from provider,1,retried_ok,
+1274309,6,caption_failed,empty caption from provider,1,retried_ok,
+3859178,6,caption_failed,empty caption from provider,1,retried_ok,
+4238652,6,caption_failed,empty caption from provider,1,retried_ok,
+4579867,6,caption_failed,empty caption from provider,1,retried_ok,
+2518308,6,caption_failed,empty caption from provider,1,retried_ok,
