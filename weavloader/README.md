@@ -42,6 +42,8 @@ weavloader/
 ├── client.py            # Milvus client initialization
 ├── main.py              # Application entry point
 └── supervisord.conf     # Process management
+
+Caption prompts live in the repo-root [`prompts/`](../prompts/) catalog (copied into the image as `/app/prompts`).
 ```
 
 ### **Components:**

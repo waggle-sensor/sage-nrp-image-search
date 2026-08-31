@@ -20,7 +20,7 @@ flowchart LR
 1. **Celery Beat** runs `monitor_data_stream` on a configurable interval (default 60 seconds).
 2. The monitor queries the SAGE data stream for new `imagesampler` tasks since the last checkpoint.
 3. Each image is enqueued to the `image_processing` Celery queue — or, if Redis `weavloader:caption_paused` is set, parked on the `weavloader:caption_wait` list (metadata only; no NRP/Triton caption, CLIP, or SAGE download). Clearing the flag lets `drain_caption_wait` move wait items onto `image_processing`.
-4. **process_image** downloads the image, generates a caption (Triton VLM or NRP AI Gateway), computes separate CLIP caption and image embeddings, and inserts the record into Milvus (`caption_vector`, `image_vector`, `search_text`, scalars — no image blob). When using NRP for captions, respect [NRP fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) (see [Configuration → NRP fair use](configuration.md#nrp-fair-use-when-llm_run_modenrp)), including the caption pause flag so benches do not share the 8-request `gemma` cap with live ingest.
+4. **process_image** downloads the image, generates a caption (Triton VLM or NRP AI Gateway), parses `long_caption` / `short_caption` / `keywords`, computes CLIP embeddings from **short_caption + keywords** (plus a separate CLIP image embedding), and inserts the record into Milvus (`caption_vector`, `image_vector`, `search_text`, scalars — no image blob). When using NRP for captions, respect [NRP fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) (see [Configuration → NRP fair use](configuration.md#nrp-fair-use-when-llm_run_modenrp)), including the caption pause flag so benches do not share the 8-request `gemma` cap with live ingest.
 
 ## Query flow
 
@@ -76,13 +76,13 @@ Model names and image tags change over time. Check the Kubernetes overlays for c
 
 ## Milvus schema
 
-Collections live in the NRP-provisioned database `MILVUS_DB=image_search_svc` (NRP admins create the DB; weavmanage only creates collections). Collection name via `MILVUS_COLLECTION` (defaults: prod/local `SageImageSearch`, dev `SageImageSearchDev`), created by [`weavmanage/migrations/001_create_schema.py`](../weavmanage/migrations/001_create_schema.py):
+Collections live in the NRP-provisioned database `MILVUS_DB=image_search_svc` (NRP admins create the DB; weavmanage only creates collections). Collection name via `MILVUS_COLLECTION` (defaults: prod/local `SageImageSearch`, dev `SageImageSearchDev`), created by weavmanage migrations ([`001`](../weavmanage/migrations/001_create_schema.py) → [`002`](../weavmanage/migrations/002_split_dense_vectors.py) → [`003_long_short_caption.py`](../weavmanage/migrations/003_long_short_caption.py)). Migration 003 **drops** collections that still have a single `caption` field; re-caption and re-embed after applying it.
 
-- **Dense vectors:** `caption_vector` and `image_vector` FLOAT_VECTOR dim=1024 (CLIP text of the caption and CLIP image; COSINE / HNSW). Modalities are stored separately; `clip_alpha` weights them at query time. `fuse_embeddings()` remains in code for later experiments but is not used for indexing.
-- **BM25:** `search_text` VARCHAR with analyzer → `sparse` via `FunctionType.BM25`
+- **Dense vectors:** `caption_vector` and `image_vector` FLOAT_VECTOR dim=1024 (CLIP text of **short_caption + keywords**, and CLIP image; COSINE / HNSW). Modalities are stored separately; `clip_alpha` weights them at query time. `fuse_embeddings()` remains in code for later experiments but is not used for indexing.
+- **BM25:** `search_text` VARCHAR with analyzer → `sparse` via `FunctionType.BM25` (`long_caption` + keywords + SAGE metadata)
 - **Time:** `timestamp` TIMESTAMPTZ (ISO 8601 on insert; stored as UTC; STL_SORT index)
 - **Location:** `location` GEOMETRY (WKT `POINT(lon lat)`; RTREE index; `st_within` / `st_dwithin`)
-- **Scalars:** caption, SAGE metadata fields
+- **Scalars:** `long_caption`, `short_caption`, SAGE metadata fields
 - **Not stored:** image/audio/video blobs (UI loads via SAGE `link`)
 
 ## Docker Compose vs Kubernetes

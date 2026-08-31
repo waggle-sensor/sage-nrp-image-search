@@ -11,6 +11,7 @@ import logging
 from PIL import Image
 from io import BytesIO
 from inference import get_clip_embedding_pair, run_nrp_model, run_triton_model
+from inference.caption_parse import parse_caption_response
 from urllib.parse import urljoin
 from metrics import metrics
 import numpy as np
@@ -209,7 +210,8 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
             lat = loc_df[loc_df['name'] == 'sys.gps.lat']['value'].values[0]
             lon = loc_df[loc_df['name'] == 'sys.gps.lon']['value'].values[0]
 
-        # Generate caption. Never store node/plugin metadata in `caption`.
+        # Generate caption. Store long/short fields separately; never store
+        # node/plugin metadata in caption text.
         # On failure, raise so Celery retries and eventually archives to DLQ.
         start_time = time.perf_counter()
         caption = None
@@ -239,11 +241,16 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
             )
             raise e
 
-        # Generate CLIP caption + image embeddings (stored separately; no fusion)
+        parsed = parse_caption_response(caption)
+        clip_text = parsed.clip_text
+        bm25_caption = parsed.bm25_caption
+
+        # Generate CLIP caption + image embeddings (stored separately; no fusion).
+        # CLIP sees short_caption + keywords (fits the 77-token window).
         start_time = time.perf_counter()
         try:
             caption_embedding, image_embedding = get_clip_embedding_pair(
-                triton_client, caption, image
+                triton_client, clip_text, image
             )
             if caption_embedding is None or image_embedding is None:
                 raise RuntimeError("CLIP returned empty embeddings")
@@ -261,7 +268,8 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
             logger.error(f"[PROCESSING] Non-finite values in embedding vector for {url}")
             raise ValueError(f"Non-finite values in embedding vector for {url}")
 
-        caption_s = safe_str(caption)
+        long_caption_s = safe_str(parsed.long_caption)
+        short_caption_s = safe_str(parsed.short_caption, default="")
         camera_s = safe_str(camera)
         host_s = safe_str(host)
         job_s = safe_str(job)
@@ -271,9 +279,9 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
         project_s = safe_str(project)
         address_s = safe_str(address)
 
-        # Same fields Weaviate used in query_properties for BM25
+        # BM25: full long_caption + keywords plus SAGE metadata
         search_text = (
-            f"{caption_s} {camera_s} {host_s} {job_s} {vsn_s} "
+            f"{bm25_caption} {camera_s} {host_s} {job_s} {vsn_s} "
             f"{plugin_s} {zone_s} {project_s} {address_s}"
         )
 
@@ -297,7 +305,8 @@ def process_image(image_data, username, token, milvus_client, triton_client, log
             # https://milvus.io/docs/timestamptz-field.md
             "timestamp": _to_milvus_timestamptz(timestamp),
             "link": safe_str(url),
-            "caption": caption_s[:65535],
+            "long_caption": long_caption_s[:65535],
+            "short_caption": short_caption_s[:65535],
             "camera": camera_s,
             "host": host_s,
             "job": job_s,

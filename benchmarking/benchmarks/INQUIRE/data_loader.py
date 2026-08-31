@@ -65,7 +65,7 @@ class INQUIREDataLoader(DataLoader):
                 logging.error(f"Error parsing date for image {filename}: {e}")
                 date_rfc3339 = raw_date.replace(" ", "T") if raw_date else ""
 
-            caption, caption_failed = generate_index_caption(
+            parsed, caption_failed = generate_index_caption(
                 self.model_provider, image, self.config
             )
             if caption_failed and not force_insert:
@@ -79,7 +79,7 @@ class INQUIREDataLoader(DataLoader):
 
                 caption_vector, image_vector, search_text, link = milvus_index_payload(
                     self.model_provider,
-                    caption,
+                    parsed,
                     image,
                     filename or inat_id,
                     self.config,
@@ -92,7 +92,8 @@ class INQUIREDataLoader(DataLoader):
                     "inat24_file_name": filename or "",
                     "query": query or "",
                     "query_id": int(query_id) if query_id not in (None, "") else 0,
-                    "caption": caption or "",
+                    "long_caption": parsed.long_caption or "",
+                    "short_caption": parsed.short_caption or "",
                     "relevant": relevant,
                     "clip_score": float(clip_score or 0.0),
                     "supercategory": supercategory or "",
@@ -118,7 +119,7 @@ class INQUIREDataLoader(DataLoader):
             encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
 
             clip_embedding = get_index_embedding(
-                self.model_provider, caption, image, self.config
+                self.model_provider, parsed.clip_text, image, self.config
             )
             if clip_embedding is None:
                 raise ValueError("Failed to generate CLIP embedding")
@@ -129,7 +130,8 @@ class INQUIREDataLoader(DataLoader):
                 "query": query,
                 "query_id": query_id,
                 "image": encoded_image,
-                "caption": caption,
+                "long_caption": parsed.long_caption,
+                "short_caption": parsed.short_caption,
                 "relevant": relevant,
                 "clip_score": clip_score,
                 "supercategory": supercategory,
@@ -164,7 +166,8 @@ class INQUIREDataLoader(DataLoader):
                     {"field_name": "inat24_file_name", "datatype": "VARCHAR"},
                     {"field_name": "query", "datatype": "VARCHAR", "max_length": 65535},
                     {"field_name": "query_id", "datatype": "INT64"},
-                    {"field_name": "caption", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "long_caption", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "short_caption", "datatype": "VARCHAR", "max_length": 65535},
                     {"field_name": "relevant", "datatype": "INT64"},
                     {"field_name": "clip_score", "datatype": "FLOAT"},
                     {"field_name": "supercategory", "datatype": "VARCHAR"},
@@ -193,7 +196,8 @@ class INQUIREDataLoader(DataLoader):
                 Property(name="image", data_type=DataType.BLOB),
                 Property(name="audio", data_type=DataType.BLOB),
                 Property(name="video", data_type=DataType.BLOB),
-                Property(name="caption", data_type=DataType.TEXT),
+                Property(name="long_caption", data_type=DataType.TEXT),
+                Property(name="short_caption", data_type=DataType.TEXT),
                 Property(name="relevant", data_type=DataType.NUMBER),
                 Property(name="clip_score", data_type=DataType.NUMBER),
                 Property(name="supercategory", data_type=DataType.TEXT),

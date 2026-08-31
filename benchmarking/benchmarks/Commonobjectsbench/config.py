@@ -7,6 +7,7 @@ from weaviate.collections.classes.config_vector_index import VectorFilterStrateg
 from imsearch_eval.framework.interfaces import Config
 from helpers.ablation import load_ablation_config
 from helpers.backend import apply_vector_db_config
+from helpers.caption_parse import load_caption_prompt
 from helpers.nrp import resolve_workers
 
 
@@ -104,32 +105,9 @@ class CommonObjectsBenchConfig(Config):
         self.enable_bm25 = ablation["enable_bm25"]
 
         # Vector DB + query parameters
-        apply_vector_db_config(self, ablation, query_properties=["caption"])
+        apply_vector_db_config(self, ablation, query_properties=["long_caption"])
         self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 25))
-
-        # Caption prompt for general objects/scenes
-        default_prompt = """
-role:
-You are a world-class Scientific Image Captioning Expert.
-
-context:
-You will be shown a scientific image captured by edge devices. Your goal is to analyze its content and significance in detail.
-
-task:
-Generate exactly one scientifically detailed caption that accurately describes what is visible in the image and its scientific relevance.
-Make it as detailed as possible. Also extract text and numbers from the images.
-
-constraints:
-- Only return:
-  1. A single caption.
-  2. a list of 15 keywords relevant to the image.
-- Do not include any additional text, explanations, or formatting.
-
-format:
-  caption: <your_scientific_caption_here>
-  keywords: <keyword1>, <keyword2>, ...
-"""
-        self.caption_model_prompt = os.environ.get("CAPTION_MODEL_PROMPT", default_prompt)
+        self.caption_model_prompt = load_caption_prompt()
 
     @staticmethod
     def is_nrp_key_set():

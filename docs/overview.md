@@ -10,12 +10,12 @@ Sage Image Search indexes images from SAGE edge cameras and retrieves them using
 
 ## How search works (high level)
 
-1. **Caption generation** — A vision-language model (VLM) writes a detailed caption for each indexed image.
-2. **Embedding** — CLIP produces vector embeddings from the image and caption.
+1. **Caption generation** — A vision-language model (VLM) writes a detailed `long_caption`, a dense `short_caption` (visible content only), and 15 keywords.
+2. **Embedding** — CLIP produces vector embeddings from the image and from **short_caption + keywords** (CLIP’s text window is 77 tokens).
 3. **Storage** — Captions, metadata, and **separate** CLIP caption and image embeddings are stored in NRP-managed Milvus (no image blob; UI loads via SAGE URL). Modalities are blended at query time, not fused at index time.
 4. **Hybrid search** — When you query, the system combines:
    - **Vector search** — semantic similarity between your query and stored CLIP `caption_vector` + `image_vector`
-   - **Keyword search** — BM25 text matching on `search_text` (caption + SAGE metadata)
+   - **Keyword search** — BM25 text matching on `search_text` (`long_caption` + keywords + SAGE metadata)
 5. **Reranking** — Triton CLIP re-scores the top results by query–image embedding similarity.
 
 ## What gets indexed

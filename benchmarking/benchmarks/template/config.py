@@ -4,6 +4,7 @@ import os
 from imsearch_eval.framework.interfaces import Config
 from helpers.ablation import load_ablation_config
 from helpers.backend import apply_vector_db_config
+from helpers.caption_parse import load_caption_prompt
 from helpers.nrp import resolve_workers
 
 
@@ -65,6 +66,7 @@ class MyConfig(Config):
         self.enable_bm25 = ablation["enable_bm25"]
 
         # Vector DB + query parameters
-        apply_vector_db_config(self, ablation, query_properties=["caption"])
+        apply_vector_db_config(self, ablation, query_properties=["long_caption"])
         self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 50))
+        self.caption_model_prompt = load_caption_prompt()
     

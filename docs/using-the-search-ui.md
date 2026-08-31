@@ -35,7 +35,8 @@ Each result includes these fields:
 
 | Field | Meaning |
 |-------|---------|
-| `caption` | AI-generated description of the image |
+| `caption` | Full AI-generated `long_caption` (search API still uses the key `caption`) |
+| `short_caption` | Dense visual sentence used for CLIP (with keywords) |
 | `score` | Hybrid search fusion score (higher is more relevant) |
 | `explainScore` | Breakdown of how vector and keyword scores were combined |
 | `rerank_score` | Relevance score from Triton CLIP query–image similarity |
@@ -55,10 +56,10 @@ Results are limited to **25** by default (`response_limit` in `app/HyperParamete
 
 Results are ranked in two stages:
 
-1. **Hybrid retrieval** — Milvus combines CLIP similarity against stored `image_vector` and `caption_vector` with BM25 keyword matching on `search_text` (captions + metadata). Defaults: `query_alpha=0.4` (40% dense / 60% keyword) and `clip_alpha=0.7` (within dense, 70% image / 30% caption) via `WeightedRanker`.
+1. **Hybrid retrieval** — Milvus combines CLIP similarity against stored `image_vector` and `caption_vector` with BM25 keyword matching on `search_text` (`long_caption` + keywords + metadata). Defaults: `query_alpha=0.4` (40% dense / 60% keyword) and `clip_alpha=0.7` (within dense, 70% image / 30% caption) via `WeightedRanker`.
 2. **Reranking** — Triton CLIP (`DFN5B-CLIP-ViT-H-14-378`) re-scores the top results by similarity between your query text and each retrieved image (same idea as HF CLIP `logits_per_image`).
 
-Keyword search covers these fields: `caption`, `camera`, `host`, `job`, `vsn`, `plugin`, `zone`, `project`, `address`.
+Keyword search covers these fields: `long_caption`, keywords, `camera`, `host`, `job`, `vsn`, `plugin`, `zone`, `project`, `address` (concatenated into `search_text`).
 
 ## Tips for effective queries
 

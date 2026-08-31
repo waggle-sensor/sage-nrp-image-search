@@ -17,6 +17,8 @@ New runs default to **Milvus** on the NRP-managed cluster (`VECTOR_DB=milvus`, `
 
 CLIP rerank matches production: the query text tower runs once, then hits are scored with vectorized `cosine(image_vector, query_text) * logit_scale`. There is no per-hit image download or extra Triton CLIP call.
 
+Captions use the shared [`prompts/`](../prompts/) catalog (`CAPTION_PROMPT_ID`, default `scientific_two_captions_v1`). CLIP embeds `short_caption` + keywords; BM25 indexes `long_caption` + keywords. After changing the prompt, re-caption and re-embed (do not reuse old `caption` collections).
+
 Index and query workers stay continuously filled (`WORKERS`). For Triton captioning the default is 16; for NRP `gemma` it is capped at **8** ([fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/)). Concurrent CLIP calls are combined by Triton’s dynamic batcher when the server has `max_batch_size > 0`. Set `QUERY_BATCH_SIZE` / `IMAGE_BATCH_SIZE` at least as large as `WORKERS`.
 
 The existing benchmarks are in the [imsearch_benchmarks](https://github.com/waggle-sensor/imsearch_benchmarks) repository. Some of them have been implemented here in this repository.
@@ -119,6 +121,8 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 | `QUERY_CLIP_ALPHA` | `0.7` | Within dense retrieval, weight for `image_vector` vs `caption_vector` (Milvus) or fused query embedding (Weaviate) |
 | `ENABLE_BM25` | `true` | When `false`, omits the BM25/keyword leg (Milvus) or sets hybrid `alpha=1.0` (Weaviate) |
 | `QUERY_ALPHA` | `0.4` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality |
+| `CAPTION_PROMPT_ID` | `scientific_two_captions_v1` | Prompt catalog id from [`prompts/`](../prompts/). Same catalog as weavloader. |
+| `CAPTION_MODEL_PROMPT` | unset | Raw prompt override; if set, `CAPTION_PROMPT_ID` is ignored |
 
 `ENABLE_BM25=false` disables the BM25 keyword leg of hybrid search. CLIP rerank still runs against stored `image_vector`s (same `logits_per_image` math as production) unless you change `QUERY_METHOD` or set `rerank` to false.
 

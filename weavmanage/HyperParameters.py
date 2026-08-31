@@ -24,7 +24,28 @@ enable_dynamic_field = False
 # VARCHAR limits
 search_text_max_length = 65535
 caption_max_length = 65535
+short_caption_max_length = 65535
 scalar_varchar_max_length = 2048
+
+# Scalar VARCHAR fields on the production collection. Caption text is split:
+#   long_caption  — full VLM caption (UI / BM25 via search_text)
+#   short_caption — dense visual sentence stored for CLIP (embedded with keywords)
+SCALAR_VARCHAR_FIELDS = [
+    "filename",
+    "long_caption",
+    "short_caption",
+    "link",
+    "vsn",
+    "node",
+    "zone",
+    "task",
+    "host",
+    "job",
+    "plugin",
+    "camera",
+    "project",
+    "address",
+]
 
 # TIMESTAMPTZ scalar index (requires Milvus 2.6.6+). Accelerates time filters.
 timestamptz_index_type = "STL_SORT"
@@ -48,7 +69,7 @@ analyzer_params = {
 # Dense vector indexes (HNSW on caption_vector and image_vector)
 # ---------------------------------------------------------------------------
 # Two CLIP FLOAT_VECTOR fields, both dim=vector_dim:
-#   caption_vector — CLIP text embedding of the generated caption
+#   caption_vector — CLIP text embedding of short_caption + keywords
 #   image_vector   — CLIP image embedding
 # Query-time WeightedRanker blends them with clip_alpha (see app/HyperParameters.py).
 # Metric: COSINE is correct for L2-normalized CLIP embeddings (IP is equivalent).

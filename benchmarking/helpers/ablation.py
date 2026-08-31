@@ -7,6 +7,7 @@ from typing import Any, Iterable, Optional
 import numpy as np
 from PIL import Image
 
+from helpers.caption_parse import ParsedCaption, parse_caption_response
 from imsearch_eval.framework.image_utils import prepare_llm_image
 
 def parse_bool_env(name: str, default: bool = True) -> bool:
@@ -64,18 +65,18 @@ def generate_index_caption(
     image: Any,
     config,
     fallback_caption: str = "",
-) -> tuple[str, bool]:
+) -> tuple[ParsedCaption, bool]:
     """
-    Generate a caption for indexing.
+    Generate and parse a caption for indexing.
 
     Returns:
-        (caption, caption_failed). When caption generation is disabled, returns
-        ("", False). When the provider returns empty/None, returns
-        (fallback_caption or "", True) so callers can soft-DLQ and still insert
-        the dataset summary (or "") after retries are exhausted.
+        (parsed, caption_failed). When caption generation is disabled, returns
+        (empty ParsedCaption, False). When the provider returns empty/None,
+        returns (parsed fallback or empty, True) so callers can soft-DLQ and
+        still insert the dataset summary (or "") after retries are exhausted.
     """
     if not config.enable_caption_generation:
-        return "", False
+        return ParsedCaption(), False
 
     caption = model_provider.generate_caption(
         prepare_llm_image(image),
@@ -84,8 +85,8 @@ def generate_index_caption(
         enable_thinking=config.nrp_enable_thinking,
     )
     if not caption:
-        return fallback_caption or "", True
-    return caption, False
+        return parse_caption_response(fallback_caption or ""), True
+    return parse_caption_response(caption), False
 
 
 def get_triton_model_utils(model_provider):
@@ -126,15 +127,16 @@ def _to_list(embedding) -> list:
     return list(embedding)
 
 
-def get_index_embedding_pair(model_provider, caption: str, image: Any, config):
+def get_index_embedding_pair(model_provider, clip_text: str, image: Any, config):
     """
     Build separate caption_vector and image_vector for Milvus indexing.
 
+    ``clip_text`` should be short_caption + keywords (not the full long caption).
     Disabled modalities are stored as zero vectors; the corresponding hybrid
     search leg is omitted at query time via enable_image_vector / enable_caption_vector.
     """
     model_utils = get_triton_model_utils(model_provider)
-    caption_vec, image_vec = model_utils.get_clip_embedding_pair(caption or "", image)
+    caption_vec, image_vec = model_utils.get_clip_embedding_pair(clip_text or "", image)
     if caption_vec is None or image_vec is None:
         return None, None
 
@@ -173,7 +175,7 @@ def cache_index_image(image: Image.Image, image_id: Any, cache_dir: str) -> str:
 
 def milvus_index_payload(
     model_provider,
-    caption: str,
+    parsed: ParsedCaption,
     image: Image.Image,
     image_id: Any,
     config,
@@ -182,17 +184,20 @@ def milvus_index_payload(
     """
     Build Milvus index fields: caption_vector, image_vector, search_text, link.
 
+    CLIP embeds ``parsed.clip_text`` (short_caption + keywords). BM25
+    ``search_text`` uses ``parsed.bm25_caption`` (long_caption + keywords).
+
     ``link`` is left empty: CLIP rerank uses stored ``image_vector``s, so JPEG
     caching under IMAGE_CACHE_DIR is skipped to save ephemeral disk I/O.
 
     Raises ValueError if embeddings cannot be generated.
     """
     caption_vector, image_vector = get_index_embedding_pair(
-        model_provider, caption, image, config
+        model_provider, parsed.clip_text, image, config
     )
     if caption_vector is None or image_vector is None:
         raise ValueError("Failed to generate CLIP embedding pair")
     _ = image_id  # reserved; link left empty (rerank uses image_vector)
     link = ""
-    search_text = build_search_text(caption, extra_search_fields)
+    search_text = build_search_text(parsed.bm25_caption, extra_search_fields)
     return caption_vector, image_vector, search_text, link

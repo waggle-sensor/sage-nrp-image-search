@@ -136,7 +136,7 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 |---|------------|-----|
 | **Model** | [gemma-4-31B-it-qat-w4a16-ct](https://huggingface.co/google/gemma-4-31B-it-qat-w4a16-ct) | [Florence-2-base](https://huggingface.co/microsoft/Florence-2-base) |
 | **API** | `run_nrp_model()` in [weavloader/inference/model.py](../weavloader/inference/model.py) | `transformers` `AutoModelForCausalLM` + `trust_remote_code=True` |
-| **Prompt** | [model_config.py](../weavloader/inference/model_config.py) `caption_model_prompt` | Built-in task token `<MORE_DETAILED_CAPTION>` |
+| **Prompt** | [`prompts/`](../prompts/) catalog via `CAPTION_PROMPT_ID` (weavloader [`model_config.py`](../weavloader/inference/model_config.py) loads `load_caption_prompt()`) | Built-in task token `<MORE_DETAILED_CAPTION>` |
 
 ### Key ideas (from the lab conclusion)
 
@@ -150,7 +150,7 @@ Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** alw
 | Level | Audience | Activities | Difficulty | Next steps |
 |-------|----------|------------|------------|------------|
 | **1 — Explorer** | New to the system | Run the notebook; try queries in the Gradio UI; compare with [production portal](https://portal.sagecontinuum.org/labs/image-search) | Easy | [overview.md](overview.md), [glossary.md](glossary.md) |
-| **2 — Tinkerer** | Comfortable with Python | Compare Florence vs `summary` captions; try `<DETAILED_CAPTION>`; tune `QUERY_ALPHA`; plot MRR@K | Medium | [configuration.md](configuration.md), [model_config.py](../weavloader/inference/model_config.py) |
+| **2 — Tinkerer** | Comfortable with Python | Compare Florence vs `summary` captions; try `<DETAILED_CAPTION>`; tune `QUERY_ALPHA`; plot MRR@K | Medium | [configuration.md](configuration.md), [prompts catalog](../prompts/) |
 | **3 — Builder** | Ready for real stack | Deploy dev UI on NRP; run Sagebench `make run-local`; try NRP API | Hard | [getting-started.md](getting-started.md), [benchmarking.md](benchmarking.md) |
 | **4 — Contributor** | Wants to ship code | Pick a [roadmap item](CONTRIBUTING.md#roadmap); open a PR | Hard | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | **5 — Pioneer** | Building something new from scratch | [Image Search at the Edge](https://sagecontinuum.org/docs/events/2026-Sage-Summer-Hackathon#potential-hackathon-projects) — pluginctl, edge models, NanoDB | Very Hard | Hackathon project page |

@@ -31,7 +31,8 @@ services:
 
   weavloader:
     build:
-      context: ./weavloader
+      context: .
+      dockerfile: weavloader/Dockerfile
     ports:
       - 8081:8080
       - 5555:5555

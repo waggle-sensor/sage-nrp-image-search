@@ -74,7 +74,7 @@ class CloudBenchDataLoader(DataLoader):
             confidence = item.get("confidence", {})
             confidence_str = json.dumps(confidence) if isinstance(confidence, dict) else str(confidence)
 
-            caption, caption_failed = generate_index_caption(
+            parsed, caption_failed = generate_index_caption(
                 self.model_provider,
                 image,
                 self.config,
@@ -85,13 +85,14 @@ class CloudBenchDataLoader(DataLoader):
 
             if is_milvus(self.config):
                 caption_vector, image_vector, search_text, link = milvus_index_payload(
-                    self.model_provider, caption, image, image_id, self.config
+                    self.model_provider, parsed, image, image_id, self.config
                 )
                 return {
                     "image_id": image_id or "",
                     "query_text": query_text or "",
                     "query_id": str(query_id or ""),
-                    "caption": caption or "",
+                    "long_caption": parsed.long_caption or "",
+                    "short_caption": parsed.short_caption or "",
                     "relevance_label": relevance_label,
                     "clip_score": clip_score,
                     "license": license_ or "",
@@ -128,7 +129,7 @@ class CloudBenchDataLoader(DataLoader):
             encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
 
             clip_embedding = get_index_embedding(
-                self.model_provider, caption, image, self.config
+                self.model_provider, parsed.clip_text, image, self.config
             )
             if clip_embedding is None:
                 raise ValueError("Failed to generate CLIP embedding")
@@ -138,7 +139,8 @@ class CloudBenchDataLoader(DataLoader):
                 "query_text": query_text,
                 "query_id": query_id,
                 "image": encoded_image,
-                "caption": caption,
+                "long_caption": parsed.long_caption,
+                "short_caption": parsed.short_caption,
                 "relevance_label": relevance_label,
                 "clip_score": clip_score,
                 "license": license_,
@@ -186,7 +188,8 @@ class CloudBenchDataLoader(DataLoader):
                     {"field_name": "image_id", "datatype": "VARCHAR"},
                     {"field_name": "query_text", "datatype": "VARCHAR", "max_length": 65535},
                     {"field_name": "query_id", "datatype": "VARCHAR"},
-                    {"field_name": "caption", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "long_caption", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "short_caption", "datatype": "VARCHAR", "max_length": 65535},
                     {"field_name": "relevance_label", "datatype": "INT64"},
                     {"field_name": "clip_score", "datatype": "FLOAT"},
                     {"field_name": "license", "datatype": "VARCHAR"},
@@ -222,7 +225,8 @@ class CloudBenchDataLoader(DataLoader):
                 Property(name="query_text", data_type=DataType.TEXT),
                 Property(name="query_id", data_type=DataType.TEXT),
                 Property(name="image", data_type=DataType.BLOB),
-                Property(name="caption", data_type=DataType.TEXT),
+                Property(name="long_caption", data_type=DataType.TEXT),
+                Property(name="short_caption", data_type=DataType.TEXT),
                 Property(name="relevance_label", data_type=DataType.INT),
                 Property(name="clip_score", data_type=DataType.NUMBER),
                 Property(name="license", data_type=DataType.TEXT),

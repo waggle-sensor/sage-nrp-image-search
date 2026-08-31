@@ -24,7 +24,7 @@ def apply_vector_db_config(config, ablation: dict, query_properties=None):
     depend on the Weaviate SDK.
     """
     if query_properties is None:
-        query_properties = ["caption"]
+        query_properties = ["long_caption"]
 
     config.vector_db = parse_vector_db()
     config._milvus_uri = os.environ.get(
@@ -63,7 +63,7 @@ def apply_vector_db_config(config, ablation: dict, query_properties=None):
             "alpha": resolve_query_alpha(ablation),
             "query_properties": query_properties,
             "autocut_jumps": int(os.environ.get("AUTOCUT_JUMPS", 0)),
-            "rerank_prop": os.environ.get("RERANK_PROP", "caption"),
+            "rerank_prop": os.environ.get("RERANK_PROP", "long_caption"),
             "clip_alpha": clip_alpha,
         }
 

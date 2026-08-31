@@ -59,10 +59,11 @@ build:
 		echo "Error: DOCKERFILE_JOB must be set"; exit 1; \
 	fi
 	@echo "Building benchmark job image..."
-	@rm -rf ./helpers
+	@rm -rf ./helpers ./prompts
 	@cp -r ../../helpers ./helpers
+	@cp -r ../../../prompts ./prompts
 	@docker build -t $(JOB_IMAGE):$(JOB_TAG) -f $(DOCKERFILE_JOB) .
-	@rm -rf ./helpers
+	@rm -rf ./helpers ./prompts
 	@echo "Build complete. Push with:"
 	@echo "  docker push $(JOB_IMAGE):$(JOB_TAG)"
 

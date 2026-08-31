@@ -82,6 +82,8 @@ Celery still submits one image per task. Concurrent weavloader workers are combi
 | `CELERY_RESULT_BACKEND` | `redis://localhost:6379/0` | Celery result backend |
 | `CAPTION_WAIT_DRAIN_INTERVAL` | `15` | Seconds between caption wait-queue drain ticks |
 | `CAPTION_WAIT_DRAIN_BATCH` | `200` | Max wait-list items moved onto `image_processing` per drain tick |
+| `CAPTION_PROMPT_ID` | `scientific_two_captions_v1` | Prompt catalog id from [`prompts/`](../prompts/). Shared with the benchmarking suite. |
+| `CAPTION_MODEL_PROMPT` | unset | Raw prompt override; if set, `CAPTION_PROMPT_ID` is ignored |
 | `LOG_LEVEL` | `INFO` | Logging level |
 | `INIT_DATASET` | empty | Optional Hub dataset id for empty-collection seed (see Milvus section) |
 

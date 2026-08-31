@@ -62,12 +62,14 @@ def _vec(row: Dict[str, Any], key: str) -> List[float]:
 def row_to_milvus(row: Dict[str, Any]) -> Dict[str, Any]:
     lat = float(row.get("location_lat") or 0.0)
     lon = float(row.get("location_lon") or 0.0)
-    caption = str(row.get("caption") or "")
+    caption = str(row.get("long_caption") or row.get("caption") or "")
+    short_caption = str(row.get("short_caption") or caption)
     search_text = str(row.get("search_text") or "").strip()
     if not search_text:
         search_text = " ".join(
             str(row.get(k) or "")
             for k in (
+                "long_caption",
                 "caption",
                 "camera",
                 "host",
@@ -87,7 +89,8 @@ def row_to_milvus(row: Dict[str, Any]) -> Dict[str, Any]:
         "filename": str(row.get("filename") or ""),
         "timestamp": _normalize_timestamp(row.get("timestamp")),
         "link": str(row.get("link") or ""),
-        "caption": caption[:65535],
+        "long_caption": caption[:65535],
+        "short_caption": short_caption[:65535],
         "camera": str(row.get("camera") or ""),
         "host": str(row.get("host") or ""),
         "job": str(row.get("job") or ""),

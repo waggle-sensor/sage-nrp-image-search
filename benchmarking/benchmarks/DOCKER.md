@@ -76,7 +76,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code (helpers and prompts are staged into the build context)
+COPY helpers/ ./helpers/
+COPY prompts/ ./prompts/
 COPY . .
 
 # Run combined benchmark script
@@ -85,18 +87,23 @@ CMD ["python", "run_benchmark.py"]
 
 ## Building Images
 
+Helpers and the prompt catalog are staged into the benchmark directory at build time (see `benchmarks/Makefile`). Prefer `make build` so `helpers/` and `prompts/` are copied, then removed after the image is built.
+
 ### Local Build
 
 ```bash
 cd benchmarks/MYBENCHMARK
-docker build -f Dockerfile.job -t benchmark-mybenchmark-job:latest .
+make build
 ```
 
-### Using Makefile
+Direct `docker build` only works after staging:
 
 ```bash
 cd benchmarks/MYBENCHMARK
-make build
+cp -r ../../helpers ./helpers
+cp -r ../../../prompts ./prompts
+docker build -f Dockerfile.job -t benchmark-mybenchmark-job:latest .
+rm -rf ./helpers ./prompts
 ```
 
 This will build the image using the `DOCKERFILE_JOB` specified in the Makefile.

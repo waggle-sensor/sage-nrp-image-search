@@ -18,7 +18,8 @@ from pymilvus import AnnSearchRequest, WeightedRanker
 
 OUTPUT_FIELDS = [
     "filename",
-    "caption",
+    "long_caption",
+    "short_caption",
     "vsn",
     "camera",
     "project",
@@ -131,12 +132,14 @@ class Milvus_query:
         logging.debug("============clip_hybrid_query RESULTS==================")
         for hit in hit_list:
             entity = hit.get("entity", hit)
-            caption = entity.get("caption", "") or ""
+            long_caption = entity.get("long_caption", "") or ""
+            short_caption = entity.get("short_caption", "") or ""
             location = entity.get("location", "") or ""
             objects.append({
                 "uuid": str(hit.get("id", "")),
                 "filename": entity.get("filename", "") or "",
-                "caption": caption,
+                "caption": long_caption,
+                "short_caption": short_caption,
                 "score": float(hit.get("distance", 0.0) or 0.0),
                 "explainScore": "",
                 "vsn": entity.get("vsn", "") or "",
