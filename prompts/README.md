@@ -35,4 +35,4 @@ Local benchmark runs already put the repo root on `PYTHONPATH` (`make run-local`
 - **BM25** (`search_text`) indexes `long_caption` + `keywords` plus SAGE metadata.
 - Milvus stores `long_caption` and `short_caption` as separate VARCHAR fields.
 
-Existing collections must be re-captioned and re-embedded after switching to v2.
+Existing collections must be re-captioned and re-embedded after switching to scientific_two_captions_v1.
