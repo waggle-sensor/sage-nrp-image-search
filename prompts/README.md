@@ -28,11 +28,3 @@ get_prompt("scientific_detailed_v1")
 ```
 
 Local benchmark runs already put the repo root on `PYTHONPATH` (`make run-local`). Weavloader and Docker images stage this directory as `/app/prompts`.
-
-## How the v2 fields are used
-
-- **CLIP** (`caption_vector`) embeds `short_caption` + `keywords` in one 77-token pass.
-- **BM25** (`search_text`) indexes `long_caption` + `keywords` plus SAGE metadata.
-- Milvus stores `long_caption` and `short_caption` as separate VARCHAR fields.
-
-Existing collections must be re-captioned and re-embedded after switching to scientific_two_captions_v1.
