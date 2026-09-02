@@ -121,7 +121,8 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 | `QUERY_CLIP_ALPHA` | `0.7` | Within dense retrieval, weight for `image_vector` vs `caption_vector` (Milvus) or fused query embedding (Weaviate) |
 | `ENABLE_BM25` | `true` | When `false`, omits the BM25/keyword leg (Milvus) or sets hybrid `alpha=1.0` (Weaviate) |
 | `QUERY_ALPHA` | `0.65` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality. With `QUERY_CLIP_ALPHA=0.7` this is 46% image / 20% caption / 35% BM25 |
-| `SKIP_INDEX` | `false` | When `true`, skip collection drop/ingest and query an existing `COLLECTION_NAME`. Fails if the collection is missing. Use for query-time sweeps (`QUERY_ALPHA`, `QUERY_CLIP_ALPHA`) |
+| `QUERY_RETRIEVE_LIMIT` | unset (= `RESPONSE_LIMIT`) | ANN / hybrid pool size before CLIP rerank. After rerank, results are sliced to `RESPONSE_LIMIT` so Success@k stays @25 (INQUIRE @50). Unset keeps retrieve-k = display-k. Skip-index OK |
+| `SKIP_INDEX` | `false` | When `true`, skip collection drop/ingest and query an existing `COLLECTION_NAME`. Fails if the collection is missing. Use for query-time sweeps (`QUERY_ALPHA`, `QUERY_CLIP_ALPHA`, `QUERY_RETRIEVE_LIMIT`) |
 | `CAPTION_PROMPT_ID` | `scientific_two_captions_v1` | Prompt catalog id from [`prompts/`](../prompts/). Same catalog as weavloader. |
 | `CAPTION_MODEL_PROMPT` | unset | Raw prompt override; if set, `CAPTION_PROMPT_ID` is ignored |
 
@@ -131,9 +132,9 @@ Keep `IMAGE_BATCH_SIZE` and `QUERY_BATCH_SIZE` ≥ `WORKERS` so batch knobs do n
 
 **NRP fair use:** for `gemma` / `gemma-small`, max per-user concurrency is 8 (short requests). K8s `nrp-dev` / `nrp-prod` overlays set `WORKERS=8` and `QUERY_BATCH_SIZE=8`. `resolve_workers()` also clamps if `WORKERS` is set higher. Leave `NRP_ENABLE_THINKING=false` so captions do not pay for reasoning tokens. DLQ exponential backoff matches NRP’s guidance to retry with increasing intervals. Monitor gateway load via [NRP LLM status](https://nrp.ai/llm-status/) and [Envoy LLMs (Grafana)](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) (Image Search token filter — remove **token** to see all consumers; see [docs/configuration.md](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp)).
 
-Use a distinct `COLLECTION_NAME` for each **index-time** ablation so vectors do not mix. `SKIP_INDEX=true` is the exception: keep the same collection and only change query-time knobs (`QUERY_ALPHA`, `QUERY_CLIP_ALPHA`). New result folders should still use a new version name (e.g. `v16_ca085`) so leaderboards can compare against historical runs.
+Use a distinct `COLLECTION_NAME` for each **index-time** ablation so vectors do not mix. `SKIP_INDEX=true` is the exception: keep the same collection and only change query-time knobs (`QUERY_ALPHA`, `QUERY_CLIP_ALPHA`, `QUERY_RETRIEVE_LIMIT`). New result folders should still use a new version name (e.g. `v16_ca085`) so leaderboards can compare against historical runs.
 
-K8s `make run` does not forward shell env into the Job. For cluster query-only runs, patch `SKIP_INDEX` / `QUERY_CLIP_ALPHA` / `QUERY_ALPHA` in the overlay `env.yaml` (base default is `SKIP_INDEX=false`).
+K8s `make run` does not forward shell env into the Job. For cluster query-only runs, patch `SKIP_INDEX` / `QUERY_CLIP_ALPHA` / `QUERY_ALPHA` / `QUERY_RETRIEVE_LIMIT` in the overlay `env.yaml` (base default is `SKIP_INDEX=false`).
 
 ### Indexing DLQ
 
@@ -172,6 +173,9 @@ ENABLE_BM25=false COLLECTION_NAME=inquire-no-bm25 make run
 
 # Query-only blend sweep on an existing v15 collection (does not drop the index)
 SKIP_INDEX=true QUERY_CLIP_ALPHA=0.85 COLLECTION_NAME=INQUIRE make run-local
+
+# Query-only retrieve-k: fetch 100, still score @ RESPONSE_LIMIT
+SKIP_INDEX=true QUERY_RETRIEVE_LIMIT=100 COLLECTION_NAME=INQUIRE make run-local
 ```
 
 Shared ablation logic lives in [`helpers/ablation.py`](helpers/ablation.py). Index-time CLIP fusion delegates to `imsearch_eval`'s `TritonModelUtils.get_clip_embeddings()`.

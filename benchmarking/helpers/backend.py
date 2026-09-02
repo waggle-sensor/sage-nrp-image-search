@@ -42,6 +42,8 @@ def apply_vector_db_config(config, ablation: dict, query_properties=None):
     config._weaviate_grpc_port = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
 
     clip_alpha = float(os.environ.get("QUERY_CLIP_ALPHA", 0.7))
+    retrieve_limit = ablation.get("retrieve_limit")
+    config.retrieve_limit = retrieve_limit
     if config.vector_db == "milvus":
         config.query_method = os.environ.get(
             "QUERY_METHOD", "clip_hybrid_query_dual_index"
@@ -56,6 +58,13 @@ def apply_vector_db_config(config, ablation: dict, query_properties=None):
             # CLIP rerank: query text embedding vs stored image_vector (no image I/O)
             "rerank": True,
         }
+        if retrieve_limit is not None:
+            config.advanced_query_parameters["retrieve_limit"] = retrieve_limit
+            if retrieve_limit > 64:
+                config.advanced_query_parameters["dense_search_params"] = {
+                    "metric_type": "COSINE",
+                    "params": {"ef": max(64, retrieve_limit)},
+                }
     else:
         config.query_method = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
         config.target_vector = os.environ.get("TARGET_VECTOR", "clip")

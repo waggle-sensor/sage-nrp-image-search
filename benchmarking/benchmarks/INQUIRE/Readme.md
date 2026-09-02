@@ -230,6 +230,7 @@ All environment variables are loaded through the `INQUIREConfig` class in `confi
 - `QUERY_METHOD`: Query method (Milvus default: `clip_hybrid_query_dual_index`)
 - `TARGET_VECTOR`: Target vector name (Milvus default: `image_vector`)
 - `RESPONSE_LIMIT`: Maximum number of results to return (default: 50)
+- `QUERY_RETRIEVE_LIMIT`: ANN / hybrid pool size before CLIP rerank (default: same as `RESPONSE_LIMIT`). After rerank, results are sliced to `RESPONSE_LIMIT`
 - `QUERY_ALPHA`: Hybrid query alpha parameter (default: 0.65)
 - `QUERY_CLIP_ALPHA`: CLIP fusion weight at query time (default: 0.7)
 - `AUTOCUT_JUMPS`: Autocut jumps (default: 0)

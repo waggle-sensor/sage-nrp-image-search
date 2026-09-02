@@ -31,6 +31,8 @@ def load_ablation_config() -> dict:
     enable_bm25 = parse_bool_env("ENABLE_BM25", True)
     query_alpha = float(os.environ.get("QUERY_ALPHA", 0.65))
     skip_index = parse_bool_env("SKIP_INDEX", False)
+    retrieve_raw = os.environ.get("QUERY_RETRIEVE_LIMIT")
+    retrieve_limit = int(retrieve_raw) if retrieve_raw not in (None, "") else None
 
     if not embed_image and not embed_caption:
         raise ValueError(
@@ -52,6 +54,7 @@ def load_ablation_config() -> dict:
         "enable_bm25": enable_bm25,
         "query_alpha": query_alpha,
         "skip_index": skip_index,
+        "retrieve_limit": retrieve_limit,
     }
 
 

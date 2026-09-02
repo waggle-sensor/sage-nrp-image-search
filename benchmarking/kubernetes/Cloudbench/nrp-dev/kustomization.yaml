@@ -20,4 +20,4 @@ patches:
 images:
   - name: PLACEHOLDER_BENCHMARK_JOB_IMAGE
     newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-cloudbench-job
-    newTag: pr-19 #TODO: change back to latest
+    newTag: pr-20 #TODO: change back to latest

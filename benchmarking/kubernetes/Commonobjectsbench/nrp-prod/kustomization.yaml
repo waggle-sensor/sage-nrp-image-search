@@ -21,4 +21,4 @@ patches:
 images:
   - name: PLACEHOLDER_BENCHMARK_JOB_IMAGE
     newName: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/benchmark-commonobjectsbench-job
-    newTag: latest
+    newTag: pr-20
