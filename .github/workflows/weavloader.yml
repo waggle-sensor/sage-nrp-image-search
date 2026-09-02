@@ -7,12 +7,14 @@ on:
       - 'v*'
     paths:
       - 'weavloader/**'
+      - 'prompts/**'
       - '.github/workflows/weavloader.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'weavloader/**'
+      - 'prompts/**'
       - '.github/workflows/weavloader.yml'
 
 jobs:
@@ -44,7 +46,7 @@ jobs:
         env:
           REGISTRY_URL: ${{ secrets.NRP_GITLAB_REGISTRY_URL }}
         run: |
-          docker build -t "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" weavloader
+          docker build -f weavloader/Dockerfile -t "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" .
           if [ "$GITHUB_REF" = "refs/heads/main" ]; then
             docker tag "$REGISTRY_URL$IMAGE_PATH:$IMAGE_TAG" "$REGISTRY_URL$IMAGE_PATH:latest"
           fi

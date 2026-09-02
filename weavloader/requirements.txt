@@ -1,4 +1,4 @@
-weaviate_client==4.14.* #https://weaviate.io/developers/weaviate/release-notes#weaviate-core-and-client-releases
+pymilvus>=2.6.6,<4
 imageio==2.33.1
 sage_data_client==0.7.1
 matplotlib==3.8.2
@@ -13,3 +13,6 @@ psutil==5.9.*
 flower==2.0.*
 Requests
 openai==2.17.0
+datasets>=3.0.0
+huggingface_hub>=0.26.0
+pyarrow>=15.0.0

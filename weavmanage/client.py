@@ -1,49 +1,33 @@
-'''This file contains the code to interact with the weaviate client'''
+'''Milvus client initialization for weavmanage.'''
 import logging
-import argparse
 import os
-import weaviate
 import time
 
-def initialize_weaviate_client():
+from pymilvus import MilvusClient
+
+
+def initialize_milvus_client():
     '''
-    Intialize weaviate client based on arg or env var
+    Initialize Milvus client from env vars.
+    Connects to the NRP-managed database (default: image_search_svc).
     '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--weaviate_host",
-        default=os.getenv("WEAVIATE_HOST","127.0.0.1"),
-        help="Weaviate host IP.",
-    )
-    parser.add_argument(
-        "--weaviate_port",
-        default=os.getenv("WEAVIATE_PORT","8080"),
-        help="Weaviate REST port.",
-    )
-    parser.add_argument(
-        "--weaviate_grpc_port",
-        default=os.getenv("WEAVIATE_GRPC_PORT","50051"),
-        help="Weaviate GRPC port.",
-    )
-    args = parser.parse_args()
+    uri = os.getenv("MILVUS_URI", "https://milvus.nrp-nautilus.io:50051")
+    token = os.getenv("MILVUS_TOKEN", "")
+    db_name = os.getenv("MILVUS_DB", "image_search_svc")
 
-    weaviate_host = args.weaviate_host
-    weaviate_port = args.weaviate_port
-    weaviate_grpc_port = args.weaviate_grpc_port
+    logging.debug(f"Attempting to connect to Milvus at {uri} (db={db_name})")
 
-    logging.debug(f"Attempting to connect to Weaviate at {weaviate_host}:{weaviate_port}")
-
-    # Retry logic to connect to Weaviate
     while True:
         try:
-            client = weaviate.connect_to_local(
-                host=weaviate_host,
-                port=weaviate_port,
-                grpc_port=weaviate_grpc_port
-            )
-            logging.debug("Successfully connected to Weaviate")
+            kwargs = {"uri": uri, "db_name": db_name}
+            if token:
+                kwargs["token"] = token
+            client = MilvusClient(**kwargs)
+            # Verify connectivity
+            client.list_collections()
+            logging.debug(f"Successfully connected to Milvus db={db_name}")
             return client
-        except weaviate.exceptions.WeaviateConnectionError as e:
-            logging.error(f"Failed to connect to Weaviate: {e}")
+        except Exception as e:
+            logging.error(f"Failed to connect to Milvus: {e}")
             logging.debug("Retrying in 10 seconds...")
             time.sleep(10)

@@ -15,11 +15,11 @@ patches:
   - path: gpus.yaml
     target:
       kind: Deployment
-      labelSelector: "app in (reranker-transformers, triton)"
+      labelSelector: "app=triton"
   - path: taint.yaml
     target:
       kind: Deployment
-      labelSelector: "app in (gradio-ui, weaviate, weavloader)"
+      labelSelector: "app in (gradio-ui, weavloader)"
   - path: gradio-env.yaml
     target:
       kind: Deployment
@@ -28,16 +28,12 @@ patches:
     target:
       kind: Deployment
       labelSelector: "app=weavloader"
-  - path: triton-env.yaml
+  - path: weavmanage-env.yaml
     target:
-      kind: Deployment
-      labelSelector: "app=triton"
+      kind: Job
+      labelSelector: "app=weavmanage"
 
 images:
-  - name: semitechnologies/reranker-transformers
-    newTag: cross-encoder-ms-marco-MiniLM-L-6-v2-latest
-  - name: semitechnologies/weaviate
-    newTag: 1.32.0
   - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/triton
     newTag: latest
   - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/gradio-ui

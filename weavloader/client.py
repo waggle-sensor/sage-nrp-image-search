@@ -1,35 +1,39 @@
-'''This file contains the code to interact with the weaviate client'''
+'''Milvus client initialization for weavloader.'''
 import logging
-import argparse
 import os
-import weaviate
 import time
 
-def initialize_weaviate_client(weaviate_host: str, weaviate_port: int, weaviate_grpc_port: int):
+from pymilvus import MilvusClient
+
+
+def initialize_milvus_client(uri: str = None, token: str = None, db_name: str = None):
     '''
-    Intialize weaviate client
+    Initialize Milvus client.
 
     Args:
-        weaviate_host: Weaviate host IP
-        weaviate_port: Weaviate REST port
-        weaviate_grpc_port: Weaviate GRPC port
-        
-    Returns:
-        weaviate.Client: Weaviate client
-    '''
-    logging.debug(f"Attempting to connect to Weaviate at {weaviate_host}:{weaviate_port}")
+        uri: Milvus URI (defaults to MILVUS_URI env)
+        token: Auth token user:password (defaults to MILVUS_TOKEN env)
+        db_name: Milvus database name (defaults to MILVUS_DB / image_search_svc)
 
-    # Retry logic to connect to Weaviate
+    Returns:
+        MilvusClient
+    '''
+    uri = uri or os.getenv("MILVUS_URI", "https://milvus.nrp-nautilus.io:50051")
+    token = token if token is not None else os.getenv("MILVUS_TOKEN", "")
+    db_name = db_name or os.getenv("MILVUS_DB", "image_search_svc")
+
+    logging.debug(f"Attempting to connect to Milvus at {uri} (db={db_name})")
+
     while True:
         try:
-            client = weaviate.connect_to_local(
-                host=weaviate_host,
-                port=weaviate_port,
-                grpc_port=weaviate_grpc_port
-            )
-            logging.debug("Successfully connected to Weaviate")
+            kwargs = {"uri": uri, "db_name": db_name}
+            if token:
+                kwargs["token"] = token
+            client = MilvusClient(**kwargs)
+            client.list_collections()
+            logging.debug(f"Successfully connected to Milvus db={db_name}")
             return client
-        except weaviate.exceptions.WeaviateConnectionError as e:
-            logging.error(f"Failed to connect to Weaviate: {e}")
+        except Exception as e:
+            logging.error(f"Failed to connect to Milvus: {e}")
             logging.debug("Retrying in 10 seconds...")
             time.sleep(10)

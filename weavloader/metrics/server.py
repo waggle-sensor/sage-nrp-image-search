@@ -14,6 +14,19 @@ import re
 import os
 app = Flask(__name__)
 
+CAPTION_PAUSE_KEY = "weavloader:caption_paused"
+CAPTION_WAIT_KEY = "weavloader:caption_wait"
+_PAUSE_TRUTHY = frozenset(("1", "true", "yes"))
+
+
+def _is_caption_paused(r: redis.Redis) -> bool:
+    """True when captioning is paused. Missing key means not paused."""
+    val = r.get(CAPTION_PAUSE_KEY)
+    if val is None:
+        return False
+    return str(val).strip().lower() in _PAUSE_TRUTHY
+
+
 @app.route('/metrics')
 def metrics_endpoint():
     """Unified Prometheus metrics endpoint for both custom and Flower metrics"""
@@ -39,7 +52,20 @@ def metrics_endpoint():
 @app.route('/health')
 def health_endpoint():
     """Health check endpoint"""
-    return {'status': 'healthy', 'timestamp': datetime.now().isoformat()}
+    paused = False
+    wait_size = 0
+    try:
+        redis_client = get_redis_client()
+        paused = _is_caption_paused(redis_client)
+        wait_size = int(redis_client.llen(CAPTION_WAIT_KEY) or 0)
+    except Exception as e:
+        logging.warning(f"[METRICS] Health could not read caption pause state: {e}")
+    return {
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'caption_paused': paused,
+        'caption_wait_size': wait_size,
+    }
 
 def count_dlq_records(r: redis.Redis):
     """Count the number of records in the DLQ"""
@@ -87,6 +113,11 @@ def collect_system_metrics():
                 metrics.update_queue_size('image_processing', image_queue_size)
                 metrics.update_queue_size('data_monitoring', monitor_queue_size)
                 metrics.update_queue_size('cleanup', cleanup_queue_size)
+                metrics.update_queue_size(
+                    'caption_wait',
+                    int(redis_client.llen(CAPTION_WAIT_KEY) or 0),
+                )
+                metrics.update_caption_paused(_is_caption_paused(redis_client))
                 metrics.update_dlq_size(count_dlq_records(redis_client))
                 
             except Exception as e:

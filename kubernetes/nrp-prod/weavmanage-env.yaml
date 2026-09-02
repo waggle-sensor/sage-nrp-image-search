@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: weavmanage
+spec:
+  template:
+    spec:
+      containers:
+        - name: weavmanage
+          env:
+            - name: MILVUS_COLLECTION
+              value: "SageImageSearch"

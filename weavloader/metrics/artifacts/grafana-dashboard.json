@@ -114,7 +114,7 @@
       "datasource": {
         "uid": "prometheus"
       },
-      "description": "Shows celery worker’s online status.",
+      "description": "Shows celery worker\u2019s online status.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -486,7 +486,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Number of tasks currently executing on each worker — a direct indicator of worker load and concurrency usage.",
+      "description": "Number of tasks currently executing on each worker \u2014 a direct indicator of worker load and concurrency usage.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -558,7 +558,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Real-time depth of each celery task queue. Use this graph to monitor system load, detect growing backlogs, and confirm that queues are draining as tasks are processed. Sustained growth in a queue’s size may indicate slow consumers, blocked workers, or downstream bottlenecks.",
+      "description": "Real-time depth of each celery task queue. Use this graph to monitor system load, detect growing backlogs, and confirm that queues are draining as tasks are processed. Sustained growth in a queue\u2019s size may indicate slow consumers, blocked workers, or downstream bottlenecks.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -659,7 +659,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Nodes sending the most images within the selected time range. Use this graph to quickly identify the highest-traffic nodes (“top talkers”).",
+          "description": "Nodes sending the most images within the selected time range. Use this graph to quickly identify the highest-traffic nodes (\u201ctop talkers\u201d).",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -887,7 +887,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Shows the difference between the total number of images received and the total number of successfully processed images over each 1-hour window. Use this panel to monitor pipeline balance and detect when ingestion starts to outpace compute capacity-often an early warning of queue buildup or worker saturation.\n\nPositive values indicate that images are arriving faster than they’re being processed, which can lead to growing backlogs. \n\nNegative or near-zero values mean processing is keeping pace with incoming data.",
+          "description": "Shows the difference between the total number of images received and the total number of successfully processed images over each 1-hour window. Use this panel to monitor pipeline balance and detect when ingestion starts to outpace compute capacity-often an early warning of queue buildup or worker saturation.\n\nPositive values indicate that images are arriving faster than they\u2019re being processed, which can lead to growing backlogs. \n\nNegative or near-zero values mean processing is keeping pace with incoming data.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -974,12 +974,12 @@
             {
               "editorMode": "code",
               "expr": "sum(increase(weavloader_sage_images_received_total{instance=\"$instance\"}[1h]))\n-\nsum(increase(weavloader_flower_events_total{instance=\"$instance\", task=\"job_system.tasks.process_image_task\", type=\"task-succeeded\"}[1h]))",
-              "legendFormat": "Ingest–Process diff",
+              "legendFormat": "Ingest\u2013Process diff",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Image Ingestion–Processing Difference",
+          "title": "Image Ingestion\u2013Processing Difference",
           "type": "timeseries"
         },
         {
@@ -987,7 +987,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Displays the per-second rate of Celery task events observed by Flower, grouped by event type (received, started, succeeded, failed, retried).\n\nThis shows how tasks are flowing through the pipeline—from being accepted by workers to completion or failure.\n\nUse it to spot bottlenecks or anomalies (e.g., high received but low succeeded may indicate growing queue backlog or worker issues).",
+          "description": "Displays the per-second rate of Celery task events observed by Flower, grouped by event type (received, started, succeeded, failed, retried).\n\nThis shows how tasks are flowing through the pipeline\u2014from being accepted by workers to completion or failure.\n\nUse it to spot bottlenecks or anomalies (e.g., high received but low succeeded may indicate growing queue backlog or worker issues).",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1611,7 +1611,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Displays the total number of Dead Letter Queue (DLQ) tasks that were permanently discarded over each 5-hour period. This metric counts how many tasks could not be successfully reprocessed and were ultimately thrown away. Use this graph to monitor long-term DLQ health, spot recurring discard spikes, and identify periods when unrecoverable task errors increase — which may point to persistent data issues, bad inputs, or system misconfigurations.",
+          "description": "Displays the total number of Dead Letter Queue (DLQ) tasks that were permanently discarded over each 5-hour period. This metric counts how many tasks could not be successfully reprocessed and were ultimately thrown away. Use this graph to monitor long-term DLQ health, spot recurring discard spikes, and identify periods when unrecoverable task errors increase \u2014 which may point to persistent data issues, bad inputs, or system misconfigurations.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2106,7 +2106,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Displays all Dead Letter Queue (DLQ) tasks that were permanently discarded during the selected time range. \n\nDLQ task = one image.\n\nEach row shows the originating node, job, task, and camera associated with the discarded task, along with the total count of thrown-away tasks.\n\nUse this table to identify the specific sources that are repeatedly producing unrecoverable or invalid data. A growing count here signals potential “poison message” issues that may require data-quality or configuration fixes. You can also use this table to find if certain images were discarded and are not in the vector database.",
+          "description": "Displays all Dead Letter Queue (DLQ) tasks that were permanently discarded during the selected time range. \n\nDLQ task = one image.\n\nEach row shows the originating node, job, task, and camera associated with the discarded task, along with the total count of thrown-away tasks.\n\nUse this table to identify the specific sources that are repeatedly producing unrecoverable or invalid data. A growing count here signals potential \u201cpoison message\u201d issues that may require data-quality or configuration fixes. You can also use this table to find if certain images were discarded and are not in the vector database.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2484,7 +2484,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Rate of task retries grouped by type and reason — helps pinpoint unstable tasks or recurring failure causes.",
+          "description": "Rate of task retries grouped by type and reason \u2014 helps pinpoint unstable tasks or recurring failure causes.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2676,7 +2676,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Shows the fraction of Weaviate insert operations that failed within the last 5 minutes (failed inserts / total inserts). A higher ratio indicates instability or write errors in the Weaviate ingestion path. Use this panel to monitor data ingestion reliability and detect spikes in insert failures early.",
+          "description": "Shows the fraction of Milvus insert operations that failed within the last 5 minutes (failed inserts / total inserts). A higher ratio indicates instability or write errors in the Milvus ingestion path. Use this panel to monitor data ingestion reliability and detect spikes in insert failures early.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2757,13 +2757,13 @@
           "targets": [
             {
               "editorMode": "code",
-              "expr": "sum(rate(weavloader_weaviate_operations_total{status=\"failure\",operation=\"insert\",instance=\"$instance\"}[5m]))\n/\nsum(rate(weavloader_weaviate_operations_total{operation=\"insert\",instance=\"$instance\"}[5m]))",
+              "expr": "sum(rate(weavloader_milvus_operations_total{status=\"failure\",operation=\"insert\",instance=\"$instance\"}[5m]))\n/\nsum(rate(weavloader_milvus_operations_total{operation=\"insert\",instance=\"$instance\"}[5m]))",
               "legendFormat": "insert",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Weaviate Insert Failure Ratio",
+          "title": "Milvus Insert Failure Ratio",
           "type": "timeseries"
         }
       ],
@@ -3018,7 +3018,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Displays the average and 90th-percentile (P90) latency for Weaviate insert operations for over the selected time range. Use this panel to monitor both typical and the 90th-percentile latency, showing how long the slower 10% of insert operations take. A widening gap between average and P90 indicates increasing variability or occasional slow responses.",
+          "description": "Displays the average and 90th-percentile (P90) latency for Milvus insert operations for over the selected time range. Use this panel to monitor both typical and the 90th-percentile latency, showing how long the slower 10% of insert operations take. A widening gap between average and P90 indicates increasing variability or occasional slow responses.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3071,7 +3071,7 @@
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum by (instance) (\n  increase(weavloader_weaviate_operation_duration_seconds_sum{operation=\"insert\",status=\"success\",instance=\"$instance\"}[$__range])\n)\n/\nsum by (instance) (\n  increase(weavloader_weaviate_operation_duration_seconds_count{operation=\"insert\",status=\"success\",instance=\"$instance\"}[$__range])\n)",
+              "expr": "sum by (instance) (\n  increase(weavloader_milvus_operation_duration_seconds_sum{operation=\"insert\",status=\"success\",instance=\"$instance\"}[$__range])\n)\n/\nsum by (instance) (\n  increase(weavloader_milvus_operation_duration_seconds_count{operation=\"insert\",status=\"success\",instance=\"$instance\"}[$__range])\n)",
               "hide": false,
               "instant": false,
               "legendFormat": "avg",
@@ -3084,7 +3084,7 @@
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "histogram_quantile(\n  0.9,\n  sum by (model_name, le) (\n    increase(weavloader_weaviate_operation_duration_seconds_bucket{\n      operation=\"insert\", instance=\"$instance\", status=\"success\"\n    }[$__range])\n  )\n)",
+              "expr": "histogram_quantile(\n  0.9,\n  sum by (model_name, le) (\n    increase(weavloader_milvus_operation_duration_seconds_bucket{\n      operation=\"insert\", instance=\"$instance\", status=\"success\"\n    }[$__range])\n  )\n)",
               "hide": false,
               "instant": false,
               "legendFormat": "P90",
@@ -3092,7 +3092,7 @@
               "refId": "A"
             }
           ],
-          "title": "Weaviate Insert Latency (Avg / P90)",
+          "title": "Milvus Insert Latency (Avg / P90)",
           "type": "stat"
         },
         {
@@ -3226,7 +3226,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Shows the share of total latency spent waiting (Prefetch) vs running (Runtime) for job_system.tasks.process_image_task.\n100% stacked bars highlight how much of each task’s time is queue delay vs execution.",
+          "description": "Shows the share of total latency spent waiting (Prefetch) vs running (Runtime) for job_system.tasks.process_image_task.\n100% stacked bars highlight how much of each task\u2019s time is queue delay vs execution.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3324,7 +3324,7 @@
               "refId": "B"
             }
           ],
-          "title": "Task Latency Composition — Process Image Task",
+          "title": "Task Latency Composition \u2014 Process Image Task",
           "type": "timeseries"
         }
       ],

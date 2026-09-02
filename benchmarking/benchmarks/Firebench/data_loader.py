@@ -7,19 +7,26 @@ from io import BytesIO, BufferedReader
 from PIL import Image
 import weaviate
 from imsearch_eval.framework.interfaces import DataLoader
-from helpers.ablation import generate_index_caption, get_index_embedding
+from helpers.ablation import (
+    generate_index_caption,
+    get_index_embedding,
+    milvus_index_payload,
+)
+from helpers.dlq import soft_caption_dlq
+from helpers.backend import is_milvus
 
 
 class FireBenchDataLoader(DataLoader):
     """Data loader for FireBench dataset (fire science image retrieval)."""
 
-    def process_item(self, item: dict) -> dict:
+    def process_item(self, item: dict, *, force_insert: bool = False) -> dict:
         """
         Process a single FireBench dataset item.
 
         Args:
             item: Dictionary containing FireBench dataset item with query_text,
                   query_id, image_id, relevance_label, image, and metadata.
+            force_insert: Insert with summary/empty caption after DLQ retries are exhausted.
         Returns:
             Dictionary with 'properties' and 'vector' keys for Weaviate insertion
         """
@@ -59,6 +66,44 @@ class FireBenchDataLoader(DataLoader):
             confidence = item.get("confidence", {})
             confidence_str = json.dumps(confidence) if isinstance(confidence, dict) else str(confidence)
 
+            parsed, caption_failed = generate_index_caption(
+                self.model_provider,
+                image,
+                self.config,
+                fallback_caption=summary or "",
+            )
+            if caption_failed and not force_insert:
+                return soft_caption_dlq(image_id, query_id)
+
+            if is_milvus(self.config):
+                caption_vector, image_vector, search_text, link = milvus_index_payload(
+                    self.model_provider, parsed, image, image_id, self.config
+                )
+                return {
+                    "image_id": image_id or "",
+                    "query_text": query_text or "",
+                    "query_id": str(query_id or ""),
+                    "long_caption": parsed.long_caption or "",
+                    "short_caption": parsed.short_caption or "",
+                    "relevance_label": relevance_label,
+                    "clip_score": clip_score,
+                    "license": license_ or "",
+                    "doi": doi or "",
+                    "summary": summary or "",
+                    "environment_type": environment_type or "",
+                    "confounder_type": confounder_type or "",
+                    "lighting": lighting or "",
+                    "plume_stage": plume_stage or "",
+                    "viewpoint": viewpoint or "",
+                    "flame_visible": flame_visible,
+                    "tags": tags_str,
+                    "confidence": confidence_str,
+                    "link": link,
+                    "caption_vector": caption_vector,
+                    "image_vector": image_vector,
+                    "search_text": search_text,
+                }
+
             # Convert image to BytesIO for encoding
             image_stream = BytesIO()
             image.save(image_stream, format="JPEG")
@@ -68,14 +113,8 @@ class FireBenchDataLoader(DataLoader):
             buffered_stream = BufferedReader(image_stream)
             encoded_image = weaviate.util.image_encoder_b64(buffered_stream)
 
-            caption = generate_index_caption(
-                self.model_provider,
-                image,
-                self.config,
-                fallback_caption=summary or "",
-            )
             clip_embedding = get_index_embedding(
-                self.model_provider, caption, image, self.config
+                self.model_provider, parsed.clip_text, image, self.config
             )
             if clip_embedding is None:
                 raise ValueError("Failed to generate CLIP embedding")
@@ -85,7 +124,8 @@ class FireBenchDataLoader(DataLoader):
                 "query_text": query_text,
                 "query_id": query_id,
                 "image": encoded_image,
-                "caption": caption,
+                "long_caption": parsed.long_caption,
+                "short_caption": parsed.short_caption,
                 "relevance_label": relevance_label,
                 "clip_score": clip_score,
                 "license": license_,
@@ -114,15 +154,40 @@ class FireBenchDataLoader(DataLoader):
 
     def get_schema_config(self) -> dict:
         """
-        Get Weaviate schema configuration for FireBench collection.
-
-        Returns:
-            Dictionary containing schema configuration
+        Get schema configuration for FireBench collection.
         """
+        COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "FireBench")
+        if is_milvus(self.config):
+            from imsearch_eval.adapters.milvus import build_benchmark_schema
+
+            return build_benchmark_schema(
+                name=COLLECTION_NAME,
+                scalar_fields=[
+                    {"field_name": "image_id", "datatype": "VARCHAR"},
+                    {"field_name": "query_text", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "query_id", "datatype": "VARCHAR"},
+                    {"field_name": "long_caption", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "short_caption", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "relevance_label", "datatype": "INT64"},
+                    {"field_name": "clip_score", "datatype": "FLOAT"},
+                    {"field_name": "license", "datatype": "VARCHAR"},
+                    {"field_name": "doi", "datatype": "VARCHAR"},
+                    {"field_name": "summary", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "environment_type", "datatype": "VARCHAR"},
+                    {"field_name": "confounder_type", "datatype": "VARCHAR"},
+                    {"field_name": "lighting", "datatype": "VARCHAR"},
+                    {"field_name": "plume_stage", "datatype": "VARCHAR"},
+                    {"field_name": "viewpoint", "datatype": "VARCHAR"},
+                    {"field_name": "flame_visible", "datatype": "BOOL"},
+                    {"field_name": "tags", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "confidence", "datatype": "VARCHAR", "max_length": 65535},
+                    {"field_name": "link", "datatype": "VARCHAR"},
+                ],
+            )
+
         from weaviate.classes.config import Configure, Property, DataType
 
         TARGET_VECTOR = os.environ.get("TARGET_VECTOR", "clip")
-        COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "FireBench")
         return {
             "name": COLLECTION_NAME,
             "description": "FireBench: fire science image retrieval benchmark (sagecontinuum/FireBench)",
@@ -131,7 +196,8 @@ class FireBenchDataLoader(DataLoader):
                 Property(name="query_text", data_type=DataType.TEXT),
                 Property(name="query_id", data_type=DataType.TEXT),
                 Property(name="image", data_type=DataType.BLOB),
-                Property(name="caption", data_type=DataType.TEXT),
+                Property(name="long_caption", data_type=DataType.TEXT),
+                Property(name="short_caption", data_type=DataType.TEXT),
                 Property(name="relevance_label", data_type=DataType.INT),
                 Property(name="clip_score", data_type=DataType.NUMBER),
                 Property(name="license", data_type=DataType.TEXT),

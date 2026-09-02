@@ -8,7 +8,8 @@ from pathlib import Path
 import tritonclient.grpc as TritonClient
 from datasets import Dataset
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter
-from imsearch_eval.adapters import WeaviateAdapter, WeaviateQuery, TritonModelProvider
+from imsearch_eval.adapters import TritonModelProvider
+from helpers.backend import init_vector_db, maybe_load_index
 from model_provider import MixedModelProvider
 from benchmark_dataset import CloudBench
 from config import CloudBenchConfig
@@ -22,25 +23,61 @@ def load_data(
     vector_db: VectorDBAdapter,
     hf_dataset: Dataset,
 ):
-    """Load CloudBench dataset into Weaviate for CloudBench benchmark."""
+    """Load CloudBench dataset into the vector database."""
     try:
         logging.info("Creating collection schema...")
         schema_config = data_loader.get_schema_config()
         vector_db.create_collection(schema_config)
 
         logging.info("Processing and inserting data...")
-        results = data_loader.process_batch(
+        inserted = 0
+
+        def on_batch(chunk):
+            nonlocal inserted
+            inserted += vector_db.insert_data(
+                config._collection_name,
+                chunk,
+                batch_size=len(chunk),
+                flush=False,
+            )
+
+        _, failures = data_loader.process_batch(
             batch_size=config._image_batch_size,
             dataset=hf_dataset,
             workers=config._workers,
+            on_batch=on_batch,
         )
-        inserted = vector_db.insert_data(
-            config._collection_name, results, batch_size=config._image_batch_size
+
+        def on_dlq_success(payload):
+            nonlocal inserted
+            inserted += vector_db.insert_data(
+                config._collection_name,
+                [payload],
+                batch_size=1,
+                flush=False,
+            )
+
+        from helpers.dlq import DlqConfig, retry_dlq_failures, log_dlq_summary
+
+        dlq_cfg = DlqConfig.from_env()
+        dlq_records = retry_dlq_failures(
+            data_loader,
+            failures,
+            on_dlq_success,
+            dataset=hf_dataset,
+            workers=config._workers,
+            config=dlq_cfg,
         )
+        log_dlq_summary(dlq_records)
+
+        flush = getattr(vector_db, "flush_collection", None)
+        if callable(flush):
+            flush(config._collection_name)
         logging.info(f"Inserted {inserted} items.")
         logging.info(
-            f"Successfully loaded {config.cloudbench_dataset} into Weaviate collection '{config._collection_name}'"
+            f"Successfully loaded {config.cloudbench_dataset} into {config.vector_db} collection '{config._collection_name}'"
         )
+        return dlq_records
     except Exception as e:
         logging.error(f"Error loading data: {e}")
         vector_db.close()
@@ -115,28 +152,13 @@ def main():
     logging.info("=" * 80)
     logging.info("Step 0: Setting up benchmark environment")
     logging.info("=" * 80)
-    logging.info("Initializing Weaviate client...")
-    weaviate_client = WeaviateAdapter.init_client(
-        host=config._weaviate_host,
-        port=config._weaviate_port,
-        grpc_port=config._weaviate_grpc_port,
-    )
-
     logging.info("Initializing Triton client...")
     triton_client = TritonClient.InferenceServerClient(
         url=f"{config._triton_host}:{config._triton_port}"
     )
 
-    query_method = WeaviateQuery(
-        weaviate_client=weaviate_client, triton_client=triton_client
-    )
-
-    logging.info("Creating adapters...")
-    vector_db = WeaviateAdapter(
-        weaviate_client=weaviate_client,
-        triton_client=triton_client,
-        query_method=query_method,
-    )
+    logging.info("Creating vector database adapters...")
+    vector_db, query_instance = init_vector_db(config, triton_client)
 
     logging.info("Creating model provider...")
     triton_model_provider = TritonModelProvider(triton_client=triton_client)
@@ -151,7 +173,7 @@ def main():
         split="train",
         sample_size=config.sample_size,
         seed=config.seed,
-        token=config._hf_token,
+        token=(config._hf_token or None),
     )
 
     logging.info("Creating data loader...")
@@ -168,7 +190,7 @@ def main():
         dataset=benchmark_dataset,
         collection_name=config._collection_name,
         limit=config.response_limit,
-        query_method=getattr(query_method, config.query_method),
+        query_method=getattr(query_instance, config.query_method),
         query_parameters=config.advanced_query_parameters,
         score_columns=["rerank_score", "clip_score"],
         target_vector=config.target_vector,
@@ -178,7 +200,9 @@ def main():
     logging.info("Step 1: Loading data into vector database")
     logging.info("=" * 80)
     try:
-        load_data(data_loader, vector_db, hf_dataset)
+        dlq_records = maybe_load_index(
+            config, load_data, data_loader, vector_db, hf_dataset
+        )
         logging.info("Data loading completed successfully.")
     except Exception as e:
         logging.error(f"Error loading data: {e}")
@@ -219,6 +243,12 @@ def main():
     logging.info(f"  - {query_evaluation_path}")
     logging.info(f"  - {config_csv_path}")
 
+    from helpers.dlq import DlqConfig, write_dlq_csv
+    dlq_cfg = DlqConfig.from_env()
+    dlq_path = results_dir / dlq_cfg.file_name
+    write_dlq_csv(dlq_path, dlq_records)
+    logging.info(f"  - {dlq_path}")
+
     if config._upload_to_s3:
         if not config._s3_bucket:
             logging.warning(
@@ -245,10 +275,12 @@ def main():
                 s3_key_config = (
                     f"{config._s3_prefix}/{timestamp}/{config._config_values_file}"
                 )
+                s3_key_dlq = f"{config._s3_prefix}/{timestamp}/{dlq_cfg.file_name}"
 
                 upload_to_s3(str(image_results_path), s3_key_image)
                 upload_to_s3(str(query_evaluation_path), s3_key_query)
                 upload_to_s3(str(config_csv_path), s3_key_config)
+                upload_to_s3(str(dlq_path), s3_key_dlq)
 
                 logging.info("S3 upload completed successfully.")
             except Exception as e:

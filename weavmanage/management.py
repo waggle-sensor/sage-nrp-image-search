@@ -18,6 +18,7 @@ def get_applied_migrations():
 
 def save_applied_migrations(migrations):
     """Save applied migrations"""
+    os.makedirs(os.path.dirname(APPLIED_MIGRATIONS_FILE), exist_ok=True)
     with open(APPLIED_MIGRATIONS_FILE, "w") as f:
         json.dump(migrations, f)
 

@@ -57,6 +57,7 @@ If `UPLOAD_TO_S3=true`, results are uploaded to `S3_PREFIX/{timestamp}/`.
 - `SEED` (default `42`)
 - `HF_TOKEN` (only needed if the dataset is private)
 - `COLLECTION_NAME` (default `Sagebench`)
+- `VECTOR_DB` (default `milvus`; set `weaviate` for the Weaviate path)
 - `S3_PREFIX` (default `dev-metrics/sagebench` for dev)
 - `RESPONSE_LIMIT` (default `50`)
 >NOTE: look at config.py for more environment variables.

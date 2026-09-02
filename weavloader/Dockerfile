@@ -14,7 +14,7 @@ RUN apt-get update \
 WORKDIR /app
 
 # Copy requirements.txt into the container
-COPY requirements.txt .
+COPY weavloader/requirements.txt .
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
@@ -26,12 +26,13 @@ ENV CELERY_RESULT_BACKEND=redis://localhost:6379/0
 ENV PYTHONUNBUFFERED=1
 ENV PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc_dir
 
-# Copy the rest of the application code into the container
-COPY . .
+# Copy application code and shared prompt catalog
+COPY weavloader/ .
+COPY prompts/ ./prompts/
 
 # Create supervisor configuration
 RUN mkdir -p /var/log/supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY weavloader/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Create Redis data directory with proper permissions
 RUN mkdir -p /var/lib/redis && chown -R root:root /var/lib/redis && chmod 755 /var/lib/redis

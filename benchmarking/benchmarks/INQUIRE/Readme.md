@@ -1,6 +1,6 @@
 # INQUIRE Benchmark
 
-Here we use [INQUIRE](https://github.com/inquire-benchmark/INQUIRE) with Weaviate as the vector database for benchmarking. Different models were used to generate captions and keywords for the images. Also different models were used to generate the embeddings for the images.
+Here we use [INQUIRE](https://github.com/inquire-benchmark/INQUIRE) with Milvus (default) or Weaviate as the vector database for benchmarking. Different models were used to generate captions and keywords for the images. Also different models were used to generate the embeddings for the images.
 
 ## Usage
 
@@ -18,7 +18,7 @@ To run this example, you'll need:
 - **Kubernetes cluster** access with `kubectl` configured
 - **kustomize** (or kubectl with kustomize support)
 - **Docker** for building images
-- **Weaviate and Triton** deployed (from `kubernetes/nrp-dev` or `kubernetes/nrp-prod` depending on the environment you want to use)
+- **Triton** deployed (from `kubernetes/nrp-dev` or `kubernetes/nrp-prod`) and NRP Milvus credentials (`MILVUS_TOKEN`). Weaviate is optional (`VECTOR_DB=weaviate`).
 
 ### Step-by-Step Setup
 
@@ -49,7 +49,7 @@ To run this example, you'll need:
      ```bash
      make logs
      ```
-   >NOTE: This loads [INQUIRE-Benchmark-small](https://huggingface.co/datasets/sagecontinuum/INQUIRE-Benchmark-small) into Weaviate, runs the evaluation, and saves results.
+   >NOTE: This loads [INQUIRE-Benchmark-small](https://huggingface.co/datasets/sagecontinuum/INQUIRE-Benchmark-small) into the configured vector database, runs the evaluation, and saves results.
 
 5. **Run Locally (Development)**:
    - For local development with port-forwarding:
@@ -61,7 +61,7 @@ To run this example, you'll need:
 ### Results
 
 Once the benchmark is run, three CSV files will be generated:
-- **`image_search_results.csv`**: Metadata of all images returned by Weaviate when different queries were being run
+- **`image_search_results.csv`**: Metadata of all images returned when different queries were being run
 - **`query_eval_metrics.csv`**: Calculated evaluation metrics (NDCG, precision, recall, etc.) based on images returned by different queries
 - **`config_values.csv`**: Configuration values used for the benchmark run (generated via `config.to_csv()`)
 
@@ -92,7 +92,7 @@ Results are saved to `/app/results` when running in Kubernetes (with volume moun
 
 ## Overview
 
-INQUIRE is a benchmark instance that uses the abstract benchmarking framework provided by the `imsearch-eval` Python package. The framework is installed from GitHub: https://github.com/waggle-sensor/imsearch_eval. This instance uses the INQUIRE dataset with Weaviate as the vector database.
+INQUIRE is a benchmark instance that uses the abstract benchmarking framework provided by the `imsearch-eval` Python package. The framework is installed from GitHub: https://github.com/waggle-sensor/imsearch_eval. This instance uses the INQUIRE dataset with Milvus by default (`VECTOR_DB=milvus`) and can still run against Weaviate.
 
 ## Directory Structure
 
@@ -155,12 +155,15 @@ The script uses a `config` object (instance of `INQUIREConfig`) to access all co
 
 ### 5. Shared Adapters (from `imsearch-eval` package)
 
+**MilvusAdapter and MilvusQuery** (default):
+- Provided by `imsearch_eval.adapters.milvus`
+- Dual-dense hybrid (`image_vector` + `caption_vector` + BM25) plus CLIP rerank of the query text embedding against stored `image_vector`s
+- Import: `from imsearch_eval.adapters import MilvusAdapter, MilvusQuery`
+- Selected via `helpers.backend.init_vector_db` when `VECTOR_DB=milvus`
+
 **WeaviateAdapter and WeaviateQuery**:
 - Provided by `imsearch_eval.adapters.weaviate`
-- `WeaviateQuery`: Independent implementation of Weaviate query methods
-- `WeaviateAdapter`: Uses `WeaviateQuery` for search operations
-- Supports query methods: `clip_hybrid_query`, `hybrid_query`, `colbert_query`, etc.
-- Implements `init_client()` class method for client initialization
+- Used when `VECTOR_DB=weaviate`
 - Import: `from imsearch_eval.adapters import WeaviateAdapter, WeaviateQuery`
 
 **TritonModelProvider and TritonModelUtils**:
@@ -197,28 +200,37 @@ All environment variables are loaded through the `INQUIREConfig` class in `confi
 - `INQUIRE_DATASET`: HuggingFace dataset name (default: `sagecontinuum/INQUIRE-Benchmark-small`)
 - `SAMPLE_SIZE`: Number of samples to use (0 = all, default: 0)
 - `SEED`: Random seed for sampling (default: 42)
-- `HF_TOKEN`: HuggingFace token (from secret, optional)
+- `HF_TOKEN`: HuggingFace token (from `huggingface-secret`, optional)
+
+**Model provider:**
+- `LLM_MODEL_PROVIDER`: `nrp` or `triton` (default: `triton`)
+- `NRP_API_KEY`: NRP Envoy AI Gateway API key (from `nrp-secret`; required when `LLM_MODEL_PROVIDER=nrp`)
+- `NRP_ENABLE_THINKING`: Enable thinking on NRP caption models (default: false)
 
 **Vector DB Parameters:**
+- `VECTOR_DB`: `milvus` (default) or `weaviate`
+- `MILVUS_URI`: NRP Milvus URI (default: `https://milvus.nrp-nautilus.io:50051`)
+- `MILVUS_TOKEN`: NRP Milvus token (`username:password`)
+- `MILVUS_DB`: database name (default: `image_search_svc`)
 - `WEAVIATE_HOST`: Weaviate host (default: 127.0.0.1)
 - `WEAVIATE_PORT`: Weaviate HTTP port (default: 8080)
 - `WEAVIATE_GRPC_PORT`: Weaviate gRPC port (default: 50051)
-- `COLLECTION_NAME`: Weaviate collection (default: INQUIRE)
+- `COLLECTION_NAME`: collection name (default: INQUIRE)
 
 **Inference Server Parameters:**
 - `TRITON_HOST`: Triton host (default: triton)
 - `TRITON_PORT`: Triton port (default: 8001)
 
 **Processing Parameters:**
-- `WORKERS`: Number of parallel workers (default: 5)
-- `IMAGE_BATCH_SIZE`: Batch size for processing images (default: 25)
-- `QUERY_BATCH_SIZE`: Batch size for parallel queries (default: 5)
+- `WORKERS`: Number of parallel workers (default: 16). Keeps the pool full for index + eval and fills Triton’s CLIP dynamic batcher.
+- `IMAGE_BATCH_SIZE`: Streamed insert chunk size during indexing (default: 32)
+- `QUERY_BATCH_SIZE`: Kept for API compatibility; in-flight query concurrency is `WORKERS` (default: 16)
 
 **Query Parameters:**
-- `QUERY_METHOD`: Query method to use (default: clip_hybrid_query)
-- `TARGET_VECTOR`: Target vector name (default: clip)
+- `QUERY_METHOD`: Query method (Milvus default: `clip_hybrid_query_dual_index`)
+- `TARGET_VECTOR`: Target vector name (Milvus default: `image_vector`)
 - `RESPONSE_LIMIT`: Maximum number of results to return (default: 50)
-- `QUERY_ALPHA`: Hybrid query alpha parameter (default: 0.4)
+- `QUERY_ALPHA`: Hybrid query alpha parameter (default: 0.65)
 - `QUERY_CLIP_ALPHA`: CLIP fusion weight at query time (default: 0.7)
 - `AUTOCUT_JUMPS`: Autocut jumps (default: 0)
 - `RERANK_PROP`: Property to use for reranking (default: caption)

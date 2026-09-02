@@ -4,18 +4,23 @@ Common issues and fixes for Sage Image Search deployments.
 
 ## Triton fails to load models
 
-**Symptoms:** Triton container restarts, logs show OSErrors loading CLIP or Gemma weights, or models stuck in `LOADING` state.
+**Symptoms:** Triton container restarts, logs show OSErrors loading CLIP or Gemma weights, models stuck in `LOADING` state, or:
+
+`Unrecognized processing class in /models/gemma-3-4b-it` / `failed to load all models`
 
 **Causes:**
-- Missing or invalid `HF_TOKEN`
+- Missing or invalid `HF_TOKEN` (or token without access to gated `google/gemma-3-4b-it`)
+- Incomplete Gemma download left in the pod `emptyDir` (entrypoint used to skip whenever the directory was non-empty)
+- Missing `processor_config.json` / `preprocessor_config.json` so `AutoProcessor` fails while CLIP still loads
 - Network issues downloading from Hugging Face
-- Insufficient disk space in the model volume
+- Insufficient disk / ephemeral-storage for model weights
 
 **Fixes:**
 
-1. Verify `HF_TOKEN` is set and has access to the required models (see [Authentication](authentication.md); create or rotate tokens at [Hugging Face access tokens](https://huggingface.co/docs/hub/en/security-tokens)).
+1. Verify `HF_TOKEN` is set, can access `google/gemma-3-4b-it`, and you have accepted the model license on Hugging Face (see [Authentication](authentication.md)).
 2. Check Triton logs: `docker compose logs triton` or `kubectl logs -l app=triton`.
-3. Manually download models and copy into the container (see [Getting Started](getting-started.md#triton-model-download-workaround)):
+3. On Kubernetes, **delete the Triton pod** so `emptyDir` model caches are cleared and `entrypoint.sh` re-downloads a complete snapshot (it now validates processor + weight files before skipping).
+4. Manually download models and copy into the container (see [Getting Started](getting-started.md#triton-model-download-workaround)):
 
 ```bash
 source .env
@@ -27,23 +32,23 @@ docker cp clip/. sage-nrp-image-search-triton-1:/models/clip/
 docker cp "$(basename "$GEMMA_MODEL_PATH")" sage-nrp-image-search-triton-1:/models/
 ```
 
+Triton is started with `--exit-on-error=false --strict-readiness=false` so CLIP can stay up even if Gemma fails; captioning on NRP (`LLM_RUN_MODE=NRP`) does not need local Gemma.
 ---
 
-## Gradio cannot connect to Weaviate
+## Gradio cannot connect to Milvus
 
-**Symptoms:** UI shows connection errors, logs repeat "Failed to connect to Weaviate".
+**Symptoms:** UI shows connection errors, logs repeat "Failed to connect to Milvus".
 
 **Causes:**
-- Weaviate is still starting up
-- Wrong host/port configuration
-- Weaviate pod crashed
+- NRP Milvus endpoint unreachable
+- Wrong `MILVUS_URI` / `MILVUS_TOKEN`
+- Missing or invalid milvus secret on Kubernetes / missing token in `.env` for Compose
 
 **Fixes:**
 
-1. Wait — the Gradio app retries every 10 seconds until Weaviate is ready.
-2. Verify Weaviate is running: `docker compose ps weaviate` or `kubectl get pods -l app=weaviate`.
-3. Check environment variables: `WEAVIATE_HOST`, `WEAVIATE_PORT`, `WEAVIATE_GRPC_PORT`.
-4. Port-forward if needed: `kubectl port-forward svc/dev-weaviate 8080:8080`.
+1. Wait — the Gradio app retries every 10 seconds until Milvus is ready.
+2. Check environment variables: `MILVUS_URI`, `MILVUS_TOKEN`, `MILVUS_COLLECTION`.
+3. Confirm NRP credentials from [vector-database docs](https://nrp.ai/documentation/userdocs/ai/vector-database/).
 
 ---
 
@@ -52,9 +57,9 @@ docker cp "$(basename "$GEMMA_MODEL_PATH")" sage-nrp-image-search-triton-1:/mode
 **Symptoms:** Queries return empty results or an empty metadata table.
 
 **Causes:**
-- Weavloader has not indexed any images yet
+- Weavloader has not indexed any images yet (fresh collections after Milvus cutover start empty)
 - All matching nodes are on the `UNALLOWED_NODES` deny list
-- The Weaviate collection is empty
+- The Milvus collection is empty or the wrong `MILVUS_COLLECTION` is configured
 - Query is too specific or uses terms not in indexed data
 
 **Fixes:**
@@ -86,13 +91,14 @@ docker cp "$(basename "$GEMMA_MODEL_PATH")" sage-nrp-image-search-triton-1:/mode
 
 ## Weavloader not ingesting images
 
-**Symptoms:** No new images appear in Weaviate; weavloader logs show no processing activity.
+**Symptoms:** No new images appear in Milvus; weavloader logs show no processing activity.
 
 **Causes:**
 - Invalid Sage credentials
 - Redis connection failure
 - Celery workers not running
 - All nodes filtered by `UNALLOWED_NODES`
+- Caption pause flag is set (`weavloader:caption_paused=1`) — ingest metadata queues, but no captions run
 
 **Fixes:**
 
@@ -100,6 +106,7 @@ docker cp "$(basename "$GEMMA_MODEL_PATH")" sage-nrp-image-search-triton-1:/mode
 2. Check Redis: `redis-cli ping` should return `PONG`.
 3. Check Celery worker status via Flower (port 5555) or logs.
 4. Review the DLQ for failed tasks — see [weavloader/README.md](../weavloader/README.md#dead-letter-queue-dlq).
+5. If you paused captioning for a bench, confirm `/health` (`caption_paused`, `caption_wait_size`) and clear the flag when done — see [Configuration → NRP fair use](configuration.md#nrp-fair-use-when-llm_run_modenrp).
 
 For detailed weavloader troubleshooting (DLQ, queue lengths, scaling), see the [weavloader troubleshooting section](../weavloader/README.md#troubleshooting).
 
@@ -113,12 +120,47 @@ For detailed weavloader troubleshooting (DLQ, queue lengths, scaling), see the [
 - `LLM_RUN_MODE=TRITON` but Gemma model not loaded in Triton
 - `LLM_RUN_MODE=NRP` but missing `NRP_API_KEY` or `NRP_API_ENDPOINT`
 - VLM timeout or OOM
+- NRP gemma overloaded by full-resolution images — see [NRP caption 500 errors on large images](#nrp-caption-500-errors-on-large-images) below
 
 **Fixes:**
 
 1. Check which mode is active: `LLM_RUN_MODE` in your environment (TRITON for Compose, NRP for K8s).
 2. For TRITON mode: verify Gemma is loaded in Triton (`kubectl logs -l app=triton`).
 3. For NRP mode: verify NRP secrets are configured (see [Authentication](authentication.md)).
+4. Check [NRP LLM status](https://nrp.ai/llm-status/) and the [Envoy LLMs Grafana dashboard](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) (see [Configuration → NRP fair use](configuration.md#nrp-fair-use-when-llm_run_modenrp) for the token-filter note).
+5. For large SAGE camera JPEGs or multi-megapixel benchmark datasets, enable `LLM_IMAGE_BYTE_LIMITING` (see section below).
+
+---
+
+## NRP caption 500 errors on large images
+
+**Symptoms:** NRP gemma caption requests fail with HTTP **500 Internal Server Error** (often intermittent). Weavloader DLQ or benchmark `dlq_records.csv` shows `caption_failed` with `empty caption from provider`. Large-image benchmarks (FireBench, SageBench, CloudBench) may fail on most rows; INQUIRE (images capped at 500px) typically completes cleanly.
+
+**Causes:**
+- `LLM_IMAGE_BYTE_LIMITING` defaults to `false`, so caption requests send full-resolution JPEGs from SAGE or Hugging Face datasets
+- FireBench and SageBench images are often multi-megapixel (common sizes include 3072×2048 and 6144×2048); oversized multimodal payloads can overload the NRP gemma backend
+- High worker concurrency (`WORKERS=8` on benchmarks, or weavloader processor concurrency at the gemma fair-use cap of 8) plus client SDK retries can amplify transient 500s into retry storms
+- Related: HTTP **413 Payload Too Large** when raw/base64 image exceeds gateway limits — byte limiting fixes this as well
+- Related: CLIP failures on RGBA images (`got [1,H,W,4]`) — caption/CLIP prep always converts to RGB before encode
+
+**Fixes:**
+
+1. Enable caption image byte limiting in weavloader or benchmark Job env:
+
+```yaml
+LLM_IMAGE_BYTE_LIMITING: "true"
+LLM_MAX_IMAGE_SIDE: "6144"
+LLM_MAX_IMAGE_BYTES: "12582912"   # 12 MiB
+```
+
+Image prep runs in [`weavloader/inference/image_utils.py`](../weavloader/inference/image_utils.py) and `imsearch_eval.framework.image_utils` — RGB conversion always applies; side cap, downscale, and JPEG quality stepping apply only when byte limiting is enabled. See [Configuration → Weavloader](configuration.md#weavloader-ingestion).
+
+2. For Kubernetes benchmark jobs, set the same variables in the Job env overlay (`benchmarking/kubernetes/base/benchmark-job.yaml` or per-bench `env.yaml`).
+3. Optionally reduce concurrency — e.g. `WORKERS=4` on benchmarks; keep total in-flight NRP captions within [fair-use limits](configuration.md#nrp-fair-use-when-llm_run_modenrp) (≤ 8 concurrent for gemma).
+4. Re-run failed items via DLQ retry after enabling byte limiting; retries reload images from the dataset with fresh prep.
+5. Check [NRP LLM status](https://nrp.ai/llm-status/) to rule out gateway outages unrelated to payload size.
+
+**Validated fix:** FireBench (4,082 images) indexed successfully with byte limiting enabled — zero DLQ failures, all captions generated.
 
 ---
 
@@ -128,10 +170,10 @@ For detailed weavloader troubleshooting (DLQ, queue lengths, scaling), see the [
 
 **Fixes:**
 
-1. Ensure the main stack (Weaviate + Triton) is deployed and healthy before running benchmarks.
+1. Ensure the main stack (Milvus credentials + Triton) is deployed and healthy before running benchmarks.
 2. Check job logs: `make logs` from the benchmark directory.
 3. See [benchmarking/kubernetes/README.md](../benchmarking/kubernetes/README.md) for deployment details.
-4. For local debugging: `make run-local` port-forwards Weaviate and Triton.
+4. For local debugging: `make run-local` port-forwards Triton (and any still-Weaviate-based benchmark adapters as documented under `benchmarking/`).
 
 ---
 
@@ -139,9 +181,9 @@ For detailed weavloader troubleshooting (DLQ, queue lengths, scaling), see the [
 
 **Symptoms:** Search works on NRP but not locally (or vice versa), different result quality.
 
-**Cause:** Local Compose uses `multi2vec-bind` vectorizer; NRP K8s uses user-provided CLIP vectors with a different query path.
+**Cause:** Caption backends may differ (`LLM_RUN_MODE=TRITON` vs `NRP`), or Compose/K8s use different `MILVUS_COLLECTION` values. Collections start empty until weavloader backfills.
 
-**Fix:** This is expected. For production-like behavior, test against the NRP deployment. See [Architecture](architecture.md#docker-compose-vs-kubernetes).
+**Fix:** Align `MILVUS_COLLECTION` and credentials with the target env. For production-like behavior, test against the NRP deployment. See [Architecture](architecture.md#docker-compose-vs-kubernetes).
 
 ---
 

@@ -81,7 +81,8 @@ See [Troubleshooting](troubleshooting.md) for more details.
 ### Local limitations
 
 - The Gradio UI container does not include Sage credentials by default, so image thumbnails may not display.
-- Docker Compose uses `multi2vec-bind` as the vectorizer, which differs from the NRP Kubernetes deployment. See [Architecture](architecture.md).
+- Compose and Kubernetes both use NRP-managed Milvus at `milvus.nrp-nautilus.io:50051` — set `MILVUS_URI` / `MILVUS_TOKEN` in `.env`. See [Architecture](architecture.md).
+- To browse collections and run ad-hoc queries while developing, connect [Attu](https://milvus.io/docs/quickstart_with_attu.md) to NRP Milvus. For pymilvus help, see [milvus-skill](https://github.com/zilliztech/milvus-skill). Details: [Authentication → Milvus development tools](authentication.md#milvus-development-tools).
 
 ---
 
@@ -95,7 +96,10 @@ Create secret files from templates in `kubernetes/base/`. See [kubernetes/README
 cp kubernetes/base/huggingface-secret.template.yaml kubernetes/base/._huggingface-secret.yaml
 cp kubernetes/base/sage-user-secret.template.yaml kubernetes/base/._sage-user-secret.yaml
 cp kubernetes/base/nrp-llm-user-secret.template.yaml kubernetes/base/._nrp-llm-user-secret.yaml
+cp kubernetes/base/milvus-secret.template.yaml kubernetes/base/._milvus-secret.yaml
 ```
+
+Fill `MILVUS_URI` / `MILVUS_TOKEN` in the milvus secret from [NRP vector-database docs](https://nrp.ai/documentation/userdocs/ai/vector-database/).
 
 Fill in base64-encoded values for each secret.
 
@@ -136,7 +140,6 @@ Port-forward for local debugging:
 ```bash
 kubectl port-forward svc/dev-triton 8001:8001
 kubectl port-forward svc/dev-gradio-ui 7860:7860
-kubectl port-forward svc/dev-weaviate 8080:8080
 kubectl port-forward svc/dev-weavloader-metrics 8081:8080
 ```
 
@@ -165,10 +168,10 @@ The `kubernetes/prs/` overlay lets you deploy a PR-specific build. See [kubernet
 
 ## What happens after deployment
 
-1. **Weavmanage** runs a one-shot Job to apply Weaviate schema migrations.
+1. **Weavmanage** runs a one-shot Job to create the env-specific Milvus collection schema.
 2. **Triton** downloads models and starts serving CLIP and Gemma.
-3. **Weavloader** begins polling the SAGE data stream and indexing new images.
-4. **Gradio UI** connects to Weaviate and Triton, ready for text queries.
+3. **Weavloader** begins polling the SAGE data stream and indexing new images into Milvus.
+4. **Gradio UI** connects to Milvus and Triton, ready for text queries (CLIP rerank via Triton).
 
 Indexing is continuous. New images appear in search results after weavloader processes them (typically within the `MONITOR_DATA_STREAM_INTERVAL`, default 60 seconds).
 

@@ -15,11 +15,13 @@ task_routes = {
     'job_system.tasks.process_dlq_tasks':  {'queue': 'cleanup'},
     'job_system.tasks.process_dlq_message': {'queue': 'cleanup'},
     'job_system.tasks.handle_dlq':            {'queue': 'cleanup'},
+    'job_system.tasks.drain_caption_wait':    {'queue': 'cleanup'},
 }
 
 # Periodic tasks (Celery Beat)
 monitor_interval = float(os.getenv('MONITOR_DATA_STREAM_INTERVAL', '60.0')) # in seconds
 process_dlq_interval = float(os.getenv('PROCESS_DLQ_INTERVAL', '86400.0')) # Daily in seconds (86400 seconds = 24 hours)
+caption_wait_drain_interval = float(os.getenv('CAPTION_WAIT_DRAIN_INTERVAL', '15.0')) # in seconds
 beat_schedule = {
     'monitor-data-stream': {
         'task': 'job_system.tasks.monitor_data_stream',
@@ -30,7 +32,12 @@ beat_schedule = {
         'task': 'job_system.tasks.process_dlq_tasks',
         'schedule': process_dlq_interval,  
         'options': {'queue': 'cleanup'},
-    }
+    },
+    'drain-caption-wait': {
+        'task': 'job_system.tasks.drain_caption_wait',
+        'schedule': caption_wait_drain_interval,
+        'options': {'queue': 'cleanup'},
+    },
 }
 
 # Celery configuration

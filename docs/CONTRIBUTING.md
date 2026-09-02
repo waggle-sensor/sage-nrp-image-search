@@ -69,27 +69,19 @@ Planned improvements and research directions. Items are not guaranteed or ordere
 
 ### Benchmarking and evaluation
 
-- [ ] Benchmark Milvus@NRP
+- [ ] Benchmark Milvus@NRP <Mark as done when you finish with milvus branch>
    - using the [benchmarking suite](../benchmarking/README.md)
+
+### Developer tooling
+
+- [ ] Stand up an MCP server that interacts with the image search Milvus database (`image_search_svc` / `SageImageSearch` / `SageImageSearchDev`)
+   - so agents (Cursor, Claude, etc.) can list collections, inspect schema, query, and hybrid-search without one-off scripts
+   - https://milvus.io/docs/milvus_and_mcp.md
+   - related: [zilliztech/mcp-server-milvus](https://github.com/zilliztech/mcp-server-milvus), [Milvus development tools](authentication.md#milvus-development-tools)
 
 ### Caption generation
 
 - [ ] Improve the caption that is generated to be more accurate. Measure "accurate" by using the [benchmarking suite](../benchmarking/README.md)
-   - [ ] try prompt repitition to see if it can improve the caption generation performance
-      - https://arxiv.org/pdf/2512.14982
-         - Paper Insights:
-            * Repeating the full prompt (`<QUERY><QUERY>`) improves accuracy in many non-reasoning settings.
-            * Gains were consistent across multiple major models.
-            * It does **not** increase output length or generation latency (only input length).
-            * Benefits shrink when explicit reasoning ("think step by step") is enabled.
-            * repitition x3 showed that it did even better than x2
-            * Repeating a **long, structured prompt** (like our scientific captioning) is more likely to experience gains vs a short simmple instruction.
-         - Repetition may improve:
-            * Format compliance
-            * Keyword count accuracy
-            * Constraint adherence
-            * It will double input tokens, so cost matters at scale.
-      - Remember to add the paper to references section, if you decide to implement this.
    - [ ] try using structured output with the caption generation model to better format the output
    - [ ] Try a Multi-Agent system with a Master agent and expert agents to improve the caption generation performance
       - for example, all images pass through a Master agent that passes the images to the correct expert agent based on the objects in the image.
@@ -100,18 +92,23 @@ Planned improvements and research directions. Items are not guaranteed or ordere
 - [ ] try https://github.com/chopratejas/headroom to reduce tokens and be more efficient with the caption generation model
    - remember to benchmark the performance of the caption generation model with headroom using the [benchmarking suite](../benchmarking/README.md)
    - blog about Headroom here: https://www.theregister.com/ai-ml/2026/05/31/netflix-wiz-creates-app-to-slash-ai-bills-then-open-sources-it/5248702
+- [ ] try converting the caption generation model to an agent that can be used to generate the caption.
+   - the agent will have a harness that will be helpful for the caption generation model to use.
+- [ ] try out https://github.com/microsoft/SkillOpt to improve the prompt and skills
 
 ### Reranking and retrieval
-
+- [ ] switch to reranking with Clip DFN5B-CLIP-ViT-H-14-378 <Mark as done when you finish with milvus branch>
+   - before making the switch permanent run the benchmarking suite to see if there are any regressions
+   - firebench results show that it is better than the current reranker model (ms-marco-MiniLM-L6-v2)
 - [ ] Improve the reranker model to be more accurate. Measure "accurate" by using the [benchmarking suite](../benchmarking/README.md)
-   - [ ] switch to reranking with Clip DFN5B-CLIP-ViT-H-14-378
-      - before making the switch permanent run the benchmarking suite to see if there are any regressions
-      - firebench results show that it is better than the current reranker model (ms-marco-MiniLM-L6-v2)
    - [ ] try an LLM to rerank the results instead of a reranker model.
       - The prompt to the LLM will ask it to rank the results based on the relevance to the query and return a score for each result. Weaviate can then use the scores to rank the results.
    - [ ] look into other reranker models to see if they can improve the reranking performance
 - [ ] look into MMR (maximal marginal relevance) to see if it can improve the reranking performance or to implement it as a "toggle" to apply it only to certain queries.
    - https://milvus.io/ai-quick-reference/how-is-diversity-in-search-results-achieved
+- [ ] try implementing AgenticRAG to see if it can improve retrieval performance. Measure "performance" by using the [benchmarking suite](../benchmarking/README.md)
+   - https://huggingface.co/docs/smolagents/en/examples/rag
+   - https://youtu.be/p0FERNkpyHE?si=WV2_0OEwNfFZKwgO
 
 ### Safety and observability
 
@@ -169,6 +166,11 @@ Planned improvements and research directions. Items are not guaranteed or ordere
          - Time between new image upload and being searchable
       - examples here: https://chatgpt.com/c/684b1286-1144-8003-8a20-85a1045375c3
 
+### Knowledge Graphs
+What if we build a massive knowledge graph of images and use it to answer scientific questions? This is still a research question, but it is a very interesting one. Maybe it can even help with searching for images.
+- https://milvus.io/blog/vector-graph-rag-without-graph-database.md
+- https://github.com/Graphify-Labs/graphify
+
 ### Performance
 
-- [ ] Utilize batching for Triton for Weavloader to use it
+- [x] Utilize batching for Triton for Weavloader to use it

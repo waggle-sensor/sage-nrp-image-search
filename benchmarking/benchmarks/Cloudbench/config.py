@@ -5,7 +5,10 @@ from weaviate.classes.config import VectorDistances, Configure
 from weaviate.collections.classes.config_vector_index import VectorFilterStrategy
 
 from imsearch_eval.framework.interfaces import Config
-from helpers.ablation import load_ablation_config, resolve_query_alpha
+from helpers.ablation import load_ablation_config
+from helpers.backend import apply_vector_db_config
+from helpers.caption_parse import load_caption_prompt
+from helpers.nrp import resolve_workers
 
 
 class CloudBenchConfig(Config):
@@ -40,10 +43,7 @@ class CloudBenchConfig(Config):
             "CONFIG_VALUES_FILE", "config_values.csv"
         )
 
-        # Weaviate parameters
-        self._weaviate_host = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
-        self._weaviate_port = os.environ.get("WEAVIATE_PORT", "8080")
-        self._weaviate_grpc_port = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
+        # Collection
         self._collection_name = os.environ.get("COLLECTION_NAME", "CloudBench")
 
         # model provider parameters
@@ -58,9 +58,9 @@ class CloudBenchConfig(Config):
         self._triton_port = os.environ.get("TRITON_PORT", "8001")
 
         # Workers parameters
-        self._workers = int(os.environ.get("WORKERS", 5))
-        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 25))
-        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 5))
+        self._workers = resolve_workers(self.llm_model_provider, self.caption_model_name)
+        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 32))
+        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 16))
 
         # Logging parameters
         self._log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -98,42 +98,12 @@ class CloudBenchConfig(Config):
         self.embed_caption = ablation["embed_caption"]
         self.index_clip_alpha = ablation["index_clip_alpha"]
         self.enable_bm25 = ablation["enable_bm25"]
+        self.skip_index = ablation["skip_index"]
 
-        # Query parameters
-        self.query_method = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
-        self.target_vector = os.environ.get("TARGET_VECTOR", "clip")
+        # Vector DB + query parameters
+        apply_vector_db_config(self, ablation, query_properties=["long_caption"])
         self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 25))
-        self.advanced_query_parameters = {
-            "alpha": resolve_query_alpha(ablation),
-            "query_properties": ["caption"],
-            "autocut_jumps": int(os.environ.get("AUTOCUT_JUMPS", 0)),
-            "rerank_prop": os.environ.get("RERANK_PROP", "caption"),
-            "clip_alpha": float(os.environ.get("QUERY_CLIP_ALPHA", 0.7)),
-        }
-
-        # Caption prompts (same as Firebench)
-        default_prompt = """
-role:
-You are a world-class Scientific Image Captioning Expert.
-
-context:
-You will be shown a scientific image captured by edge devices. Your goal is to analyze its content and significance in detail.
-
-task:
-Generate exactly one scientifically detailed caption that accurately describes what is visible in the image and its scientific relevance.
-Make it as detailed as possible. Also extract text and numbers from the images.
-
-constraints:
-- Only return:
-  1. A single caption.
-  2. a list of 15 keywords relevant to the image.
-- Do not include any additional text, explanations, or formatting.
-
-format:
-  caption: <your_scientific_caption_here>
-  keywords: <keyword1>, <keyword2>, ...
-"""
-        self.caption_model_prompt = os.environ.get("CAPTION_MODEL_PROMPT", default_prompt)
+        self.caption_model_prompt = load_caption_prompt()
 
     @staticmethod
     def is_nrp_key_set():

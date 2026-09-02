@@ -1,6 +1,6 @@
 # Weavloader
 
-**Weavloader** is a distributed image processing service that continuously monitors SAGE data streams, processes images with AI models, and stores them in Weaviate for hybrid search capabilities.
+**Weavloader** is a distributed image processing service that continuously monitors SAGE data streams, processes images with AI models, and stores them in Milvus for hybrid search capabilities.
 
 ## **What is Weavloader?**
 
@@ -8,14 +8,14 @@ Weavloader is a job processing system that:
 
 - **Monitors SAGE data streams** for new images from environmental sensors
 - **Processes images** using AI models (Gemma3, CLIP, Florence2) for captioning and embeddings
-- **Stores processed data** in Weaviate vector database for hybrid search
+- **Stores processed data** in Milvus vector database for hybrid search
 - **Handles failures gracefully** with automatic retries and dead letter queues
 - **Scales horizontally** to process thousands of images efficiently
 
 ## **Architecture**
 
 ```
-SAGE Data Stream → Weavloader → AI Processing → Weaviate Database
+SAGE Data Stream → Weavloader → AI Processing → Milvus Database
                       ↓
                  Redis Queue (Celery)
                       ↓
@@ -38,9 +38,12 @@ weavloader/
 │   ├── server.py        # HTTP metrics server (unified endpoint)
 │   └── artifacts/       # Prometheus configuration files
 ├── processing.py        # SAGE data stream processing
-├── client.py            # Weaviate client initialization
+├── seed.py              # Optional Hub → Milvus init seed (INIT_DATASET)
+├── client.py            # Milvus client initialization
 ├── main.py              # Application entry point
 └── supervisord.conf     # Process management
+
+Caption prompts live in the repo-root [`prompts/`](../prompts/) catalog (copied into the image as `/app/prompts`).
 ```
 
 ### **Components:**
@@ -51,7 +54,7 @@ weavloader/
 - **Flower Monitoring**: Real-time Celery task and worker monitoring
 - **Data Monitor**: Watches SAGE streams for new images
 - **Redis**: Message broker and task queue
-- **Weaviate**: Vector database for hybrid search
+- **Milvus**: Vector database for hybrid search
 
 ## **Key Features**
 
@@ -63,8 +66,9 @@ weavloader/
 - **Dead Letter Queue**: Failed jobs archived for manual inspection
 
 ### **AI Inference:**
-- **Multi-Model Support**: Gemma3, CLIP, Florence2, ColBERT, ALIGN
-- **Triton Integration**: High-performance model serving
+- **Multi-Model Support**: Gemma (NRP gateway or Triton), CLIP, Florence2, ColBERT
+- **Triton / NRP Integration**: CLIP via Triton; captions via Triton VLM or NRP AI Gateway (`LLM_RUN_MODE`)
+- **NRP Fair Use**: Cap total NRP caption concurrency when using the gateway (see [NRP Fair Use](#nrp-fair-use-captioning-via-ai-gateway))
 - **Configurable Hyperparameters**: Easy model tuning and optimization
 
 ### **Monitoring & Observability:**
@@ -83,7 +87,7 @@ weavloader/
 
 ### **Required Services:**
 - **Redis Server** (message broker)
-- **Weaviate Database** (vector storage)
+- **Milvus Database** (vector storage)
 - **Triton Inference Server** (ML model serving)
 - **SAGE Data Access** (environmental sensor data)
 
@@ -98,12 +102,26 @@ weavloader/
    export TRITON_PORT="8001"
 
 # Database
-export WEAVIATE_HOST="weaviate"
-export WEAVIATE_PORT="8080"
+export MILVUS_URI="https://milvus.nrp-nautilus.io:50051"
+export MILVUS_DB="image_search_svc"
+
+# Optional: seed empty collection from portable Hub parquet
+# (private dataset; requires HF_TOKEN). Skipped if collection already has rows.
+# export INIT_DATASET="sagecontinuum/init_img_search"
+# export INIT_DATASET_REVISION="main"
+# export INIT_DATASET_BATCH_SIZE="256"
+# export HF_TOKEN="hf_..."
 
 # Celery Configuration
    export CELERY_BROKER_URL="redis://localhost:6379/0"
    export CELERY_RESULT_BACKEND="redis://localhost:6379/0"
+
+# Caption backend: TRITON (local/Compose) or NRP (K8s default)
+# export LLM_RUN_MODE="NRP"
+# export NRP_LLM_MODEL="gemma"
+# export NRP_ENABLE_THINKING="false"   # keep false for fair-use / latency
+# export NRP_API_KEY="..."
+# export NRP_API_ENDPOINT="..."
 
 # Node Filtering (Optional)
 export UNALLOWED_NODES="node1,node2,node3"  # Comma-separated list of nodes to exclude
@@ -152,6 +170,7 @@ docker-compose logs weavloader
    - This port is exposed externally
 - **Flower**: Celery monitoring UI (port 5555)
 - **Supervisor**: Manages all processes
+- **init-dataset-seed** (oneshot): When `INIT_DATASET` is set, streams the Hub parquet into Milvus once, then exits. Idempotent if the collection is non-empty.
 
 ## **Worker Types**
 
@@ -160,7 +179,7 @@ Weavloader uses specialized Celery workers for different tasks:
 ### **Celery Processor**
 - **Role**: Processes individual image jobs
 - **Queue**: `image_processing`
-- **Concurrency**: 3 workers
+- **Concurrency**: 6 workers (`weavloader/main.py`; keep ≤ NRP fair-use cap when `LLM_RUN_MODE=NRP`)
 - **Node Name**: `processor@%h`
 - **Purpose**: AI model inference, image captioning, embedding generation
 
@@ -174,7 +193,7 @@ Weavloader uses specialized Celery workers for different tasks:
 ### **Celery Cleaner**
 - **Role**: Manages cleanup and maintenance tasks
 - **Queue**: `cleanup`
-- **Concurrency**: 2 workers
+- **Concurrency**: 3 workers
 - **Node Name**: `cleaner@%h`
 - **Purpose**: DLQ management, task cleanup, system maintenance
 
@@ -193,15 +212,51 @@ Weavloader uses specialized Celery workers for different tasks:
 - **Backoff**: Exponential (60s → 120s → 240s)
 - **Max Delay**: 10 minutes
 
+### **NRP Fair Use (captioning via AI Gateway)**
+
+When `LLM_RUN_MODE=NRP`, captions use the [NRP managed LLM](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) (default model [`gemma`](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)). Stay within per-user limits:
+
+| Rule | Weavloader practice |
+|------|---------------------|
+| Max concurrent requests (`gemma` / `gemma-small`) | **8** per user. Default processor concurrency is **6** with **1** deployment replica → **6 ≤ 8**. |
+| Combined context of concurrent requests | Stay under **35%** of model context (~92k tokens for gemma’s 262k window). Single-image caption jobs are typically only hundreds–low thousands of tokens each (Gemma 4 soft-token budget, default **280** vision tokens/image). |
+| Reasoning / thinking | Keep `NRP_ENABLE_THINKING=false` unless you need it (lower latency and token use). |
+| Retries under load | Celery exponential backoff (60s → 120s → 240s) matches NRP guidance to retry with increasing intervals. |
+
+**Do not** scale `replicas × processor_concurrency` above **8** while on NRP `gemma` without raising the fair-use allowance or switching caption backends. The NRP API key is shared with any other clients (e.g. benchmark jobs) — concurrent NRP caption load is summed per user.
+
+**Monitoring:** [NRP LLM status](https://nrp.ai/llm-status/) · [Envoy LLMs (Grafana)](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) — filtered to the Image Search API token; remove the **token** filter to see all NRP LLM consumers. Details: [Configuration → NRP fair use](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp).
+
+To keep weavloader from competing with a bench run, raise the Redis pause flag. SAGE ingest still records image metadata onto a wait list; captioning (and therefore CLIP / SAGE download) stays off until you clear the flag. Up to ~6 in-flight NRP calls may finish after you pause.
+
+```bash
+# Raise flag (stop sending NRP captions; metadata queues on weavloader:caption_wait)
+kubectl -n sage exec deploy/prod-weavloader -- redis-cli SET weavloader:caption_paused 1
+kubectl -n sage exec deploy/dev-weavloader -- redis-cli SET weavloader:caption_paused 1
+
+# Lower flag (drain wait queue onto image_processing; captioning resumes)
+kubectl -n sage exec deploy/prod-weavloader -- redis-cli SET weavloader:caption_paused 0
+kubectl -n sage exec deploy/dev-weavloader -- redis-cli SET weavloader:caption_paused 0
+
+# Inspect
+kubectl -n sage exec deploy/prod-weavloader -- redis-cli GET weavloader:caption_paused
+kubectl -n sage exec deploy/prod-weavloader -- redis-cli LLEN weavloader:caption_wait
+```
+
+Pause **both** `dev-weavloader` and `prod-weavloader` if both are on NRP — fair use is per API key, not per pod. Confirm via `/health` (`caption_paused`, `caption_wait_size`) or the `weavloader_caption_paused` / `weavloader_queue_size{queue_name="caption_wait"}` metrics.
+
+Env knobs: `LLM_RUN_MODE`, `NRP_LLM_MODEL`, `NRP_ENABLE_THINKING`, `LLM_IMAGE_BYTE_LIMITING`, `LLM_MAX_IMAGE_BYTES`, `LLM_MAX_IMAGE_SIDE`, `NRP_API_KEY`, `NRP_API_ENDPOINT`, `CAPTION_WAIT_DRAIN_INTERVAL`, `CAPTION_WAIT_DRAIN_BATCH` (see [docs/configuration.md](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp) and [docs/authentication.md](../docs/authentication.md#nrp-ai-gateway-credentials)).
+
 ### **Queue Configuration**:
 - **`image_processing`**: Individual image processing tasks (handled by Processor workers)
 - **`data_monitoring`**: Data monitoring and health check tasks (handled by Moderator workers)
 - **`cleanup`**: Cleanup and maintenance tasks (handled by Cleaner workers)
+- **`weavloader:caption_wait`**: Redis LIST of parked image metadata while `weavloader:caption_paused` is set (not a Celery queue; drained onto `image_processing` when the flag is cleared)
 
 ### **Scheduled Tasks**:
-- **Every 30 minutes**: Health check and monitoring
-- **Every hour**: Archive failed tasks to DLQ
-- **Daily**: Reprocess archived tasks
+- **Every 60 seconds** (default): Monitor SAGE data stream
+- **Every 15 seconds** (default): Drain caption wait list onto `image_processing` (no-op while paused)
+- **Daily**: Reprocess archived DLQ tasks
 
 ## **Manual Deployment**
 
@@ -257,6 +312,8 @@ redis-cli
 > LLEN image_processing
 > LLEN data_monitoring
 > LLEN cleanup
+> GET weavloader:caption_paused
+> LLEN weavloader:caption_wait
 > KEYS dlq:*
 
 # View health metrics
@@ -313,7 +370,9 @@ celery -A tasks worker --loglevel=info --concurrency=2 --hostname=worker3@%h
 ### **Horizontal Scaling:**
 - **Workers**: Scale based on image processing load
 - **Redis**: Use Redis Cluster for high availability
-- **Weaviate**: Scale Weaviate cluster for storage
+- **Milvus**: Scale Milvus collection/cluster for storage
+
+When `LLM_RUN_MODE=NRP`, treat **total** caption concurrency (`replicas × processor concurrency`) as subject to [NRP fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) (max **8** for `gemma`). Prefer scaling Triton CLIP capacity over exceeding that cap; see [NRP Fair Use](#nrp-fair-use-captioning-via-ai-gateway) above.
 
 ## **Troubleshooting**
 
@@ -393,7 +452,7 @@ export CELERY_RESULT_BACKEND="redis://redis-cluster:6379/0"
 Weavloader exposes comprehensive metrics on port 8080 with a **unified endpoint** that includes both custom weavloader metrics and Flower Celery metrics:
 
 - **Task Metrics**: Processing rates, success rates, duration
-- **Queue Metrics**: Queue sizes, DLQ status
+- **Queue Metrics**: Queue sizes, DLQ status, caption wait list, caption-pause flag
 - **System Metrics**: Memory usage, worker count, health status
 - **SAGE Metrics**: Stream health, image reception rates
 - **Model Metrics**: Inference duration, error rates
@@ -425,14 +484,14 @@ Import the provided `grafana-dashboard.json` to visualize:
 Use the provided `prometheus.yml` to scrape metrics from:
 - Weavloader (port 8080)
 - Redis (port 6379)
-- Weaviate (port 8080)
+- NRP Milvus (`milvus.nrp-nautilus.io:50051`)
 
 ## **Configuration Files:**
 
 ### **Core Application:**
 - **`main.py`**: Application entry point
 - **`processing.py`**: SAGE data stream processing
-- **`client.py`**: Weaviate client initialization
+- **`client.py`**: Milvus client initialization
 - **`supervisord.conf`**: Process management
 - **`Dockerfile`**: Container configuration
 - **`requirements.txt`**: Python dependencies
@@ -526,3 +585,7 @@ Flower metrics are automatically integrated into the unified Prometheus endpoint
 - [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)
    - [Multiprocess Mode](https://prometheus.github.io/client_python/multiprocess/)
 - [Sage Documentation](https://sagecontinuum.org/docs/about/overview)
+- [NRP Managed LLM — Fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/)
+- [NRP Managed LLM — Models (gemma)](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)
+- [NRP LLM status](https://nrp.ai/llm-status/)
+- [Envoy LLMs Grafana dashboard](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) (Image Search token filter — remove **token** for all consumers)

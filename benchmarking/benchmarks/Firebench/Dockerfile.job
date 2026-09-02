@@ -17,8 +17,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code (helpers and prompts are staged into the build context)
 COPY helpers/ ./helpers/
+COPY prompts/ ./prompts/
 COPY . .
 
 ENV PYTHONPATH=/app

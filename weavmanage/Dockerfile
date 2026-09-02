@@ -8,6 +8,9 @@ RUN apt-get update \
 # Set working directory
 WORKDIR /app
 
+# Directory for applied-migrations tracking (migrations.json)
+RUN mkdir -p /app/active
+
 # Copy requirements.txt into the container
 COPY requirements.txt .
 

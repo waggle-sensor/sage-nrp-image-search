@@ -128,7 +128,8 @@ The structure should be:
 ```python
 from config import MyConfig
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter
-from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider, WeaviateQuery
+from imsearch_eval.adapters import TritonModelProvider
+from helpers.backend import init_vector_db
 from benchmark_dataset import MyBenchmarkDataset
 from data_loader import MyDataLoader  # Optional
 
@@ -140,12 +141,22 @@ def load_data(data_loader, vector_db: VectorDBAdapter, hf_dataset):
     schema_config = data_loader.get_schema_config()
     vector_db.create_collection(schema_config)
     
-    # Process and insert data
-    results = data_loader.process_batch(batch_size=config._image_batch_size, 
-                                        dataset=hf_dataset, 
-                                        workers=config._workers)
-    inserted = vector_db.insert_data(config._collection_name, results, 
-                                     batch_size=config._image_batch_size)
+    # Process and stream-insert data (worker pool stays full; inserts as chunks complete)
+    inserted = 0
+    def on_batch(chunk):
+        nonlocal inserted
+        inserted += vector_db.insert_data(
+            config._collection_name, chunk, batch_size=len(chunk), flush=False
+        )
+    data_loader.process_batch(
+        batch_size=config._image_batch_size,
+        dataset=hf_dataset,
+        workers=config._workers,
+        on_batch=on_batch,
+    )
+    flush = getattr(vector_db, "flush_collection", None)
+    if callable(flush):
+        flush(config._collection_name)
 
 def run_evaluation(evaluator: BenchmarkEvaluator, hf_dataset):
     """Run the benchmark evaluation."""
@@ -229,6 +240,10 @@ The `imsearch-eval` package provides shared adapters you can use:
 - **TritonModelProvider**: For Triton inference server (implements `ModelProvider`)
 - **TritonModelUtils**: Triton implementation of `ModelUtils` interface
 
+**Milvus adapters** (default):
+- **MilvusAdapter**: For Milvus vector database (implements `VectorDBAdapter`)
+- **MilvusQuery**: Dual-dense + BM25 hybrid with CLIP rerank on stored `image_vector`s
+
 **Weaviate adapters**:
 - **WeaviateAdapter**: For Weaviate vector database (implements `VectorDBAdapter`)
 - **WeaviateQuery**: Weaviate query implementation (implements `Query` interface)
@@ -236,12 +251,12 @@ The `imsearch-eval` package provides shared adapters you can use:
 Import them:
 
 ```python
-from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider, WeaviateQuery, TritonModelUtils
+from imsearch_eval.adapters import MilvusAdapter, WeaviateAdapter, TritonModelProvider, WeaviateQuery, TritonModelUtils
 ```
 
 **Note**: Install the package with all extras needed:
 ```bash
-pip install "imsearch_eval[weaviate,triton,huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0"
+pip install "imsearch_eval[weaviate,milvus,triton,huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0"
 ```
 
 ## Deployment
@@ -284,6 +299,7 @@ Results can be automatically uploaded to S3-compatible storage (MinIO). Configur
 
 - **Base Kubernetes config**: S3 endpoint, bucket, and secure flag are set in `benchmarking/kubernetes/base/benchmark-job.yaml`
 - **S3 Secret**: Access key and secret key are stored in `benchmarking/kubernetes/base/._s3-secret.yaml`
+- **NRP Secret**: `NRP_API_KEY` is stored in `benchmarking/kubernetes/base/._nrp-secret.yaml` (copy from `nrp-secret.template.yaml`; required when `LLM_MODEL_PROVIDER=nrp`)
 - **Benchmark-specific**: Override `S3_PREFIX` in your benchmark's `nrp-dev/env.yaml` or `nrp-prod/env.yaml` if needed
 
 To enable S3 upload, set `UPLOAD_TO_S3=true` in the base config (already enabled by default). Results are uploaded with timestamps: `{S3_PREFIX}/{timestamp}/{filename}`.

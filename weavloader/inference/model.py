@@ -9,6 +9,10 @@ import json
 import base64
 from openai import OpenAI
 from io import BytesIO
+from PIL import Image
+
+
+from .image_utils import ensure_rgb, prepare_llm_image, prepare_llm_image_bytes
 
 def florence2_run_model(triton_client, task_prompt, image, text_input=""):
     """
@@ -137,6 +141,22 @@ def get_colbert_embedding(triton_client, text):
 
     return token_embeddings
 
+def _clip_infer_inputs(text, image=None):
+    """Build CLIP InferInputs with a leading batch dim of 1 (max_batch_size > 0)."""
+    text_np = np.array([[text.encode("utf-8")]], dtype=object)
+    if image is not None:
+        image_np = np.expand_dims(np.asarray(ensure_rgb(image), dtype=np.float32), 0)
+    else:
+        image_np = np.zeros((1, 1, 1, 3), dtype=np.float32)
+    inputs = [
+        TritonClient.InferInput("text", list(text_np.shape), "BYTES"),
+        TritonClient.InferInput("image", list(image_np.shape), "FP32"),
+    ]
+    inputs[0].set_data_from_numpy(text_np)
+    inputs[1].set_data_from_numpy(image_np)
+    return inputs
+
+
 def fuse_embeddings( img_emb: np.ndarray, txt_emb: np.ndarray, alpha: float = 0.5) -> np.ndarray:
     """
     Given two L2-normalized vectors img_emb and txt_emb (shape (D,)), 
@@ -201,30 +221,36 @@ def get_allign_embeddings(triton_client, text, image=None):
 
     return embedding
 
+def get_clip_embedding_pair(triton_client, text, image):
+    """
+    Return (caption_embedding, image_embedding) from Triton CLIP without fusion.
+
+    ``fuse_embeddings`` is kept for later experiments; ingest stores the two
+    modalities as separate Milvus FLOAT_VECTOR fields.
+    """
+    inputs = _clip_infer_inputs(text, image)
+    outputs = [
+        TritonClient.InferRequestedOutput("text_embedding"),
+        TritonClient.InferRequestedOutput("image_embedding")
+    ]
+
+    try:
+        results = triton_client.infer(model_name="clip", inputs=inputs, outputs=outputs)
+        text_embedding = results.as_numpy("text_embedding")[0]
+        image_embedding = results.as_numpy("image_embedding")[0]
+    except Exception as e:
+        logging.error(f"[MODEL] Error during CLIP inference: {str(e)}")
+        return None, None
+
+    return text_embedding, image_embedding
+
+
 def get_clip_embeddings(triton_client, text, image=None):
     """
     Embed text and image using CLIP encoder served via Triton Inference Server.
     Returns one fused embedding created from both modalities.
     """
-    # --- 1. Prepare Inputs ---
-    text_bytes = text.encode("utf-8")
-    text_np = np.array([text_bytes], dtype="object")
-
-    # Fallback image shape (e.g., placeholder 1x1 RGB)
-    if image is not None:
-        image_np = np.array(image).astype(np.float32)
-    else:
-        image_np = np.zeros((1, 1, 3), dtype=np.float32)
-
-    # Create Triton input objects
-    inputs = [
-        TritonClient.InferInput("text", [1], "BYTES"),
-        TritonClient.InferInput("image", list(image_np.shape), "FP32")
-    ]
-
-    inputs[0].set_data_from_numpy(text_np)
-    inputs[1].set_data_from_numpy(image_np)
-
+    inputs = _clip_infer_inputs(text, image)
     outputs = [
         TritonClient.InferRequestedOutput("text_embedding"),
         TritonClient.InferRequestedOutput("image_embedding")
@@ -251,7 +277,7 @@ def qwen2_5_run_model(triton_client, image, task_prompt=hp.caption_model_prompt)
     """
     takes in a task prompt and image, returns an answer using Qwen2.5-VL model
     """
-    # Prepare inputs for Triton
+    image = prepare_llm_image(image)
     image_width, image_height = image.size
     image_np = np.array(image).astype(np.uint8)
     task_prompt_bytes = task_prompt.encode("utf-8")
@@ -288,32 +314,27 @@ def gemma3_run_model(triton_client, image, task_prompt=hp.caption_model_prompt):
     """
     takes in a task prompt and image, returns an answer using gemma3 model
     """
-    # Prepare inputs for Triton
-    image_width, image_height = image.size
-    image_np = np.array(image).astype(np.uint8)
-    task_prompt_bytes = task_prompt.encode("utf-8")
+    image = prepare_llm_image(image)
+    image_np = np.expand_dims(np.asarray(image, dtype=np.uint8), 0)
+    prompt_np = np.array([[task_prompt.encode("utf-8")]], dtype=object)
 
-    # Prepare inputs & outputs for Triton
-    # NOTE: if you enable max_batch_size, leading number is batch size, example [1,1] 1 is batch size
     inputs = [
-        TritonClient.InferInput("image", [image_height, image_width, 3], "UINT8"),
-        TritonClient.InferInput("prompt", [1], "BYTES"),
+        TritonClient.InferInput("image", list(image_np.shape), "UINT8"),
+        TritonClient.InferInput("prompt", list(prompt_np.shape), "BYTES"),
     ]
     outputs = [
         TritonClient.InferRequestedOutput("answer")
     ]
-
-    # Add tensors
     inputs[0].set_data_from_numpy(image_np)
-    inputs[1].set_data_from_numpy(np.array([task_prompt_bytes], dtype="object"))
+    inputs[1].set_data_from_numpy(prompt_np)
 
-    # Perform inference
     try:
         response = triton_client.infer(model_name="gemma3", inputs=inputs, outputs=outputs)
 
-        # Get the result
-        answer = response.as_numpy("answer")[0]
-        answer_str = answer.decode("utf-8")
+        answer = response.as_numpy("answer").reshape(-1)[0]
+        answer_str = (
+            answer.decode("utf-8") if isinstance(answer, (bytes, np.bytes_)) else str(answer)
+        )
 
         logging.info(f'[MODEL] Final Generated Description: {answer_str}')
         return answer_str
@@ -343,9 +364,8 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.caption_model_pro
     if model not in NRP_MODELS:
         raise ValueError(f"Unsupported NRP LLM Model: {model}")
 
-    buffer = BytesIO()
-    image.save(buffer, format="PNG")
-    image_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    image_bytes, mime = prepare_llm_image_bytes(image)
+    image_b64 = base64.b64encode(image_bytes).decode("utf-8")
 
     try:
         create_kwargs = {
@@ -358,7 +378,7 @@ def run_nrp_model(client: OpenAI, image, model, task_prompt=hp.caption_model_pro
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/png;base64,{image_b64}"
+                                "url": f"data:image/{mime};base64,{image_b64}"
                             },
                         },
                     ],

@@ -27,6 +27,12 @@ queue_size = Gauge(
     multiprocess_mode='mostrecent'
 )
 
+caption_paused = Gauge(
+    'weavloader_caption_paused',
+    'Caption processing paused (1=paused, 0=running)',
+    multiprocess_mode='mostrecent'
+)
+
 # DLQ metrics
 dlq_size = Gauge(
     'weavloader_dlq_size',
@@ -85,16 +91,16 @@ model_inference_total = Counter(
 )
 
 # === DATABASE METRICS ===
-# Weaviate operations
-weaviate_operations_total = Counter(
-    'weavloader_weaviate_operations_total',
-    'Total Weaviate operations',
+# Milvus operations
+milvus_operations_total = Counter(
+    'weavloader_milvus_operations_total',
+    'Total Milvus operations',
     ['operation', 'status'],  # operation: insert, query, delete
 )
 
-weaviate_operation_duration = Histogram(
-    'weavloader_weaviate_operation_duration_seconds',
-    'Time spent on Weaviate operations',
+milvus_operation_duration = Histogram(
+    'weavloader_milvus_operation_duration_seconds',
+    'Time spent on Milvus operations',
     ['operation', 'status'],
     buckets=[0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0, 120.0, 300.0],
 )
@@ -110,7 +116,7 @@ errors_total = Counter(
 component_health = Gauge(
     'weavloader_component_health',
     'Component health status',
-    ['component'],  # component: redis, weaviate, triton, sage
+    ['component'],  # component: redis, milvus, triton, sage
     multiprocess_mode='mostrecent'
 )
 
@@ -125,6 +131,11 @@ class MetricsCollector:
         """Update queue size"""
         queue_size.labels(queue_name=queue_name).set(size)
         logging.debug(f"[METRICS] Queue size: {queue_name} - {size}")
+
+    def update_caption_paused(self, paused: bool):
+        """Update caption-pause flag (1=paused, 0=running)"""
+        caption_paused.set(1 if paused else 0)
+        logging.debug(f"[METRICS] Caption paused: {paused}")
     
     def update_dlq_size(self, size: int):
         """Update DLQ size"""
@@ -157,11 +168,11 @@ class MetricsCollector:
         model_inference_total.labels(model_name=model_name, operation=operation, status=status).inc()
         logging.debug(f"[METRICS] Model inference: {model_name} - {operation} - {duration:.2f}s - {status}")
     
-    def record_weaviate_operation(self, operation: str, status: str, duration: float):
-        """Record Weaviate operation"""
-        weaviate_operations_total.labels(operation=operation, status=status).inc()
-        weaviate_operation_duration.labels(operation=operation, status=status).observe(duration)
-        logging.debug(f"[METRICS] Weaviate operation: {operation} - {status} - {duration:.2f}s")
+    def record_milvus_operation(self, operation: str, status: str, duration: float):
+        """Record Milvus operation"""
+        milvus_operations_total.labels(operation=operation, status=status).inc()
+        milvus_operation_duration.labels(operation=operation, status=status).observe(duration)
+        logging.debug(f"[METRICS] Milvus operation: {operation} - {status} - {duration:.2f}s")
     
     def record_error(self, component: str, error_type: str):
         """Record an error"""

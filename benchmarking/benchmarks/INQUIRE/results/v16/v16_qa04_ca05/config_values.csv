@@ -1,0 +1,49 @@
+Config Variable,Value,Type
+advanced_query_parameters,"{'query_alpha': 0.4, 'clip_alpha': 0.5, 'enable_image_vector': True, 'enable_caption_vector': True, 'enable_bm25': True, 'rerank': True}",dict
+caption_model_name,gemma,str
+caption_model_prompt,"role:
+You are a world-class Scientific Image Captioning Expert.
+
+context:
+You will be shown a scientific image captured by edge devices. Your goal is to analyze its content and significance in detail.
+
+task:
+Generate a scientifically detailed caption of what is visible in the image and its scientific relevance. Also extract text and numbers from the images. Then write a short visual caption and 15 keywords.
+
+constraints:
+- Only return:
+  1. A long_caption: full scientific description, as detailed as needed. Include visible text, numbers, and scene context.
+  2. A short_caption: one dense scientific sentence, at most 55 tokens, describing visible content only. No device IDs, no timestamps, no dates, and no phrases like ""this image shows"" or ""this infrared image captured by"".
+  3. A list of exactly 15 keywords relevant to the image.
+- Do not include any additional text, explanations, or formatting.
+
+format:
+  long_caption: <your_scientific_caption_here>
+  short_caption: <one_dense_visual_scientific_sentence>
+  keywords: <keyword1>, <keyword2>, ...",str
+embed_caption,True,bool
+embed_image,True,bool
+enable_bm25,True,bool
+enable_caption_generation,True,bool
+hnsw_dist_metric,VectorDistances.COSINE,VectorDistances
+hnsw_dynamicEfMax,500,int
+hnsw_dynamicEfMin,200,int
+hnsw_ef,-1,int
+hnsw_ef_construction,100,int
+hnsw_ef_factor,20,int
+hnsw_filterStrategy,VectorFilterStrategy.ACORN,VectorFilterStrategy
+hnsw_flatSearchCutoff,40000,int
+hnsw_maxConnections,50,int
+hnsw_quantizer,"enabled=True bitCompression=None centroids=None encoder=_PQEncoderConfigCreate(type_=None, distribution=None) segments=None trainingLimit=500000",_PQConfigCreate
+hnsw_vector_cache_max_objects,1000000000000,int
+index_clip_alpha,0.7,float
+inquire_dataset,sagecontinuum/INQUIRE-Benchmark-small,str
+llm_model_provider,nrp,str
+nrp_enable_thinking,False,bool
+query_method,clip_hybrid_query_dual_index,str
+response_limit,50,int
+sample_size,0,int
+seed,42,int
+skip_index,True,bool
+target_vector,image_vector,str
+vector_db,milvus,str

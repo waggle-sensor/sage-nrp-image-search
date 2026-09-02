@@ -25,12 +25,10 @@ spec:
             - containerPort: 8080
               name: metrics
           env:
-            - name: WEAVIATE_HOST
-              value: "$(WEAVIATE_SERVICE)"
-            - name: WEAVIATE_PORT
-              value: "8080"
-            - name: WEAVIATE_GRPC_PORT
-              value: "50051"
+            - name: MILVUS_DB
+              value: "image_search_svc"
+            - name: MILVUS_COLLECTION
+              value: "SageImageSearch"
             - name: TRITON_HOST
               value: "$(TRITON_SERVICE)"
             - name: TRITON_PORT
@@ -47,11 +45,24 @@ spec:
               value: "gemma"
             - name: NRP_ENABLE_THINKING
               value: "false"
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: huggingface-secret
+                  key: token
+            - name: LLM_IMAGE_BYTE_LIMITING
+              value: "true"
+            - name: LLM_MAX_IMAGE_BYTES
+              value: "12582912"
+            - name: LLM_MAX_IMAGE_SIDE
+              value: "6144"
           envFrom:
             - secretRef:
                 name: sage-user-secret
             - secretRef:
                 name: nrp-llm-user-secret
+            - secretRef:
+                name: milvus-secret
           resources:
             limits:
               cpu: 2

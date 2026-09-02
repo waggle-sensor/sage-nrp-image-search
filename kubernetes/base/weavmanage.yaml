@@ -16,12 +16,13 @@ spec:
         - name: weavmanage
           image: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavmanage:latest
           env:
-            - name: WEAVIATE_HOST
-              value: "$(WEAVIATE_SERVICE)"
-            - name: WEAVIATE_PORT
-              value: "8080"
-            - name: WEAVIATE_GRPC_PORT
-              value: "50051"
+            - name: MILVUS_DB
+              value: "image_search_svc"
+            - name: MILVUS_COLLECTION
+              value: "SageImageSearch"
+          envFrom:
+            - secretRef:
+                name: milvus-secret
           resources:
             limits:
               cpu: 4

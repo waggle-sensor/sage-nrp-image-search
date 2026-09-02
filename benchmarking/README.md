@@ -13,6 +13,14 @@ This repository provides:
 
 The framework code itself (interfaces, adapters, evaluator) is in the separate [`imsearch_eval`](https://github.com/waggle-sensor/imsearch_eval) package.
 
+New runs default to **Milvus** on the NRP-managed cluster (`VECTOR_DB=milvus`, `MILVUS_DB=image_search_svc`) with per-benchmark collection names. Set `VECTOR_DB=weaviate` to use the in-cluster Weaviate path. Historical Weaviate result folders are unchanged.
+
+CLIP rerank matches production: the query text tower runs once, then hits are scored with vectorized `cosine(image_vector, query_text) * logit_scale`. There is no per-hit image download or extra Triton CLIP call.
+
+Captions use the shared [`prompts/`](../prompts/) catalog (`CAPTION_PROMPT_ID`, default `scientific_two_captions_v1`). CLIP embeds `short_caption` + keywords; BM25 indexes `long_caption` + keywords. After changing the prompt, re-caption and re-embed (do not reuse old `caption` collections).
+
+Index and query workers stay continuously filled (`WORKERS`). For Triton captioning the default is 16; for NRP `gemma` it is capped at **8** ([fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/)). Concurrent CLIP calls are combined by Triton’s dynamic batcher when the server has `max_batch_size > 0`. Set `QUERY_BATCH_SIZE` / `IMAGE_BATCH_SIZE` at least as large as `WORKERS`.
+
 The existing benchmarks are in the [imsearch_benchmarks](https://github.com/waggle-sensor/imsearch_benchmarks) repository. Some of them have been implemented here in this repository.
 
 ## Quick Start: Creating a New Benchmark
@@ -96,17 +104,52 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 
 | Variable | Default | Effect |
 |----------|---------|--------|
+| `VECTOR_DB` | `milvus` | Backend: `milvus` (default) or `weaviate` |
+| `WORKERS` | `16` (Triton) / NRP fair-use cap | Thread-pool size for indexing and query eval. When `LLM_MODEL_PROVIDER=nrp` and `CAPTION_MODEL_NAME=gemma`, clamped to **8** per [NRP fair use](https://nrp.ai/documentation/userdocs/ai/llm-managed/fair-use/) |
+| `IMAGE_BATCH_SIZE` | `32` | Streamed Milvus/Weaviate insert chunk size during indexing |
+| `QUERY_BATCH_SIZE` | `16` | Kept for API compatibility; in-flight query concurrency is `WORKERS` |
+| `LLM_MODEL_PROVIDER` | `triton` | Caption LLM: `nrp` (Envoy gateway) or `triton` |
+| `CAPTION_MODEL_NAME` | `gemma` | NRP model id (see [available models](https://nrp.ai/documentation/userdocs/ai/llm-managed/models/#gemma)); Triton uses its own model names |
+| `NRP_ENABLE_THINKING` | `false` | Keep `false` for captioning latency; Gemma reasoning is on by default on NRP unless disabled |
+| `LLM_IMAGE_BYTE_LIMITING` | `false` | When `true`, apply side cap, downscale, and JPEG quality stepping for all caption LLM providers |
+| `LLM_MAX_IMAGE_BYTES` | `12582912` (12 MiB) | Max caption image payload when byte limiting is enabled |
+| `LLM_MAX_IMAGE_SIDE` | `6144` | Longest-side cap when byte limiting is enabled |
 | `ENABLE_CAPTION_GENERATION` | `true` | When `false`, skips the caption LLM entirely and stores an empty caption |
-| `EMBED_IMAGE` | `true` | When `false`, index vectors use caption-only CLIP embeddings |
-| `EMBED_CAPTION` | `false` when caption generation is disabled | When `false`, index vectors use image-only CLIP embeddings |
-| `INDEX_CLIP_ALPHA` | `0.7` | Fusion weight for image vs caption when both modalities are embedded at index time. A higher value means more weight is given to the image modality. |
-| `QUERY_CLIP_ALPHA` | `0.7` | CLIP fusion weight when embedding the query text at search time. As of right now, it is not used since only text queries are supported. A higher value means more weight is given to the image modality. |
-| `ENABLE_BM25` | `true` | When `false`, sets hybrid query `alpha=1.0` (vector-only retrieval) |
-| `QUERY_ALPHA` | `0.4` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality. |
+| `EMBED_IMAGE` | `true` | Milvus: omit the `image_vector` hybrid leg. Weaviate: index-time CLIP fusion uses image only when caption is also disabled |
+| `EMBED_CAPTION` | `false` when caption generation is disabled | Milvus: omit the `caption_vector` hybrid leg. Weaviate: index-time CLIP fusion |
+| `INDEX_CLIP_ALPHA` | `0.7` | Weaviate-only index-time fusion weight for image vs caption. Unused on Milvus (fusion is query-time via `QUERY_CLIP_ALPHA`) |
+| `QUERY_CLIP_ALPHA` | `0.7` | Within dense retrieval, weight for `image_vector` vs `caption_vector` (Milvus) or fused query embedding (Weaviate) |
+| `ENABLE_BM25` | `true` | When `false`, omits the BM25/keyword leg (Milvus) or sets hybrid `alpha=1.0` (Weaviate) |
+| `QUERY_ALPHA` | `0.65` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality. With `QUERY_CLIP_ALPHA=0.7` this is 46% image / 20% caption / 35% BM25 |
+| `SKIP_INDEX` | `false` | When `true`, skip collection drop/ingest and query an existing `COLLECTION_NAME`. Fails if the collection is missing. Use for query-time sweeps (`QUERY_ALPHA`, `QUERY_CLIP_ALPHA`) |
+| `CAPTION_PROMPT_ID` | `scientific_two_captions_v1` | Prompt catalog id from [`prompts/`](../prompts/). Same catalog as weavloader. |
+| `CAPTION_MODEL_PROMPT` | unset | Raw prompt override; if set, `CAPTION_PROMPT_ID` is ignored |
 
-`ENABLE_BM25=false` disables the BM25 keyword leg of hybrid search. The cross-encoder reranker still runs unless you change `QUERY_METHOD` or `RERANK_PROP`.
+`ENABLE_BM25=false` disables the BM25 keyword leg of hybrid search. CLIP rerank still runs against stored `image_vector`s (same `logits_per_image` math as production) unless you change `QUERY_METHOD` or set `rerank` to false.
 
-Use a distinct `COLLECTION_NAME` for each ablation condition so indexed vectors do not mix across experiments.
+Keep `IMAGE_BATCH_SIZE` and `QUERY_BATCH_SIZE` ≥ `WORKERS` so batch knobs do not under-subscribe the pool. Indexing streams inserts as items complete (no “process all → insert all” barrier).
+
+**NRP fair use:** for `gemma` / `gemma-small`, max per-user concurrency is 8 (short requests). K8s `nrp-dev` / `nrp-prod` overlays set `WORKERS=8` and `QUERY_BATCH_SIZE=8`. `resolve_workers()` also clamps if `WORKERS` is set higher. Leave `NRP_ENABLE_THINKING=false` so captions do not pay for reasoning tokens. DLQ exponential backoff matches NRP’s guidance to retry with increasing intervals. Monitor gateway load via [NRP LLM status](https://nrp.ai/llm-status/) and [Envoy LLMs (Grafana)](https://grafana.nrp-nautilus.io/d/ad8bzhl/envoy-llms?from=now-1h&to=now&timezone=browser&var-team_id=$__all&var-model=$__all&var-token=Francisco) (Image Search token filter — remove **token** to see all consumers; see [docs/configuration.md](../docs/configuration.md#nrp-fair-use-when-llm_run_modenrp)).
+
+Use a distinct `COLLECTION_NAME` for each **index-time** ablation so vectors do not mix. `SKIP_INDEX=true` is the exception: keep the same collection and only change query-time knobs (`QUERY_ALPHA`, `QUERY_CLIP_ALPHA`). New result folders should still use a new version name (e.g. `v16_ca085`) so leaderboards can compare against historical runs.
+
+K8s `make run` does not forward shell env into the Job. For cluster query-only runs, patch `SKIP_INDEX` / `QUERY_CLIP_ALPHA` / `QUERY_ALPHA` in the overlay `env.yaml` (base default is `SKIP_INDEX=false`).
+
+### Indexing DLQ
+
+Hard failures (`process_item` returns `None` / raises) and soft caption failures (LLM returned empty) are held in an in-memory DLQ, retried with production-style exponential backoff, then written to CSV and uploaded with other metrics when `UPLOAD_TO_S3=true`. On exhausted soft retries, the dataset `summary` is used as the caption fallback (or `""` when no summary exists, e.g. INQUIRE). The DLQ stores only `dataset_idx` / ids (no images); retries reload rows from the HuggingFace dataset on disk.
+
+| Variable | Default | Effect |
+|----------|---------|--------|
+| `DLQ_MAX_RETRIES` | `6` | Retry rounds after the first failure |
+| `DLQ_RETRY_BASE_SECONDS` | `60` | Backoff base; delay = `base * 2^attempt` (60s → 120s → 240s) |
+| `DLQ_FILE` | `dlq_records.csv` | Local/S3 filename for terminal DLQ outcomes |
+
+Semantics:
+
+- Soft caption failure: do **not** insert on first empty caption; retry captioning; after retries are exhausted, force-insert with `summary` or `""` (`final_status=inserted_degraded`).
+- Hard failure: never insert unless a retry succeeds (`retried_ok`); otherwise `abandoned`.
+- CSV columns: `image_id`, `query_id`, `reason`, `error`, `attempts`, `final_status`, `last_error` (no image bytes).
 
 ### Example Ablation Runs
 
@@ -126,6 +169,9 @@ COLLECTION_NAME=inquire-caption-only-vector make run
 
 # Full pipeline but disable BM25 keyword matching
 ENABLE_BM25=false COLLECTION_NAME=inquire-no-bm25 make run
+
+# Query-only blend sweep on an existing v15 collection (does not drop the index)
+SKIP_INDEX=true QUERY_CLIP_ALPHA=0.85 COLLECTION_NAME=INQUIRE make run-local
 ```
 
 Shared ablation logic lives in [`helpers/ablation.py`](helpers/ablation.py). Index-time CLIP fusion delegates to `imsearch_eval`'s `TritonModelUtils.get_clip_embeddings()`.
@@ -182,8 +228,7 @@ from imsearch_eval.framework.interfaces import Config
 class MyConfig(Config):
     def __init__(self):
         self.MYBENCHMARK_DATASET = os.environ.get("MYBENCHMARK_DATASET", "your-dataset/name")
-        self.WEAVIATE_HOST = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
-        # ... add more environment variables
+        # VECTOR_DB, MILVUS_*, WEAVIATE_* are loaded via helpers.backend.apply_vector_db_config
 ```
 
 See `benchmarks/template/config.py` and `benchmarks/INQUIRE/config.py` for examples.
@@ -200,7 +245,8 @@ Create `run_benchmark.py` that combines data loading and evaluation. The script 
 ```python
 from config import MyConfig
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter
-from imsearch_eval.adapters import WeaviateAdapter, TritonModelProvider, WeaviateQuery
+from imsearch_eval.adapters import TritonModelProvider
+from helpers.backend import init_vector_db
 from benchmark_dataset import MyBenchmarkDataset
 from data_loader import MyDataLoader  # Optional
 
@@ -253,9 +299,11 @@ Add the required packages:
 
 ```txt
 # Core benchmarking framework (install with all extras needed)
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[milvus] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+```
 
 # S3 upload support (MinIO)
 minio>=7.2.0
@@ -349,6 +397,8 @@ Located in `kubernetes/base/`, these provide common Kubernetes resources:
 - `benchmark-job.yaml` - Combined job template (loads data and evaluates)
 - `._s3-secret.yaml` - S3 credentials secret (use the template file as a guide)
 - `._huggingface-secret.yaml` - HuggingFace token secret (use the template file as a guide)
+- `._nrp-secret.yaml` - NRP Envoy AI Gateway API key (`NRP_API_KEY`; use the template file as a guide)
+- `._milvus-secret.yaml` - NRP Milvus URI and token (use the template file as a guide)
 - `kustomization.yaml` - Base kustomization config
 
 > **Important:** 
@@ -390,19 +440,12 @@ The `benchmarks/template/` directory provides a complete starting point for new 
 All benchmarks depend on the [`imsearch_eval`](https://github.com/waggle-sensor/imsearch_eval) package, which provides:
 - Abstract interfaces (`VectorDBAdapter`, `ModelProvider`, `Query`, `BenchmarkDataset`, etc.)
 - Evaluation logic (`BenchmarkEvaluator`)
-- Shared adapters (`WeaviateAdapter`, `TritonModelProvider`, etc.)
+- Shared adapters (`MilvusAdapter`, `WeaviateAdapter`, `TritonModelProvider`, etc.)
 
 Install it via:
 ```bash
 # Install with all extras needed for benchmarks
-pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-pip install imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-pip install imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-```
-
-Or install all at once:
-```bash
-pip install "imsearch_eval[weaviate,triton,huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0"
+pip install "imsearch_eval[weaviate,milvus,triton,huggingface,nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0"
 ```
 
 See the [`imsearch_eval` README](https://github.com/waggle-sensor/imsearch_eval) for framework documentation.

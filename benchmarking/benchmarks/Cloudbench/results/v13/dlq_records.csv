@@ -1,0 +1,111 @@
+image_id,query_id,reason,error,attempts,final_status,last_error
+ccsn/Ci/Ci-N134.jpg,query_060,caption_failed,empty caption from provider,1,retried_ok,
+ccsn/Ns/Ns-N260.jpg,query_060,caption_failed,empty caption from provider,1,retried_ok,
+ccsn/Ct/Ct-N026.jpg,query_060,caption_failed,empty caption from provider,1,retried_ok,
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d15bc77/1649914110736988853-sample.jpg,query_060,caption_failed,empty caption from provider,1,retried_ok,
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d15bc77/1643560954154307904-sample.jpg,query_060,caption_failed,empty caption from provider,1,retried_ok,
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d15bc77/1643787028927550078-sample.jpg,query_060,caption_failed,empty caption from provider,1,retried_ok,
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d15bc77/1649914580126012699-sample.jpg,query_060,caption_failed,empty caption from provider,1,retried_ok,
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d15bc8c/1649915411467039906-sample.jpg,query_060,caption_failed,empty caption from provider,1,retried_ok,
+ccsn/Ci/Ci-N022.jpg,query_110,caption_failed,empty caption from provider,1,retried_ok,
+ccsn/Ct/Ct-N151.jpg,query_110,caption_failed,empty caption from provider,1,retried_ok,
+ccsn/Ct/Ct-N142.jpg,query_110,caption_failed,empty caption from provider,1,retried_ok,
+ccsn/Cu/Cu-N133.jpg,query_110,caption_failed,empty caption from provider,1,retried_ok,
+ccsn/Cu/Cu-N005.jpg,query_110,caption_failed,empty caption from provider,1,retried_ok,
+ccsn/Ac/Ac-N125.jpg,query_110,caption_failed,empty caption from provider,1,retried_ok,
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d15bc8c/1654744611243713908-sample.jpg,query_110,caption_failed,empty caption from provider,1,retried_ok,
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d15bc77/1663135404304910825-sample.jpg,query_110,caption_failed,empty caption from provider,1,retried_ok,
+sage/imagesampler-top-446/sage-imagesampler-top-0.3.0/000048b02d35a9b2/1720831506222787140-sample.jpg,query_005,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645713317061866863-sample.jpg,query_009,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740263026757448-sample.jpg,query_003,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1692896416240049284-sample.jpg,query_007,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645712159073823007-sample.jpg,query_005,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1699869615711801512-sample.jpg,query_006,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739230217251877-sample.jpg,query_002,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645711877411999261-sample.jpg,query_003,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739856208401930-sample.jpg,query_020,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739731036836853-sample.jpg,query_010,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740294357324121-sample.jpg,query_011,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645713191841078985-sample.jpg,query_017,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739699701060465-sample.jpg,query_014,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-2701/sage-imagesampler-top-0.3.7/000048b02d3ae2f4/1748944809367071922-sample.jpg,query_019,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739981276729042-sample.jpg,query_021,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645711595801156097-sample.jpg,query_025,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1731/sage-imagesampler-top-0.3.5/000048b02d3b1313/1748134807996224007-top_camera.jpg,query_036,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739230217251877-sample.jpg,query_032,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740325663946330-sample.jpg,query_042,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-13/sage-imagesampler-top-0.3.5/000048b02d3af4a3/1758114019638525838-top_camera.jpg,query_040,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740419493459079-sample.jpg,query_028,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-2701/sage-imagesampler-top-0.3.7/000048b02d3ae2f4/1748062809877846861-sample.jpg,query_037,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645712503351378672-sample.jpg,query_046,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1699869615711801512-sample.jpg,query_039,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645712252922052630-sample.jpg,query_043,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645712065198661030-sample.jpg,query_040,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1701360007421914490-sample.jpg,query_043,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740263026757448-sample.jpg,query_047,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1731/sage-imagesampler-top-0.3.5/000048b02d3b1313/1748134807996224007-top_camera.jpg,query_050,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-2701/sage-imagesampler-top-0.3.7/000048b02d3ae2f4/1761987607772423651-sample.jpg,query_043,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645713191841078985-sample.jpg,query_055,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1274/sage-imagesampler-top-0.3.4/00004cd98fb56d33/1716307211635833467-sample.jpg,query_018,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740075222340931-sample.jpg,query_049,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645713160548464822-sample.jpg,query_049,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1702087207774013558-sample.jpg,query_045,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645711971293218021-sample.jpg,query_060,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740419493459079-sample.jpg,query_060,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645711971293218021-sample.jpg,query_060,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740075222340931-sample.jpg,query_062,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1274/sage-imagesampler-top-0.3.5/00004cd98fb56d33/1767045605081266754-sample.jpg,query_030,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1699869615711801512-sample.jpg,query_047,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-7/sage-imagesampler-top-0.3.0/000048b02d15bc77/1701291619297573144-sample.jpg,query_064,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739981276729042-sample.jpg,query_062,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739324152013513-sample.jpg,query_067,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739856208401930-sample.jpg,query_068,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1699869615711801512-sample.jpg,query_054,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-13/sage-imagesampler-top-0.3.5/000048b02d3af4a3/1758114019638525838-top_camera.jpg,query_070,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645712409400986073-sample.jpg,query_068,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645713285754038416-sample.jpg,query_069,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739167591511579-sample.jpg,query_070,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645711971293218021-sample.jpg,query_073,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d3af4a3/1699869617921609048-sample.jpg,query_073,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740294357324121-sample.jpg,query_072,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740889082888358-sample.jpg,query_073,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739950013149896-sample.jpg,query_074,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739167591511579-sample.jpg,query_070,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645712941469870092-sample.jpg,query_080,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645712941469870092-sample.jpg,query_076,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739981276729042-sample.jpg,query_085,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740231718395203-sample.jpg,query_085,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1699869615711801512-sample.jpg,query_072,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739292846773108-sample.jpg,query_082,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645712941469870092-sample.jpg,query_089,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739981276729042-sample.jpg,query_084,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645712221595254092-sample.jpg,query_092,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1731/sage-imagesampler-top-0.3.5/000048b02d3b1313/1748134807996224007-top_camera.jpg,query_087,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740482093010128-sample.jpg,query_092,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.3.0/000048b02d0766be/1689404417402462449-sample.jpg,query_078,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739449349557857-sample.jpg,query_091,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739324152013513-sample.jpg,query_095,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739230217251877-sample.jpg,query_093,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1731/sage-imagesampler-top-0.3.5/000048b02d3b1313/1748062806842038933-top_camera.jpg,query_091,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645713317061866863-sample.jpg,query_101,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645712252922052630-sample.jpg,query_096,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739418053212234-sample.jpg,query_096,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645711752282739851-sample.jpg,query_103,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1731/sage-imagesampler-top-0.3.5/000048b02d3b1313/1758409215547368203-top_camera.jpg,query_098,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1688724012514264505-sample.jpg,query_108,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1731/sage-imagesampler-top-0.3.5/000048b02d3b1313/1758409215547368203-top_camera.jpg,query_103,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645711752282739851-sample.jpg,query_113,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-446/sage-imagesampler-top-0.3.0/000048b02d35a9b2/1720831506222787140-sample.jpg,query_116,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739386738141653-sample.jpg,query_115,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1645711658412950339-sample.jpg,query_113,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1697785227509221033-sample.jpg,query_109,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1731/sage-imagesampler-top-0.3.5/000048b02d3b1313/1748062806842038933-top_camera.jpg,query_115,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740575971133805-sample.jpg,query_115,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739762302604875-sample.jpg,query_115,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740450789792623-sample.jpg,query_043,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1274/sage-imagesampler-top-0.3.5/00004cd98fb56d33/1749423637026602210-sample.jpg,query_081,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top/sage-imagesampler-top-0.3.0/000048b02d0766be/1688724012514264505-sample.jpg,query_120,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646740482093010128-sample.jpg,query_120,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/sage/sage-imagesampler-top-0.2.5/000048b02d3ae2e2/1646739981276729042-sample.jpg,query_118,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1274/sage-imagesampler-top-0.3.5/00004cd98fb56d33/1745352005286033420-sample.jpg,query_101,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
+sage/imagesampler-top-1274/sage-imagesampler-top-0.3.5/00004cd98fb56d33/1745352005286033420-sample.jpg,query_120,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider

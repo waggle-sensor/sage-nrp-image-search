@@ -1,6 +1,6 @@
 # Sage Image Search Documentation
 
-Sage Image Search is a hybrid image retrieval system for the [SAGE Continuum](https://sagecontinuum.org) sensor network. It continuously indexes camera images from SAGE, generates AI captions and embeddings, stores them in Weaviate, and lets you search with natural-language text queries.
+Sage Image Search is a hybrid image retrieval system for the [SAGE Continuum](https://sagecontinuum.org) sensor network. It continuously indexes camera images from SAGE, generates AI captions and embeddings, stores them in NRP-managed Milvus, and lets you search with natural-language text queries.
 
 ## I want to...
 
@@ -10,6 +10,7 @@ Sage Image Search is a hybrid image retrieval system for the [SAGE Continuum](ht
 | Search for images | [Using the Search UI](using-the-search-ui.md) |
 | Run or deploy the stack | [Getting Started](getting-started.md) |
 | Set up credentials | [Authentication](authentication.md) |
+| Inspect Milvus (Attu / milvus-skill) | [Authentication → Milvus development tools](authentication.md#milvus-development-tools) |
 | Understand how it works | [Overview](overview.md) → [Architecture](architecture.md) |
 | Configure models or search tuning | [Configuration](configuration.md) |
 | Fix a problem | [Troubleshooting](troubleshooting.md) |

@@ -22,6 +22,7 @@ JOB_TAG ?= latest
 ENV ?= dev
 
 # Local run configuration
+VECTOR_DB ?= milvus
 WEAVIATE_SERVICE ?= $(ENV)-weaviate
 TRITON_SERVICE ?= $(ENV)-triton
 WEAVIATE_HTTP_PORT ?= 8080
@@ -31,6 +32,8 @@ LOCAL_WEAVIATE_HTTP_PORT ?= 8080
 LOCAL_WEAVIATE_GRPC_PORT ?= 50051
 LOCAL_TRITON_GRPC_PORT ?= 8001
 RUN_SCRIPT ?= run_benchmark.py
+MILVUS_URI ?= https://milvus.nrp-nautilus.io:50051
+MILVUS_DB ?= image_search_svc
 
 # Derived variables
 JOB_IMAGE ?= $(REGISTRY)/benchmark-$(BENCHMARK_NAME)-job
@@ -56,10 +59,11 @@ build:
 		echo "Error: DOCKERFILE_JOB must be set"; exit 1; \
 	fi
 	@echo "Building benchmark job image..."
-	@rm -rf ./helpers
+	@rm -rf ./helpers ./prompts
 	@cp -r ../../helpers ./helpers
+	@cp -r ../../../prompts ./prompts
 	@docker build -t $(JOB_IMAGE):$(JOB_TAG) -f $(DOCKERFILE_JOB) .
-	@rm -rf ./helpers
+	@rm -rf ./helpers ./prompts
 	@echo "Build complete. Push with:"
 	@echo "  docker push $(JOB_IMAGE):$(JOB_TAG)"
 
@@ -132,16 +136,20 @@ logs: kubectl
 # Local Development Targets
 # ============================================================================
 
-# Start port-forwarding for Weaviate and Triton services
+# Start port-forwarding for Triton (always) and Weaviate (VECTOR_DB=weaviate only)
 port-forward-start: kubectl
 	@echo "Starting port-forwarding for services..."
-	@echo "Weaviate HTTP: localhost:$(LOCAL_WEAVIATE_HTTP_PORT) -> $(WEAVIATE_SERVICE):$(WEAVIATE_HTTP_PORT)"
-	@echo "Weaviate gRPC: localhost:$(LOCAL_WEAVIATE_GRPC_PORT) -> $(WEAVIATE_SERVICE):$(WEAVIATE_GRPC_PORT)"
 	@echo "Triton gRPC: localhost:$(LOCAL_TRITON_GRPC_PORT) -> $(TRITON_SERVICE):$(TRITON_GRPC_PORT)"
-	@kubectl port-forward -n $(KUBECTL_NAMESPACE) svc/$(WEAVIATE_SERVICE) $(LOCAL_WEAVIATE_HTTP_PORT):$(WEAVIATE_HTTP_PORT) $(LOCAL_WEAVIATE_GRPC_PORT):$(WEAVIATE_GRPC_PORT) > /tmp/kubectl-port-forward-weaviate.log 2>&1 & \
-		echo $$! > /tmp/kubectl-port-forward-weaviate.pid
 	@kubectl port-forward -n $(KUBECTL_NAMESPACE) svc/$(TRITON_SERVICE) $(LOCAL_TRITON_GRPC_PORT):$(TRITON_GRPC_PORT) > /tmp/kubectl-port-forward-triton.log 2>&1 & \
 		echo $$! > /tmp/kubectl-port-forward-triton.pid
+	@if [ "$(VECTOR_DB)" = "weaviate" ]; then \
+		echo "Weaviate HTTP: localhost:$(LOCAL_WEAVIATE_HTTP_PORT) -> $(WEAVIATE_SERVICE):$(WEAVIATE_HTTP_PORT)"; \
+		echo "Weaviate gRPC: localhost:$(LOCAL_WEAVIATE_GRPC_PORT) -> $(WEAVIATE_SERVICE):$(WEAVIATE_GRPC_PORT)"; \
+		kubectl port-forward -n $(KUBECTL_NAMESPACE) svc/$(WEAVIATE_SERVICE) $(LOCAL_WEAVIATE_HTTP_PORT):$(WEAVIATE_HTTP_PORT) $(LOCAL_WEAVIATE_GRPC_PORT):$(WEAVIATE_GRPC_PORT) > /tmp/kubectl-port-forward-weaviate.log 2>&1 & \
+			echo $$! > /tmp/kubectl-port-forward-weaviate.pid; \
+	else \
+		echo "Skipping Weaviate port-forward (VECTOR_DB=$(VECTOR_DB); Milvus is remote NRP)"; \
+	fi
 	@sleep 2
 	@echo "Port-forwarding started. PIDs saved to /tmp/kubectl-port-forward-*.pid"
 	@echo "To stop port-forwarding, run: make port-forward-stop"
@@ -170,13 +178,23 @@ run-local: port-forward-start
 		echo "Error: Run script $(RUN_SCRIPT) not found"; exit 1; \
 	fi
 	@echo "Running $(BENCHMARK_NAME) benchmark locally..."
+	@echo "Using VECTOR_DB=$(VECTOR_DB)"
 	@echo "Using port-forwarded services:"
-	@echo "  WEAVIATE_HOST=127.0.0.1"
-	@echo "  WEAVIATE_PORT=$(LOCAL_WEAVIATE_HTTP_PORT)"
-	@echo "  WEAVIATE_GRPC_PORT=$(LOCAL_WEAVIATE_GRPC_PORT)"
 	@echo "  TRITON_HOST=127.0.0.1"
 	@echo "  TRITON_PORT=$(LOCAL_TRITON_GRPC_PORT)"
-	@WEAVIATE_HOST=127.0.0.1 \
+	@if [ "$(VECTOR_DB)" = "weaviate" ]; then \
+		echo "  WEAVIATE_HOST=127.0.0.1"; \
+		echo "  WEAVIATE_PORT=$(LOCAL_WEAVIATE_HTTP_PORT)"; \
+		echo "  WEAVIATE_GRPC_PORT=$(LOCAL_WEAVIATE_GRPC_PORT)"; \
+	else \
+		echo "  MILVUS_URI=$(MILVUS_URI)"; \
+		echo "  MILVUS_DB=$(MILVUS_DB)"; \
+	fi
+	@VECTOR_DB=$(VECTOR_DB) \
+	 MILVUS_URI=$(MILVUS_URI) \
+	 MILVUS_TOKEN="$(MILVUS_TOKEN)" \
+	 MILVUS_DB=$(MILVUS_DB) \
+	 WEAVIATE_HOST=127.0.0.1 \
 	 WEAVIATE_PORT=$(LOCAL_WEAVIATE_HTTP_PORT) \
 	 WEAVIATE_GRPC_PORT=$(LOCAL_WEAVIATE_GRPC_PORT) \
 	 TRITON_HOST=127.0.0.1 \

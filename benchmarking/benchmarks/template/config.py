@@ -2,7 +2,10 @@
 
 import os
 from imsearch_eval.framework.interfaces import Config
-from helpers.ablation import load_ablation_config, resolve_query_alpha
+from helpers.ablation import load_ablation_config
+from helpers.backend import apply_vector_db_config
+from helpers.caption_parse import load_caption_prompt
+from helpers.nrp import resolve_workers
 
 
 class MyConfig(Config):
@@ -29,20 +32,27 @@ class MyConfig(Config):
         self._query_eval_metrics_file = os.environ.get("QUERY_EVAL_METRICS_FILE", "query_eval_metrics.csv")
         self._config_values_file = os.environ.get("CONFIG_VALUES_FILE", "config_values.csv")
         
-        # Weaviate parameters
-        self._weaviate_host = os.environ.get("WEAVIATE_HOST", "127.0.0.1")
-        self._weaviate_port = os.environ.get("WEAVIATE_PORT", "8080")
-        self._weaviate_grpc_port = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
+        # Collection
         self._collection_name = os.environ.get("COLLECTION_NAME", "MYBENCHMARK")
+
+        # model provider parameters
+        self.llm_model_provider = os.environ.get(
+            "LLM_MODEL_PROVIDER", "triton"
+        ).lower()
+        self.caption_model_name = os.environ.get("CAPTION_MODEL_NAME", "gemma")
+        self.nrp_enable_thinking = (
+            os.environ.get("NRP_ENABLE_THINKING", "false").lower()
+            in ("1", "true", "yes")
+        )
         
         # Triton parameters
         self._triton_host = os.environ.get("TRITON_HOST", "triton")
         self._triton_port = os.environ.get("TRITON_PORT", "8001")
         
-        # Workers parameters
-        self._workers = int(os.environ.get("WORKERS", 5))
-        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 25))
-        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", 5))
+        # Workers parameters (NRP gemma fair-use max concurrency is 8)
+        self._workers = resolve_workers(self.llm_model_provider, self.caption_model_name)
+        self._image_batch_size = int(os.environ.get("IMAGE_BATCH_SIZE", 32))
+        self._query_batch_size = int(os.environ.get("QUERY_BATCH_SIZE", self._workers))
         
         # Logging parameters
         self._log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -54,16 +64,10 @@ class MyConfig(Config):
         self.embed_caption = ablation["embed_caption"]
         self.index_clip_alpha = ablation["index_clip_alpha"]
         self.enable_bm25 = ablation["enable_bm25"]
+        self.skip_index = ablation["skip_index"]
 
-        # Query parameters
-        self.query_method = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
-        self.target_vector = os.environ.get("TARGET_VECTOR", "clip")
+        # Vector DB + query parameters
+        apply_vector_db_config(self, ablation, query_properties=["long_caption"])
         self.response_limit = int(os.environ.get("RESPONSE_LIMIT", 50))
-        self.advanced_query_parameters = {
-            "alpha": resolve_query_alpha(ablation),
-            "query_properties": ["caption"],  # TODO: Update with your query properties
-            "autocut_jumps": int(os.environ.get("AUTOCUT_JUMPS", 0)),
-            "rerank_prop": os.environ.get("RERANK_PROP", "caption"),  # TODO: Update with your rerank property
-            "clip_alpha": float(os.environ.get("QUERY_CLIP_ALPHA", 0.7)),
-        }
+        self.caption_model_prompt = load_caption_prompt()
     
