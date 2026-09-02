@@ -35,10 +35,10 @@ patches:
 
 images:
   - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/triton
-    newTag: pr-19 #change back to latest
+    newTag: latest
   - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/gradio-ui
-    newTag: pr-19 #change back to latest
+    newTag: latest
   - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavmanage
-    newTag: pr-19 #change back to latest
+    newTag: latest
   - name:  gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavloader
-    newTag: pr-19 #change back to latest
+    newTag: latest

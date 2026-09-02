@@ -17,7 +17,6 @@ spec:
       containers:
         - name: gradio-ui
           image: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/gradio-ui:latest
-          imagePullPolicy: Always #TODO: remove once done with dev
           env:
             - name: PYTHONUNBUFFERED
               value: "1"

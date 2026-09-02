@@ -21,7 +21,6 @@ spec:
       containers:
         - name: weavloader
           image: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavloader:latest
-          imagePullPolicy: Always #TODO: remove once done with dev
           ports:
             - containerPort: 8080
               name: metrics

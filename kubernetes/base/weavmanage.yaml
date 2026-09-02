@@ -15,7 +15,6 @@ spec:
       containers:
         - name: weavmanage
           image: gitlab-registry.nrp-nautilus.io/ndp/sage/nrp-image-search/weavmanage:latest
-          imagePullPolicy: Always #TODO: remove once done with dev
           env:
             - name: MILVUS_DB
               value: "image_search_svc"

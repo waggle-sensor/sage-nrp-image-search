@@ -18,7 +18,6 @@ spec:
       containers:
         - name: benchmark-job
           image: PLACEHOLDER_BENCHMARK_JOB_IMAGE:latest
-          imagePullPolicy: Always # TODO: remove once you're done with development
           # Note: Vector DB and inference server environment variables should be
           # added via patches in benchmark-specific overlays (e.g., env.yaml)
           command: ["python", "run_benchmark.py"]

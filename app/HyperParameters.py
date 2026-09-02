@@ -6,9 +6,6 @@ done to find more hyper params that can be altered'''
 #   make all the microservices apart of the same deployment so the HPs continue to be easily managed
 #   and don't get split up.
 
-#TODO: Grab a big enough sample set to test a real deployment so you can fine tune the HPs
-#  NOTE: instead of recreating the db just update the HPs when testing
-
 # 1) Hybrid Search Query hyperparameters
 response_limit=25 #Number of objects to return
 query_alpha=0.65 # Dense vs BM25: 1 = pure dense (image+caption), 0 = pure keyword (BM25).
