@@ -7,3 +7,4 @@
     - [ ] release imsearch_eval 0.2.0
     - [ ] change the requirement files to use that new version
 - [ ] 4. do all the TODOs or changes you marked that were done only for dev and need to change back now that you are done with dev work
+- [ ] clean up dev environment in NRP
