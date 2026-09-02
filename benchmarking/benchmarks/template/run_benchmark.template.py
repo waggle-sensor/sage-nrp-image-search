@@ -10,7 +10,7 @@ from datasets import Dataset
 
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter, BatchedIterator
 from imsearch_eval.adapters import TritonModelProvider
-from helpers.backend import init_vector_db
+from helpers.backend import init_vector_db, maybe_load_index
 from benchmark_dataset import MyBenchmarkDataset  # TODO: Import your BenchmarkDataset
 # from data_loader import MyDataLoader  # TODO: Import if you have a custom DataLoader
 from config import MyConfig  # TODO: Set a Config class for your benchmark
@@ -191,7 +191,9 @@ def main():
     logging.info("Step 1: Loading data into vector database")
     logging.info("=" * 80)
     try:
-        dlq_records = load_data(data_loader, vector_db, hf_dataset)
+        dlq_records = maybe_load_index(
+            config, load_data, data_loader, vector_db, hf_dataset
+        )
         logging.info("Data loading completed successfully.")
     except Exception as e:
         logging.error(f"Error loading data: {e}")

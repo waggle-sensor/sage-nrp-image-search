@@ -104,6 +104,7 @@ class SagebenchConfig(Config):
         self.embed_caption = ablation["embed_caption"]
         self.index_clip_alpha = ablation["index_clip_alpha"]
         self.enable_bm25 = ablation["enable_bm25"]
+        self.skip_index = ablation["skip_index"]
 
         # Vector DB + query parameters
         apply_vector_db_config(

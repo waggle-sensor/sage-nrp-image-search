@@ -72,6 +72,50 @@ def is_milvus(config) -> bool:
     return getattr(config, "vector_db", "milvus") == "milvus"
 
 
+def _collection_exists(vector_db, collection_name: str) -> bool:
+    milvus_client = getattr(vector_db, "milvus_client", None)
+    if milvus_client is not None:
+        return bool(milvus_client.has_collection(collection_name))
+    weaviate_client = getattr(vector_db, "weaviate_client", None)
+    if weaviate_client is not None:
+        exists = getattr(weaviate_client.collections, "exists", None)
+        if callable(exists):
+            return bool(exists(collection_name))
+        return collection_name in list(weaviate_client.collections.list_all())
+    raise TypeError(
+        f"Cannot check collection existence on {type(vector_db).__name__}"
+    )
+
+
+def reuse_existing_index(vector_db, collection_name: str) -> list:
+    """SKIP_INDEX path: require the collection, do not drop or recaption.
+
+    Returns an empty DLQ record list so callers can still write dlq_records.csv.
+    """
+    if not collection_name:
+        raise ValueError("COLLECTION_NAME is required when SKIP_INDEX=true")
+    if not _collection_exists(vector_db, collection_name):
+        raise FileNotFoundError(
+            f"SKIP_INDEX=true but collection {collection_name!r} does not exist. "
+            "Point COLLECTION_NAME at the existing index, or unset SKIP_INDEX to ingest."
+        )
+    milvus_client = getattr(vector_db, "milvus_client", None)
+    if milvus_client is not None:
+        milvus_client.load_collection(collection_name)
+    logging.info(
+        "SKIP_INDEX=true: reusing collection %r (no drop, no recaption)",
+        collection_name,
+    )
+    return []
+
+
+def maybe_load_index(config, load_data_fn, data_loader, vector_db, hf_dataset):
+    """Ingest unless SKIP_INDEX=true, in which case reuse the existing collection."""
+    if getattr(config, "skip_index", False):
+        return reuse_existing_index(vector_db, config._collection_name)
+    return load_data_fn(data_loader, vector_db, hf_dataset)
+
+
 def init_vector_db(config, triton_client):
     """
     Create the VectorDBAdapter and Query instance for this run.

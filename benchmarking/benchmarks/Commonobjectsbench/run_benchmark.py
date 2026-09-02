@@ -8,7 +8,7 @@ from pathlib import Path
 import tritonclient.grpc as TritonClient
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter
 from imsearch_eval.adapters import TritonModelProvider
-from helpers.backend import init_vector_db
+from helpers.backend import init_vector_db, maybe_load_index
 from model_provider import MixedModelProvider
 from benchmark_dataset import CommonObjectsBench
 from config import CommonObjectsBenchConfig
@@ -200,7 +200,9 @@ def main():
     logging.info("Step 1: Loading data into vector database")
     logging.info("=" * 80)
     try:
-        dlq_records = load_data(data_loader, vector_db, hf_dataset)
+        dlq_records = maybe_load_index(
+            config, load_data, data_loader, vector_db, hf_dataset
+        )
         logging.info("Data loading completed successfully.")
     except Exception as e:
         logging.error(f"Error loading data: {e}")

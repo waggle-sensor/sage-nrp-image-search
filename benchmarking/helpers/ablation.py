@@ -30,6 +30,7 @@ def load_ablation_config() -> dict:
     )
     enable_bm25 = parse_bool_env("ENABLE_BM25", True)
     query_alpha = float(os.environ.get("QUERY_ALPHA", 0.4))
+    skip_index = parse_bool_env("SKIP_INDEX", False)
 
     if not embed_image and not embed_caption:
         raise ValueError(
@@ -50,6 +51,7 @@ def load_ablation_config() -> dict:
         "index_clip_alpha": index_clip_alpha,
         "enable_bm25": enable_bm25,
         "query_alpha": query_alpha,
+        "skip_index": skip_index,
     }
 
 
