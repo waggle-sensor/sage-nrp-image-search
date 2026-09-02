@@ -58,7 +58,7 @@ The main lab is [sage_image_search_lab.ipynb](notebooks/sage_image_search_lab.ip
 | **Conclusion** | End-to-end workflow recap and key ideas |
 | **Stretch** | Choose your next learning path (Explorer → Pioneer) |
 
-**Default hyperparameters** (set near the top of the notebook): `SEED=42`, `SAMPLE_SIZE=50`, `QUERY_ALPHA=0.4`, `TOP_K=25`, `CLIP_ALPHA=0.7` (from production `model_config.py`).
+**Default hyperparameters** (set near the top of the notebook): `SEED=42`, `SAMPLE_SIZE=50`, `QUERY_ALPHA=0.4`, `TOP_K=25`, `CLIP_ALPHA=0.7`. Production hybrid defaults are `query_alpha=0.65` / `clip_alpha=0.7` in `app/HyperParameters.py`; the lab keeps a two-leg `QUERY_ALPHA=0.4` for the dense-vs-BM25 demo.
 
 Steps 4 and 5 teach vector and keyword search separately; **Steps 6 onward** always use `hybrid_search()` — matching production before reranking.
 

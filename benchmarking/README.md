@@ -120,7 +120,7 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 | `INDEX_CLIP_ALPHA` | `0.7` | Weaviate-only index-time fusion weight for image vs caption. Unused on Milvus (fusion is query-time via `QUERY_CLIP_ALPHA`) |
 | `QUERY_CLIP_ALPHA` | `0.7` | Within dense retrieval, weight for `image_vector` vs `caption_vector` (Milvus) or fused query embedding (Weaviate) |
 | `ENABLE_BM25` | `true` | When `false`, omits the BM25/keyword leg (Milvus) or sets hybrid `alpha=1.0` (Weaviate) |
-| `QUERY_ALPHA` | `0.4` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality |
+| `QUERY_ALPHA` | `0.65` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality. With `QUERY_CLIP_ALPHA=0.7` this is 46% image / 20% caption / 35% BM25 |
 | `SKIP_INDEX` | `false` | When `true`, skip collection drop/ingest and query an existing `COLLECTION_NAME`. Fails if the collection is missing. Use for query-time sweeps (`QUERY_ALPHA`, `QUERY_CLIP_ALPHA`) |
 | `CAPTION_PROMPT_ID` | `scientific_two_captions_v1` | Prompt catalog id from [`prompts/`](../prompts/). Same catalog as weavloader. |
 | `CAPTION_MODEL_PROMPT` | unset | Raw prompt override; if set, `CAPTION_PROMPT_ID` is ignored |

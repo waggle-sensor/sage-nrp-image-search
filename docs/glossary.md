@@ -4,7 +4,7 @@ Terms used throughout Sage Image Search documentation.
 
 | Term | Definition |
 |------|------------|
-| **Alpha (query)** | Hybrid search blend parameter (`query_alpha`). A value of 0 means pure keyword (BM25) search; 1 means pure dense search over `image_vector` + `caption_vector`. The default is 0.4. Combined with `clip_alpha` in `WeightedRanker`. |
+| **Alpha (query)** | Hybrid search blend parameter (`query_alpha`). A value of 0 means pure keyword (BM25) search; 1 means pure dense search over `image_vector` + `caption_vector`. The default is 0.65. Combined with `clip_alpha` in `WeightedRanker` (46% image / 20% caption / 35% BM25). |
 | **ANN** | Approximate nearest neighbor. Fast similarity search over embedding vectors; trades perfect accuracy for speed at large scale. |
 | **Attu** | Desktop/web GUI for Milvus. Useful in development to inspect NRP collections, schema, and row counts — see [Authentication → Milvus development tools](authentication.md#milvus-development-tools) and the [Attu quickstart](https://milvus.io/docs/quickstart_with_attu.md). |
 | **BM25** | Best Matching 25 — a keyword ranking algorithm used for text-based search on `search_text` (`long_caption` + keywords + metadata). In Milvus, produced via `FunctionType.BM25` into a sparse vector field. |

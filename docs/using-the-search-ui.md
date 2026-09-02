@@ -56,7 +56,7 @@ Results are limited to **25** by default (`response_limit` in `app/HyperParamete
 
 Results are ranked in two stages:
 
-1. **Hybrid retrieval** — Milvus combines CLIP similarity against stored `image_vector` and `caption_vector` with BM25 keyword matching on `search_text` (`long_caption` + keywords + metadata). Defaults: `query_alpha=0.4` (40% dense / 60% keyword) and `clip_alpha=0.7` (within dense, 70% image / 30% caption) via `WeightedRanker`.
+1. **Hybrid retrieval** — Milvus combines CLIP similarity against stored `image_vector` and `caption_vector` with BM25 keyword matching on `search_text` (`long_caption` + keywords + metadata). Defaults: `query_alpha=0.65` and `clip_alpha=0.7` via `WeightedRanker` (46% image / 20% caption / 35% BM25).
 2. **Reranking** — Triton CLIP (`DFN5B-CLIP-ViT-H-14-378`) re-scores the top results by similarity between your query text and each retrieved image (same idea as HF CLIP `logits_per_image`).
 
 Keyword search covers these fields: `long_caption`, keywords, `camera`, `host`, `job`, `vsn`, `plugin`, `zone`, `project`, `address` (concatenated into `search_text`).

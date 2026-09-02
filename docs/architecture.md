@@ -43,7 +43,7 @@ flowchart LR
 
 1. The user enters text in the Gradio UI.
 2. Triton embeds the query text with CLIP.
-3. Milvus runs `hybrid_search` with three requests — `image_vector`, `caption_vector`, and BM25 `sparse` — fused by `WeightedRanker(query_alpha * clip_alpha, query_alpha * (1 - clip_alpha), 1 - query_alpha)` (defaults: query_alpha=0.4, clip_alpha=0.7).
+3. Milvus runs `hybrid_search` with three requests — `image_vector`, `caption_vector`, and BM25 `sparse` — fused by `WeightedRanker(query_alpha * clip_alpha, query_alpha * (1 - clip_alpha), 1 - query_alpha)` (defaults: query_alpha=0.65, clip_alpha=0.7 → 46% image / 20% caption / 35% BM25).
 4. Triton CLIP (`DFN5B-CLIP-ViT-H-14-378`) re-scores each hit by query-text vs image similarity matching HF `logits_per_image` (L2-normalized cosine × `exp(logit_scale)` from the model).
 5. Results from deny-listed nodes are filtered out.
 6. Images are fetched from SAGE URLs and displayed in a gallery and map.

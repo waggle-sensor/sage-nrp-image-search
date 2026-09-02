@@ -11,9 +11,10 @@ done to find more hyper params that can be altered'''
 
 # 1) Hybrid Search Query hyperparameters
 response_limit=25 #Number of objects to return
-query_alpha=0.4 # Dense vs BM25: 1 = pure dense (image+caption), 0 = pure keyword (BM25).
+query_alpha=0.65 # Dense vs BM25: 1 = pure dense (image+caption), 0 = pure keyword (BM25).
 # 2) CLIP modality mix at query time (not index-time fusion)
 clip_alpha = 0.7 # Within dense: 1 = image_vector only, 0 = caption_vector only.
+# v16 H defaults → WeightedRanker 46% image / 20% caption / 35% BM25.
 # WeightedRanker(
 #     query_alpha * clip_alpha,           # image_vector
 #     query_alpha * (1.0 - clip_alpha),   # caption_vector

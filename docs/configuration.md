@@ -137,8 +137,8 @@ These are set in [`app/HyperParameters.py`](../app/HyperParameters.py) and are n
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `response_limit` | `25` | Maximum number of results returned |
-| `query_alpha` | `0.4` | Dense vs BM25: 0 = pure BM25, 1 = pure dense (`image_vector` + `caption_vector`) |
-| `clip_alpha` | `0.7` | Within dense: 1 = `image_vector` only, 0 = `caption_vector` only. Combined as `WeightedRanker(query_alpha * clip_alpha, query_alpha * (1 - clip_alpha), 1 - query_alpha)` |
+| `query_alpha` | `0.65` | Dense vs BM25: 0 = pure BM25, 1 = pure dense (`image_vector` + `caption_vector`) |
+| `clip_alpha` | `0.7` | Within dense: 1 = `image_vector` only, 0 = `caption_vector` only. Combined as `WeightedRanker(query_alpha * clip_alpha, query_alpha * (1 - clip_alpha), 1 - query_alpha)` (46% image / 20% caption / 35% BM25) |
 
 The active query path uses `clip_hybrid_query` with Milvus `hybrid_search` + Triton CLIP query–image rerank.
 
