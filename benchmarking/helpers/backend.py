@@ -43,7 +43,9 @@ def apply_vector_db_config(config, ablation: dict, query_properties=None):
 
     clip_alpha = float(os.environ.get("QUERY_CLIP_ALPHA", 0.7))
     retrieve_limit = ablation.get("retrieve_limit")
+    rerank_fusion = ablation.get("rerank_fusion") or "clip"
     config.retrieve_limit = retrieve_limit
+    config.rerank_fusion = rerank_fusion
     if config.vector_db == "milvus":
         config.query_method = os.environ.get(
             "QUERY_METHOD", "clip_hybrid_query_dual_index"
@@ -57,6 +59,7 @@ def apply_vector_db_config(config, ablation: dict, query_properties=None):
             "enable_bm25": ablation["enable_bm25"],
             # CLIP rerank: query text embedding vs stored image_vector (no image I/O)
             "rerank": True,
+            "rerank_fusion": rerank_fusion,
         }
         if retrieve_limit is not None:
             config.advanced_query_parameters["retrieve_limit"] = retrieve_limit

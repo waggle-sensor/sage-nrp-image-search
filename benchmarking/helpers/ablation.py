@@ -33,6 +33,11 @@ def load_ablation_config() -> dict:
     skip_index = parse_bool_env("SKIP_INDEX", False)
     retrieve_raw = os.environ.get("QUERY_RETRIEVE_LIMIT")
     retrieve_limit = int(retrieve_raw) if retrieve_raw not in (None, "") else None
+    rerank_fusion = (os.environ.get("QUERY_RERANK_FUSION") or "clip").strip().lower()
+    if rerank_fusion not in ("clip", "rrf"):
+        raise ValueError(
+            f"QUERY_RERANK_FUSION must be 'clip' or 'rrf', got {rerank_fusion!r}"
+        )
 
     if not embed_image and not embed_caption:
         raise ValueError(
@@ -55,6 +60,7 @@ def load_ablation_config() -> dict:
         "query_alpha": query_alpha,
         "skip_index": skip_index,
         "retrieve_limit": retrieve_limit,
+        "rerank_fusion": rerank_fusion,
     }
 
 
