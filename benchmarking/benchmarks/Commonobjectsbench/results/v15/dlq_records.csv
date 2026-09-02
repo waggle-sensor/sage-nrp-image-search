@@ -1,0 +1,2 @@
+image_id,query_id,reason,error,attempts,final_status,last_error
+sage/imagesampler-bottom-446/sage-imagesampler-bottom-0.3.0/000048b02d35a9b2/1701288015888455140-sample.jpg,query_076,caption_failed,empty caption from provider,6,inserted_degraded,empty caption from provider
