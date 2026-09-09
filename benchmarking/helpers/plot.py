@@ -33,6 +33,8 @@ DEFAULT_PRIMARY_PLUS_DIVERSITY_WEIGHTS = {
 
 BASELINE_VERSION = "baseline"
 ABLATION_VERSION_PREFIX = "ablation_"
+# v13 caption/indexing failures (DLQ force-inserts and abandoned items) inflated scores.
+LEADERBOARD_EXCLUDED_VERSIONS = frozenset({"v13"})
 
 def discover_benchmark_names(base_path: Path) -> list[str]:
     """
@@ -571,15 +573,18 @@ def discover_benchmark_versions(
     min_version: int = 10,
     include_baseline: bool = True,
     include_ablations: bool = False,
+    exclude_versions: set[str] | frozenset[str] | None = None,
 ) -> dict[str, list[str]]:
     """
     Discover benchmark versions with query_eval_metrics.csv from baseline, v{min_version}+,
     and optionally ablation_* folders.
     Returns mapping benchmark -> sorted versions (baseline, v10+, ablation_*).
+    Versions in exclude_versions (default LEADERBOARD_EXCLUDED_VERSIONS) are omitted.
     """
     base_path = Path(base_path)
     if benchmarks is None:
         benchmarks = [b for b in discover_benchmark_names(base_path) if (base_path / b / "results").exists()]
+    skipped = LEADERBOARD_EXCLUDED_VERSIONS if exclude_versions is None else frozenset(exclude_versions)
 
     out = {}
     for benchmark in benchmarks:
@@ -590,10 +595,13 @@ def discover_benchmark_versions(
         versions = []
         if include_baseline:
             baseline_dir = result_dir / BASELINE_VERSION
-            if (baseline_dir / "query_eval_metrics.csv").exists():
+            if (
+                BASELINE_VERSION not in skipped
+                and (baseline_dir / "query_eval_metrics.csv").exists()
+            ):
                 versions.append(BASELINE_VERSION)
         for version_dir in result_dir.iterdir():
-            if not version_dir.is_dir():
+            if not version_dir.is_dir() or version_dir.name in skipped:
                 continue
             match = re.fullmatch(r"v(\d+)", version_dir.name)
             if match:
@@ -615,6 +623,7 @@ def load_cross_version_metrics(
     min_version: int = 10,
     include_baseline: bool = True,
     include_ablations: bool = False,
+    exclude_versions: set[str] | frozenset[str] | None = None,
     verbose: bool = False,
 ) -> pd.DataFrame:
     """
@@ -627,9 +636,10 @@ def load_cross_version_metrics(
         min_version=min_version,
         include_baseline=include_baseline,
         include_ablations=include_ablations,
+        exclude_versions=exclude_versions,
     )
-    rows = []
 
+    rows = []
     for benchmark, versions in discovered.items():
         for version in versions:
             csv_path = Path(base_path) / benchmark / "results" / version / "query_eval_metrics.csv"
@@ -704,6 +714,7 @@ def build_benchmark_version_leaderboard(
     min_version: int = 10,
     include_baseline: bool = True,
     include_ablations: bool = False,
+    exclude_versions: set[str] | frozenset[str] | None = None,
     mode: str = "primary",
     metric_weights: dict[str, float] | None = None,
 ) -> pd.DataFrame:
@@ -714,6 +725,7 @@ def build_benchmark_version_leaderboard(
     :param min_version: the minimum version to include in the leaderboard.
     :param include_baseline: whether to include the baseline run.
     :param include_ablations: whether to include ablation_* runs.
+    :param exclude_versions: versions to omit (default LEADERBOARD_EXCLUDED_VERSIONS).
     :param mode: the mode to build the leaderboard for.
     :param metric_weights: the weights to use for the metrics.
     :return: the leaderboard dataframe.
@@ -724,6 +736,7 @@ def build_benchmark_version_leaderboard(
         min_version=min_version,
         include_baseline=include_baseline,
         include_ablations=include_ablations,
+        exclude_versions=exclude_versions,
     )
     if df.empty:
         return df
@@ -739,6 +752,7 @@ def build_overall_version_leaderboard(
     min_version: int = 10,
     include_baseline: bool = True,
     include_ablations: bool = False,
+    exclude_versions: set[str] | frozenset[str] | None = None,
     mode: str = "primary",
     metric_weights: dict[str, float] | None = None,
     benchmark_weights: dict[str, float] | None = None,
@@ -751,6 +765,7 @@ def build_overall_version_leaderboard(
     :param min_version: the minimum version to include in the leaderboard.
     :param include_baseline: whether to include the baseline run.
     :param include_ablations: whether to include ablation_* runs.
+    :param exclude_versions: versions to omit (default LEADERBOARD_EXCLUDED_VERSIONS).
     :param mode: the mode to build the leaderboard for.
     :param metric_weights: the weights to use for the metrics.
     :param benchmark_weights: the weights to use for the benchmarks.
@@ -762,6 +777,7 @@ def build_overall_version_leaderboard(
         min_version=min_version,
         include_baseline=include_baseline,
         include_ablations=include_ablations,
+        exclude_versions=exclude_versions,
         mode=mode,
         metric_weights=metric_weights,
     )
@@ -832,6 +848,7 @@ def render_single_benchmark_leaderboard(
     min_version: int = 10,
     include_baseline: bool = True,
     include_ablations: bool = False,
+    exclude_versions: set[str] | frozenset[str] | None = None,
     mode: str = "primary",
     metric_weights: dict[str, float] | None = None,
     display_fn=None,
@@ -844,6 +861,7 @@ def render_single_benchmark_leaderboard(
     :param min_version: the minimum version to include in the leaderboard.
     :param include_baseline: whether to include the baseline run.
     :param include_ablations: whether to include ablation_* runs.
+    :param exclude_versions: versions to omit (default LEADERBOARD_EXCLUDED_VERSIONS).
     :param mode: the mode to build the leaderboard for.
     :param metric_weights: the weights to use for the metrics.
     :param display_fn: the function to use to display the leaderboard.
@@ -855,6 +873,7 @@ def render_single_benchmark_leaderboard(
         min_version=min_version,
         include_baseline=include_baseline,
         include_ablations=include_ablations,
+        exclude_versions=exclude_versions,
         mode=mode,
         metric_weights=metric_weights,
     )
@@ -864,6 +883,9 @@ def render_single_benchmark_leaderboard(
         version_desc = f"baseline, v{min_version}+"
         if include_ablations:
             version_desc += f", {ABLATION_VERSION_PREFIX}*"
+        skipped = LEADERBOARD_EXCLUDED_VERSIONS if exclude_versions is None else frozenset(exclude_versions)
+        if skipped:
+            version_desc += f" (excluding {', '.join(sorted(skipped))})"
         print(f"Skip {benchmark}: no {version_desc} results")
         return part
 

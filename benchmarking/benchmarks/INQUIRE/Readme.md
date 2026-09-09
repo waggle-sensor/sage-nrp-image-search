@@ -286,7 +286,7 @@ The abstract framework and adapters are provided by the `imsearch-eval` Python p
 - **Package**: `imsearch_eval[weaviate,triton,huggingface]`
 - **Installation**: 
   ```bash
-  pip install "imsearch_eval[weaviate,triton,huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0"
+  pip install "imsearch_eval[weaviate,triton,huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1"
   ```
 
 This allows:
