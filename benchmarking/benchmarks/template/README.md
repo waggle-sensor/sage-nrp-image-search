@@ -202,9 +202,9 @@ Create a `requirements.txt` with your dependencies:
 
 ```txt
 # Core benchmarking framework (install with all extras needed)
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
-imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.1.0
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1
+imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1
+imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1
 
 # S3 upload support (MinIO)
 minio>=7.2.0
@@ -256,7 +256,7 @@ from imsearch_eval.adapters import MilvusAdapter, WeaviateAdapter, TritonModelPr
 
 **Note**: Install the package with all extras needed:
 ```bash
-pip install "imsearch_eval[weaviate,milvus,triton,huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0"
+pip install "imsearch_eval[weaviate,milvus,triton,huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1"
 ```
 
 ## Deployment
@@ -318,7 +318,7 @@ benchmarking/
 The framework code (`framework/` and `adapters/`) is now in a separate repository:
 - **Repository**: https://github.com/waggle-sensor/imsearch_eval
 - **Package name**: `imsearch-eval`
-- **Installation**: `pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@main`
+- **Installation**: `pip install imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1`
 
 ## Next Steps
 

@@ -299,10 +299,10 @@ Add the required packages:
 
 ```txt
 # Core benchmarking framework (install with all extras needed)
-imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
-imsearch_eval[milvus] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
-imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
-imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0
+imsearch_eval[weaviate] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1
+imsearch_eval[milvus] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1
+imsearch_eval[triton] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1
+imsearch_eval[huggingface] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1
 ```
 
 # S3 upload support (MinIO)
@@ -445,7 +445,7 @@ All benchmarks depend on the [`imsearch_eval`](https://github.com/waggle-sensor/
 Install it via:
 ```bash
 # Install with all extras needed for benchmarks
-pip install "imsearch_eval[weaviate,milvus,triton,huggingface,nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.0"
+pip install "imsearch_eval[weaviate,milvus,triton,huggingface,nrp] @ git+https://github.com/waggle-sensor/imsearch_eval.git@0.2.1"
 ```
 
 See the [`imsearch_eval` README](https://github.com/waggle-sensor/imsearch_eval) for framework documentation.
