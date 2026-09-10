@@ -10,7 +10,7 @@ from datasets import Dataset
 
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter, BatchedIterator
 from imsearch_eval.adapters import TritonModelProvider
-from helpers.backend import init_vector_db, maybe_load_index
+from helpers.backend import init_vector_db, maybe_load_index, ranking_score_columns
 from benchmark_dataset import MyBenchmarkDataset  # TODO: Import your BenchmarkDataset
 # from data_loader import MyDataLoader  # TODO: Import if you have a custom DataLoader
 from config import MyConfig  # TODO: Set a Config class for your benchmark
@@ -182,7 +182,7 @@ def main():
         limit=config.response_limit,
         query_method=getattr(query_instance, config.query_method),
         query_parameters=config.advanced_query_parameters,
-        score_columns=["rerank_score", "clip_score"],  # TODO: Adjust as needed
+        score_columns=ranking_score_columns(config),
         target_vector=config.target_vector
     )
     

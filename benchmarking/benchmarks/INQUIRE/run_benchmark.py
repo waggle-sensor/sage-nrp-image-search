@@ -9,7 +9,7 @@ import tritonclient.grpc as TritonClient
 from datasets import Dataset
 from imsearch_eval import BenchmarkEvaluator, VectorDBAdapter
 from imsearch_eval.adapters import TritonModelProvider
-from helpers.backend import init_vector_db, maybe_load_index
+from helpers.backend import init_vector_db, maybe_load_index, ranking_score_columns
 from model_provider import MixedModelProvider
 from benchmark_dataset import INQUIRE
 from config import INQUIREConfig
@@ -175,7 +175,7 @@ def main():
         limit=config.response_limit,
         query_method=getattr(query_instance, config.query_method),
         query_parameters=config.advanced_query_parameters,
-        score_columns=["rerank_score", "clip_score"],
+        score_columns=ranking_score_columns(config),
         target_vector=config.target_vector
     )
     
