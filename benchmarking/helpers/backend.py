@@ -42,19 +42,21 @@ def apply_vector_db_config(config, ablation: dict, query_properties=None):
     config._weaviate_grpc_port = os.environ.get("WEAVIATE_GRPC_PORT", "50051")
 
     clip_alpha = float(os.environ.get("QUERY_CLIP_ALPHA", 0.7))
+    config.enable_rerank = ablation.get("enable_rerank", True)
     if config.vector_db == "milvus":
         config.query_method = os.environ.get(
             "QUERY_METHOD", "clip_hybrid_query_dual_index"
         )
         config.target_vector = os.environ.get("TARGET_VECTOR", "image_vector")
+        query_alpha = resolve_query_alpha(ablation)
         config.advanced_query_parameters = {
-            "query_alpha": resolve_query_alpha(ablation),
+            "query_alpha": query_alpha,
             "clip_alpha": clip_alpha,
             "enable_image_vector": ablation["embed_image"],
             "enable_caption_vector": ablation["embed_caption"],
             "enable_bm25": ablation["enable_bm25"],
             # CLIP rerank: query text embedding vs stored image_vector (no image I/O)
-            "rerank": True,
+            "rerank": config.enable_rerank,
         }
     else:
         config.query_method = os.environ.get("QUERY_METHOD", "clip_hybrid_query")
@@ -66,6 +68,65 @@ def apply_vector_db_config(config, ablation: dict, query_properties=None):
             "rerank_prop": os.environ.get("RERANK_PROP", "long_caption"),
             "clip_alpha": clip_alpha,
         }
+    log_query_ablation(config)
+
+
+def ranking_score_columns(config) -> list[str]:
+    """Score columns for BenchmarkEvaluator ranking metrics.
+
+    Milvus always records hybrid retrieval ``score`` so no-rerank arms have a
+    real ranking signal. When rerank is on, ``rerank_score_*`` is the reported
+    MRR/NDCG and ``score_*`` is the pre-rerank ranking of the same candidates.
+    """
+    if getattr(config, "vector_db", "milvus") == "milvus":
+        return ["rerank_score", "score", "clip_score"]
+    return ["rerank_score", "clip_score"]
+
+
+def log_query_ablation(config) -> None:
+    """Log active retrieval legs, weights, rerank, SKIP_INDEX, and collection."""
+    params = getattr(config, "advanced_query_parameters", None) or {}
+    collection = getattr(config, "_collection_name", None)
+    skip_index = getattr(config, "skip_index", False)
+    if getattr(config, "vector_db", "milvus") != "milvus":
+        logging.info(
+            "Query ablation: backend=weaviate collection=%s skip_index=%s "
+            "alpha=%s rerank_prop=%s",
+            collection,
+            skip_index,
+            params.get("alpha"),
+            params.get("rerank_prop"),
+        )
+        return
+
+    query_alpha = float(params.get("query_alpha", 0.65))
+    clip_alpha = float(params.get("clip_alpha", 0.7))
+    enable_image = bool(params.get("enable_image_vector", True))
+    enable_caption = bool(params.get("enable_caption_vector", True))
+    enable_bm25 = bool(params.get("enable_bm25", True))
+    rerank = bool(params.get("rerank", True))
+    legs = []
+    weights = []
+    if enable_image:
+        legs.append("image")
+        weights.append(query_alpha * clip_alpha)
+    if enable_caption:
+        legs.append("caption")
+        weights.append(query_alpha * (1.0 - clip_alpha))
+    if enable_bm25:
+        legs.append("bm25")
+        weights.append(1.0 - query_alpha)
+    logging.info(
+        "Query ablation: collection=%s skip_index=%s rerank=%s legs=%s "
+        "weights=%s (query_alpha=%s clip_alpha=%s)",
+        collection,
+        skip_index,
+        rerank,
+        legs,
+        [round(w, 3) for w in weights],
+        query_alpha,
+        clip_alpha,
+    )
 
 
 def is_milvus(config) -> bool:
