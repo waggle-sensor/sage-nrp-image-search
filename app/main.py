@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from pymilvus import MilvusClient
 from query import Milvus_query, Sage_query, parse_wkt_point
+from metrics import metrics, set_health_clients, start_metrics_server
 
 # Disable Gradio analytics
 os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
@@ -122,11 +123,14 @@ def filter_map(df):
 
     return fig
 
+start_metrics_server(port=int(os.environ.get("METRICS_PORT", "8080")))
+
 milvus_client = initialize_milvus_client()
 
 TRITON_HOST = os.environ.get("TRITON_HOST","triton")
 TRITON_PORT = os.environ.get("TRITON_PORT","8001")
 triton_client = TritonClient.InferenceServerClient(url=f"{TRITON_HOST}:{TRITON_PORT}")
+set_health_clients(milvus_client=milvus_client, triton_client=triton_client)
 
 wq = Milvus_query(milvus_client, triton_client)
 sq = Sage_query()
@@ -134,30 +138,33 @@ def text_query(description):
     '''
     Send text query to Milvus hybrid search and engineer results to display in Gradio
     '''
-    # send the query to Milvus and get the results
-    df = wq.clip_hybrid_query(description)
+    gallery_start = time.perf_counter()
+    gallery_status = "success"
+    try:
+        df = wq.clip_hybrid_query(description)
 
-    if df is None or df.empty:
-        return [], gr.DataFrame(value=None), gr.Plot(value=None)
+        if df is None or df.empty:
+            return [], gr.DataFrame(value=None), gr.Plot(value=None)
 
-    # Extract the image links and captions from the DataFrame
-    images = []
-    for _, row in df.iterrows():  # Iterate through the DataFrame rows
-        if any(row["filename"].endswith(ext) for ext in [".jfif", ".jpg", ".jpeg", ".png"]):
-            # Use getImage to retrieve the image from the URL
-            image = sq.getImage(row['link'])
-            if image:
-                images.append((image, f"{row['uuid']}"))
+        images = []
+        for _, row in df.iterrows():
+            if any(row["filename"].endswith(ext) for ext in [".jfif", ".jpg", ".jpeg", ".png"]):
+                image = sq.getImage(row['link'])
+                if image:
+                    images.append((image, f"{row['uuid']}"))
 
-    #get location details
-    location = df[['location', 'uuid', 'score', 'rerank_score', 'address']]
-    map_fig = filter_map(location)
-
-    #drop columns that I dont want to show
-    meta = df.drop(columns=["link", "node", "image_vector"], errors="ignore")
-
-    # Return the images, DataFrame, and map
-    return images, meta, map_fig
+        location = df[['location', 'uuid', 'score', 'rerank_score', 'address']]
+        map_fig = filter_map(location)
+        meta = df.drop(columns=["link", "node", "image_vector"], errors="ignore")
+        return images, meta, map_fig
+    except Exception as e:
+        gallery_status = "failure"
+        metrics.record_error("gallery", type(e).__name__)
+        raise
+    finally:
+        metrics.record_query_stage(
+            "gallery", gallery_status, time.perf_counter() - gallery_start
+        )
 
 def search(query):
     '''
@@ -313,8 +320,6 @@ def load_interface():
     iface.launch(server_name="0.0.0.0", server_port=7860, share=True)
 
 def main():
-
-    #start gradio app
     load_interface()
 
 if __name__ == "__main__":
