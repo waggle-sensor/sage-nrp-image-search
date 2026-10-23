@@ -140,8 +140,9 @@ The following manual steps are required for now:
 - port-forwarding for any of the services to test out (update `pr`):
     - `kubectl port-forward svc/pr-triton 8001:8001`: triton endpoint to call the LLM models locally
     - `kubectl port-forward svc/pr-gradio-ui 7860:7860`: Search UI
+    - `kubectl port-forward svc/pr-gradio-ui 8081:8080`: Gradio query Prometheus endpoint (`/metrics`, `/health`)
     - `kubectl port-forward svc/pr-weavloader-metrics 5555:5555`: Weavloader Flower endpoint
-    - `kubectl port-forward svc/pr-weavloader-metrics 8081:8080`: Weavloader Prometheus endpoint
+    - `kubectl port-forward svc/pr-weavloader-metrics 8082:8080`: Weavloader Prometheus endpoint
 
 Deploy:
 ```

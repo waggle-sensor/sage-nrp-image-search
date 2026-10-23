@@ -126,21 +126,22 @@ kubectl apply -k kubernetes/nrp-prod
 | Dev | [https://dev-sage-hybrid-search.nrp-nautilus.io](https://dev-sage-hybrid-search.nrp-nautilus.io) |
 | Prod | [https://sage-hybrid-search.nrp-nautilus.io](https://sage-hybrid-search.nrp-nautilus.io) |
 
-### 4. Monitor ingestion
+### 4. Monitor ingestion and query latency
 
-Weavloader metrics and Flower are available via ingress:
+Weavloader (ingest) and Gradio (query) metrics are available via ingress. Public query-metrics hosts need NRP DNS; ServiceMonitor scrape still works without it. Import [`app/metrics/artifacts/grafana-dashboard.json`](../app/metrics/artifacts/grafana-dashboard.json) for query p50/p90 panels.
 
-| Environment | Metrics | Flower |
-|-------------|---------|--------|
-| Dev | [dev-weavloader-metrics.nrp-nautilus.io](https://dev-weavloader-metrics.nrp-nautilus.io) | port 5555 via port-forward |
-| Prod | [weavloader-metrics.nrp-nautilus.io](https://weavloader-metrics.nrp-nautilus.io) | port 5555 via port-forward |
+| Environment | Ingest metrics | Query metrics | Flower |
+|-------------|----------------|---------------|--------|
+| Dev | [dev-weavloader-metrics.nrp-nautilus.io](https://dev-weavloader-metrics.nrp-nautilus.io) | [dev-gradio-metrics.nrp-nautilus.io](https://dev-gradio-metrics.nrp-nautilus.io) | port 5555 via port-forward |
+| Prod | [weavloader-metrics.nrp-nautilus.io](https://weavloader-metrics.nrp-nautilus.io) | [gradio-metrics.nrp-nautilus.io](https://gradio-metrics.nrp-nautilus.io) | port 5555 via port-forward |
 
 Port-forward for local debugging:
 
 ```bash
 kubectl port-forward svc/dev-triton 8001:8001
 kubectl port-forward svc/dev-gradio-ui 7860:7860
-kubectl port-forward svc/dev-weavloader-metrics 8081:8080
+kubectl port-forward svc/dev-gradio-ui 8081:8080
+kubectl port-forward svc/dev-weavloader-metrics 8082:8080
 ```
 
 ### 5. Tear down
