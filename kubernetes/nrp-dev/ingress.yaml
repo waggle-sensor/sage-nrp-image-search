@@ -42,3 +42,26 @@ spec:
   tls:
   - hosts:
     - dev-weavloader-metrics.nrp-nautilus.io
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gradio-metrics-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: haproxy
+  rules:
+  - host: dev-gradio-metrics.nrp-nautilus.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gradio-ui
+            port:
+              number: 8080
+  tls:
+  - hosts:
+    - dev-gradio-metrics.nrp-nautilus.io

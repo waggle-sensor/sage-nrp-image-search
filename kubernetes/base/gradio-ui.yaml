@@ -13,6 +13,10 @@ spec:
     metadata:
       labels:
         app: gradio-ui
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: gradio-ui
@@ -45,6 +49,20 @@ spec:
           ports:
           - name: http
             containerPort: 7860
+          - name: metrics
+            containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
       restartPolicy: Always
 ---
 apiVersion: v1
@@ -58,5 +76,8 @@ spec:
     - name: http
       port: 7860
       targetPort: 7860
+    - name: metrics
+      port: 8080
+      targetPort: 8080
   selector:
     app: gradio-ui
