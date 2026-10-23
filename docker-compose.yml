@@ -69,6 +69,7 @@ services:
       context: ./app
     ports:
       - 7860:7860
+      - 8080:8080
     restart: on-failure
     environment:
     - MILVUS_URI
