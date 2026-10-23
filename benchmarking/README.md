@@ -121,11 +121,12 @@ Benchmark runs support env-driven ablations for index-time captioning, embedding
 | `QUERY_CLIP_ALPHA` | `0.7` | Within dense retrieval, weight for `image_vector` vs `caption_vector` (Milvus) or fused query embedding (Weaviate) |
 | `ENABLE_BM25` | `true` | When `false`, omits the BM25/keyword leg (Milvus) or sets hybrid `alpha=1.0` (Weaviate) |
 | `QUERY_ALPHA` | `0.65` | Hybrid vector/keyword blend when `ENABLE_BM25=true`. A higher value means more weight is given to the vector modality. With `QUERY_CLIP_ALPHA=0.7` this is 46% image / 20% caption / 35% BM25 |
-| `SKIP_INDEX` | `false` | When `true`, skip collection drop/ingest and query an existing `COLLECTION_NAME`. Fails if the collection is missing. Use for query-time sweeps (`QUERY_ALPHA`, `QUERY_CLIP_ALPHA`) |
+| `ENABLE_RERANK` | `true` | When `false`, skip CLIP `image_vector` rerank and rank metrics by hybrid retrieval `score`. Default `true` matches production v16 |
+| `SKIP_INDEX` | `false` | When `true`, skip collection drop/ingest and query an existing `COLLECTION_NAME`. Fails if the collection is missing |
 | `CAPTION_PROMPT_ID` | `scientific_two_captions_v1` | Prompt catalog id from [`prompts/`](../prompts/). Same catalog as weavloader. |
 | `CAPTION_MODEL_PROMPT` | unset | Raw prompt override; if set, `CAPTION_PROMPT_ID` is ignored |
 
-`ENABLE_BM25=false` disables the BM25 keyword leg of hybrid search. CLIP rerank still runs against stored `image_vector`s (same `logits_per_image` math as production) unless you change `QUERY_METHOD` or set `rerank` to false.
+`ENABLE_BM25=false` disables the BM25 keyword leg of hybrid search. CLIP rerank still runs against stored `image_vector`s unless `ENABLE_RERANK=false`. On Milvus, no-rerank runs record MRR/NDCG on the hybrid `score` column (`score_reciprocal_rank` / `score_NDCG`); rerank-on runs keep `rerank_score_*` as the reported ranking metrics and still persist `score_*` for the pre-rerank order of the same candidates.
 
 Keep `IMAGE_BATCH_SIZE` and `QUERY_BATCH_SIZE` ≥ `WORKERS` so batch knobs do not under-subscribe the pool. Indexing streams inserts as items complete (no “process all → insert all” barrier).
 

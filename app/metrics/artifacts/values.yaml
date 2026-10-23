@@ -1,0 +1,12 @@
+# Image-search query metrics scrape config for external Prometheus.
+# Add this to your existing values.yaml under additionalScrapeConfigs
+additionalScrapeConfigs:
+  - job_name: imagesearch-query-metrics
+    scheme: https
+    static_configs:
+      - targets:
+          - dev-gradio-metrics.nrp-nautilus.io
+          - gradio-metrics.nrp-nautilus.io
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s

@@ -29,20 +29,28 @@ def load_ablation_config() -> dict:
         os.environ.get("INDEX_CLIP_ALPHA", 0.7)
     )
     enable_bm25 = parse_bool_env("ENABLE_BM25", True)
+    enable_rerank = parse_bool_env("ENABLE_RERANK", True)
     query_alpha = float(os.environ.get("QUERY_ALPHA", 0.65))
     skip_index = parse_bool_env("SKIP_INDEX", False)
 
     if not embed_image and not embed_caption:
         raise ValueError(
-            "At least one of EMBED_IMAGE or EMBED_CAPTION must be true for indexing."
+            "At least one of EMBED_IMAGE or EMBED_CAPTION must be true."
         )
 
     if not enable_caption_generation and embed_caption:
-        logging.warning(
-            "ENABLE_CAPTION_GENERATION=false with EMBED_CAPTION=true; "
-            "disabling caption embedding for indexing."
-        )
-        embed_caption = False
+        if skip_index:
+            logging.info(
+                "ENABLE_CAPTION_GENERATION=false ignored for SKIP_INDEX query runs; "
+                "keeping EMBED_CAPTION=%s so the caption hybrid leg stays available.",
+                embed_caption,
+            )
+        else:
+            logging.warning(
+                "ENABLE_CAPTION_GENERATION=false with EMBED_CAPTION=true; "
+                "disabling caption embedding for indexing."
+            )
+            embed_caption = False
 
     return {
         "enable_caption_generation": enable_caption_generation,
@@ -50,6 +58,7 @@ def load_ablation_config() -> dict:
         "embed_caption": embed_caption,
         "index_clip_alpha": index_clip_alpha,
         "enable_bm25": enable_bm25,
+        "enable_rerank": enable_rerank,
         "query_alpha": query_alpha,
         "skip_index": skip_index,
     }

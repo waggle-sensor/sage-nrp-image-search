@@ -1,6 +1,7 @@
 """
 Helper functions for plotting benchmarking graphs.
 """
+import ast
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -35,6 +36,56 @@ BASELINE_VERSION = "baseline"
 ABLATION_VERSION_PREFIX = "ablation_"
 # v13 caption/indexing failures (DLQ force-inserts and abandoned items) inflated scores.
 LEADERBOARD_EXCLUDED_VERSIONS = frozenset({"v13"})
+
+
+def _parse_boolish(value) -> bool | None:
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return None
+    text = str(value).strip().lower()
+    if text in {"true", "1", "yes"}:
+        return True
+    if text in {"false", "0", "no"}:
+        return False
+    return None
+
+
+def version_uses_rerank(version_dir: Path) -> bool:
+    """True unless config_values.csv records rerank disabled.
+
+    Historical Weaviate runs have no enable_rerank field and used caption-property
+    rerank, so missing config defaults to rerank-on ranking columns.
+    """
+    cfg_path = Path(version_dir) / "config_values.csv"
+    if not cfg_path.exists():
+        return True
+    cfg = pd.read_csv(cfg_path)
+    if "Config Variable" not in cfg.columns or "Value" not in cfg.columns:
+        return True
+    rows = dict(zip(cfg["Config Variable"].astype(str), cfg["Value"]))
+    enable = _parse_boolish(rows.get("enable_rerank"))
+    if enable is not None:
+        return enable
+    params = rows.get("advanced_query_parameters")
+    if params is None or (isinstance(params, float) and np.isnan(params)):
+        return True
+    try:
+        parsed = ast.literal_eval(str(params))
+    except (ValueError, SyntaxError):
+        return True
+    if isinstance(parsed, dict) and "rerank" in parsed:
+        flag = _parse_boolish(parsed.get("rerank"))
+        if flag is not None:
+            return flag
+    return True
+
+
+def version_ranking_columns(version_dir: Path) -> dict[str, str]:
+    """Leaderboard metric column map for one result folder."""
+    columns = dict(LEADERBOARD_METRIC_COLUMNS)
+    if not version_uses_rerank(version_dir):
+        columns["MRR"] = "score_reciprocal_rank"
+        columns["NDCG@25"] = "score_NDCG"
+    return columns
 
 def discover_benchmark_names(base_path: Path) -> list[str]:
     """
@@ -343,11 +394,13 @@ def plot_overall_ndcg(
             print(f"Skip {label}: not found")
             continue
         df = pd.read_csv(path)
-        if "rerank_score_NDCG" not in df.columns:
-            print(f"Skip {label}: no 'rerank_score_NDCG' column")
+        ranking_cols = version_ranking_columns(path.parent)
+        ndcg_col = ranking_cols["NDCG@25"]
+        if ndcg_col not in df.columns:
+            print(f"Skip {label}: no {ndcg_col!r} column")
             continue
         names.append(label)
-        ndcg_values.append(df["rerank_score_NDCG"].mean())
+        ndcg_values.append(df[ndcg_col].mean())
 
     if not names:
         print("No benchmark data found.")
@@ -433,11 +486,13 @@ def plot_overall_mrr(
             print(f"Skip {label}: not found")
             continue
         df = pd.read_csv(path)
-        if "rerank_score_reciprocal_rank" not in df.columns:
-            print(f"Skip {label}: no 'rerank_score_reciprocal_rank' column")
+        ranking_cols = version_ranking_columns(path.parent)
+        mrr_col = ranking_cols["MRR"]
+        if mrr_col not in df.columns:
+            print(f"Skip {label}: no {mrr_col!r} column")
             continue
         names.append(label)
-        mrr_values.append(df["rerank_score_reciprocal_rank"].mean())
+        mrr_values.append(df[mrr_col].mean())
 
     if not names:
         print("No benchmark data found.")
@@ -479,23 +534,23 @@ def plot_group_bar_plot(
     for benchmark in benchmarks:
         bench_paths.append((benchmark, base_path / f"{benchmark}/results/{system_version}/query_eval_metrics.csv"))
 
-    metrics = {
-        "Accuracy":  "accuracy",
-        "Precision": "precision",
-        "Recall":    "recall",
-        f"Success@{k}": "hit",
-        "NDCG":      "rerank_score_NDCG",
-        "Diversity": "diversity",
-        "MRR":       "rerank_score_reciprocal_rank",
-    }
-    cols = list(metrics.values())
-    categories = list(metrics.keys())
-
     names, metrics_by_bench, errors_by_bench = [], [], []
     for label, path in bench_paths:
         if not path.exists():
             print(f"Skip {label}: not found")
             continue
+        ranking_cols = version_ranking_columns(path.parent)
+        metrics = {
+            "Accuracy":  "accuracy",
+            "Precision": "precision",
+            "Recall":    "recall",
+            f"Success@{k}": "hit",
+            "NDCG":      ranking_cols["NDCG@25"],
+            "Diversity": "diversity",
+            "MRR":       ranking_cols["MRR"],
+        }
+        cols = list(metrics.values())
+        categories = list(metrics.keys())
         df = pd.read_csv(path)
         missing = [c for c in cols if c not in df.columns]
         if missing:
@@ -653,8 +708,9 @@ def load_cross_version_metrics(
                 "system_version": version,
                 "query_count": len(df),
             }
+            ranking_cols = version_ranking_columns(csv_path.parent)
             missing_cols = []
-            for display_metric, col in LEADERBOARD_METRIC_COLUMNS.items():
+            for display_metric, col in ranking_cols.items():
                 if col in df.columns:
                     row[display_metric] = float(df[col].mean())
                 else:

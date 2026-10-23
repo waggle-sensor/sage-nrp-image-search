@@ -32,3 +32,21 @@ spec:
       path: /metrics
       interval: 30s
       scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: gradio-ui
+  labels:
+    app: gradio-ui
+    env: prod
+spec:
+  selector:
+    matchLabels:
+      app: gradio-ui
+      env: prod
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
